@@ -3,8 +3,8 @@
 ## Create small inputs for these examples
 
 The repository includes a generator based on FFmpeg test sources. It creates a
-two-second video with audio, a WAV tone, a cover image, and an SRT file. Run it
-from a cloned repository checkout:
+small fixture set for single-input and multi-input jobs. Run it from a cloned
+repository checkout:
 
 ```console
 git clone https://github.com/Imanm02/flowmpeg.git
@@ -12,9 +12,22 @@ cd flowmpeg
 python scripts/make_demo_media.py demo-media
 ```
 
-The command refuses to replace its four known outputs unless `--overwrite` is
-set. It also verifies `sample.mp4` with FFprobe and prints a JSON summary. Try
-the generated files with these one-liners:
+The command refuses to replace any known output unless `--overwrite` is set.
+It also verifies `sample.mp4` with FFprobe and prints a JSON summary.
+
+| Fixture | Media | What it helps test |
+|---|---|---|
+| `sample.mp4` | 320 by 180 video with 440 Hz audio | Single-input video jobs |
+| `second.mp4` | 320 by 180 bars with 660 Hz audio | Joins, grids, and transitions |
+| `silent.mp4` | 320 by 180 video without audio | Optional audio handling |
+| `voice.wav` | 220 Hz WAV | Voice and waveform jobs |
+| `music.wav` | 330 Hz WAV | Mixing and crossfades |
+| `cover.jpg` | 640 by 360 image | Thumbnails and audiograms |
+| `logo.png` | 96 by 96 image with transparency | Watermarks and overlays |
+| `captions.srt` | One subtitle cue | Selectable caption jobs |
+| `frame-001.png` to `frame-004.png` | Four numbered frames | Sequence input jobs |
+
+Try the generated files with these one-liners:
 
 ```console
 flowmpeg probe demo-media/sample.mp4
@@ -22,6 +35,9 @@ flowmpeg cut demo-media/sample.mp4 --duration 1 -o demo-media/clip.mp4
 flowmpeg waveform demo-media/voice.wav -o demo-media/waveform.png
 flowmpeg captions demo-media/sample.mp4 demo-media/captions.srt -o demo-media/captioned.mp4
 flowmpeg audiogram demo-media/voice.wav demo-media/cover.jpg -o demo-media/audiogram.mp4
+flowmpeg join demo-media/sample.mp4 demo-media/second.mp4 -o demo-media/joined.mp4
+flowmpeg mark demo-media/sample.mp4 demo-media/logo.png -o demo-media/branded.mp4
+flowmpeg crossfade demo-media/voice.wav demo-media/music.wav --duration 0.5 -o demo-media/blend.wav
 ```
 
 This guide starts with files and results instead of FFmpeg syntax. Every
