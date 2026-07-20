@@ -1023,6 +1023,7 @@ The JSON form is suitable for scripts:
 ```console
 flowmpeg doctor --json
 flowmpeg doctor --command podcast-voice --json
+flowmpeg doctor --smoke-test --json
 ```
 
 Doctor and setup JSON include a top-level `schema_version`. Raw probe mode
@@ -1049,6 +1050,11 @@ The detailed JSON report contains every tested capability. Command checks add
 `required_command`, `command_requirements`, and `command_ready` fields. An
 unavailable or unknown command requirement returns exit code 3.
 
+`--smoke-test` encodes one generated frame to a temporary Matroska file and
+probes it. The JSON `smoke_test` object reports `ready`, an encode or probe
+failure, a timeout, or a skipped test when either executable is unavailable.
+The temporary directory is removed after the check.
+
 ## Paths in CMD
 
 Quote a path that contains spaces, parentheses, or CMD metacharacters:
@@ -1073,7 +1079,7 @@ flowmpeg thumb "C:\Media\گفتگو.mp4" --at 5 -o "C:\Media\تصویر.jpg"
 | 0 | The command completed or a preview was printed |
 | 1 | Another Flowmpeg error occurred |
 | 2 | Arguments or the media plan were invalid |
-| 3 | A tool is unavailable, setup is incomplete, or `doctor --require` is unmet |
+| 3 | A tool is unavailable, setup is incomplete, or a doctor check is unmet |
 | 4 | A local output already exists |
 | 5 | FFprobe could not inspect the input |
 | 6 | FFmpeg exited with an error |

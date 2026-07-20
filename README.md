@@ -40,10 +40,13 @@ capability report:
 ```console
 flowmpeg doctor
 flowmpeg doctor --command trim
+flowmpeg doctor --smoke-test
 ```
 
 The second check verifies the default encoders, muxer, and filters used by
 `trim`. It returns exit code 3 when that exact path is unavailable.
+The smoke test creates a temporary 16 by 16 video, encodes one frame, probes
+the result, then removes it.
 
 ## One-line terminal jobs
 

@@ -51,7 +51,7 @@ flowmpeg explain-error FMG612
 | 0 | Command completed or a preview was printed |
 | 1 | Another Flowmpeg error occurred |
 | 2 | Arguments or a media plan were invalid |
-| 3 | A tool is unavailable, setup is incomplete, or `doctor --require` is unmet |
+| 3 | A tool is unavailable, setup is incomplete, or a doctor check is unmet |
 | 4 | A local output exists |
 | 5 | FFprobe could not inspect the input |
 | 6 | FFmpeg returned an error |

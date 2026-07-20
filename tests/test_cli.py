@@ -881,6 +881,137 @@ def test_doctor_rejects_two_requirement_modes() -> None:
     assert raised.value.code == 2
 
 
+def test_doctor_smoke_test_is_reported(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    monkeypatch.setattr(
+        cli,
+        "_tool_report",
+        lambda executable, *args: {
+            "ok": True,
+            "status": "ready",
+            "path": executable,
+        },
+    )
+    monkeypatch.setattr(cli, "_capability_report", lambda *args: {})
+    monkeypatch.setattr(
+        cli,
+        "_smoke_report",
+        lambda *args: {
+            "ok": True,
+            "status": "ready",
+            "reason": None,
+            "video": {"codec_name": "mpeg4", "width": 16, "height": 16},
+        },
+    )
+
+    assert cli.main(["doctor", "--smoke-test", "--json"]) == 0
+    report = json.loads(capsys.readouterr().out)
+    assert report["smoke_test"] == {
+        "ok": True,
+        "status": "ready",
+        "reason": None,
+        "video": {"codec_name": "mpeg4", "width": 16, "height": 16},
+    }
+
+
+def test_doctor_smoke_failure_controls_exit_code(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    monkeypatch.setattr(
+        cli,
+        "_tool_report",
+        lambda executable, *args: {
+            "ok": True,
+            "status": "ready",
+            "path": executable,
+        },
+    )
+    monkeypatch.setattr(cli, "_capability_report", lambda *args: {})
+    monkeypatch.setattr(
+        cli,
+        "_smoke_report",
+        lambda *args: {
+            "ok": False,
+            "status": "encode-failed",
+            "reason": "Encoder stopped",
+            "video": None,
+        },
+    )
+
+    assert cli.main(["doctor", "--smoke-test"]) == 3
+    output = capsys.readouterr().out
+    assert "Smoke test: encode-failed" in output
+    assert "reason: Encoder stopped" in output
+
+
+def test_smoke_report_encodes_then_probes(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    calls: list[tuple[str, ...]] = []
+    results = iter(
+        (
+            subprocess.CompletedProcess((), 0, "", ""),
+            subprocess.CompletedProcess(
+                (),
+                0,
+                json.dumps(
+                    {"streams": [{"codec_name": "mpeg4", "width": 16, "height": 16}]}
+                ),
+                "",
+            ),
+        )
+    )
+
+    def run(
+        argv: tuple[str, ...], **kwargs: object
+    ) -> subprocess.CompletedProcess[str]:
+        del kwargs
+        calls.append(argv)
+        return next(results)
+
+    monkeypatch.setattr(cli.subprocess, "run", run)
+
+    report = cli._smoke_report("custom-ffmpeg", "custom-ffprobe", 2)
+
+    assert report["ok"] is True
+    assert calls[0][0] == "custom-ffmpeg"
+    assert "lavfi" in calls[0]
+    assert calls[1][0] == "custom-ffprobe"
+    assert calls[0][-1] == calls[1][-1]
+
+
+def test_smoke_report_bounds_encode_time(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def run(*args: object, **kwargs: object) -> subprocess.CompletedProcess[str]:
+        del args, kwargs
+        raise subprocess.TimeoutExpired("ffmpeg", 2)
+
+    monkeypatch.setattr(cli.subprocess, "run", run)
+
+    report = cli._smoke_report("ffmpeg", "ffprobe", 2)
+
+    assert report["ok"] is False
+    assert report["status"] == "encode-timeout"
+    assert report["reason"] == "Encode exceeded 2 seconds"
+
+
+@pytest.mark.integration
+def test_doctor_smoke_test_with_local_tools(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    if shutil.which("ffmpeg") is None or shutil.which("ffprobe") is None:
+        pytest.skip("FFmpeg and FFprobe are not installed")
+
+    assert cli.main(["doctor", "--smoke-test", "--json"]) == 0
+    report = json.loads(capsys.readouterr().out)
+    assert report["smoke_test"]["status"] == "ready"
+    assert report["smoke_test"]["video"]["width"] == 16
+
+
 def test_setup_ready_is_read_only(
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],

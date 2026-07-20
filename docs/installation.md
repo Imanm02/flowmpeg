@@ -49,6 +49,7 @@ Require one group in CI when a job depends on it:
 flowmpeg doctor --require web-video
 flowmpeg doctor --require audiogram --json
 flowmpeg doctor --command resize
+flowmpeg doctor --smoke-test
 ```
 
 Without `--require`, limited optional groups do not change the exit code. A
@@ -56,6 +57,12 @@ requested group that is limited or unknown returns exit code 3. `--command`
 checks the exact default path for one command and follows the same exit rule.
 It reports each required capability separately. Use either `--require` or
 `--command`, not both.
+
+`--smoke-test` performs work instead of reading capability lists alone. It
+generates one 16 by 16 frame, encodes it as MPEG-4 in a temporary Matroska
+file, asks FFprobe to verify the stream, and removes the temporary file. A
+timeout, encode error, unexpected probe result, or unavailable core tool
+returns exit code 3. It can be combined with one requirement check.
 
 ## Let Flowmpeg run the package manager
 
@@ -195,6 +202,7 @@ Then fail the build early if required tools are absent:
 
 ```console
 flowmpeg doctor --json
+flowmpeg doctor --smoke-test --json
 ```
 
 `doctor` returns exit code 3 when FFmpeg or FFprobe is unavailable. Missing

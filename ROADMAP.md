@@ -84,7 +84,7 @@ only a discussion or test placeholder.
 - [x] Add category and search filters to `flowmpeg examples`.
 - [x] Add `doctor --require GROUP` for scripts that depend on one feature
   group.
-- [ ] Add an optional doctor smoke test that encodes and probes a tiny generated
+- [x] Add an optional doctor smoke test that encodes and probes a tiny generated
   input.
 - [x] Split doctor requirements by the exact encoders and muxers each command
   needs.

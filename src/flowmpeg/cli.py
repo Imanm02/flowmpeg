@@ -11,6 +11,7 @@ import re
 import shutil
 import subprocess
 import sys
+import tempfile
 from collections.abc import Callable, Sequence
 from dataclasses import asdict, dataclass, replace
 from typing import TextIO, cast
@@ -1783,6 +1784,11 @@ def _add_doctor(commands: argparse._SubParsersAction[argparse.ArgumentParser]) -
         help="Fail unless one command's default path is ready",
     )
     parser.add_argument("--json", action="store_true")
+    parser.add_argument(
+        "--smoke-test",
+        action="store_true",
+        help="Encode and probe a generated video",
+    )
     parser.set_defaults(handler=_run_doctor)
 
 
@@ -1994,15 +2000,31 @@ def _run_doctor(args: argparse.Namespace) -> int:
         command_spec(required_command) if required_command is not None else None
     )
     command_requirements = (
-        command_specification.requirements
-        if command_specification is not None
-        else ()
+        command_specification.requirements if command_specification is not None else ()
     )
     command_ready = (
         _requirements_state(capabilities, command_requirements)
         if required_command is not None
         else None
     )
+    smoke_requested = cast(bool, args.smoke_test)
+    smoke_test: dict[str, object] | None = None
+    ffprobe_path = ffprobe.get("path")
+    if smoke_requested:
+        if (
+            ffmpeg.get("ok") is True
+            and ffprobe.get("ok") is True
+            and isinstance(ffmpeg_path, str)
+            and isinstance(ffprobe_path, str)
+        ):
+            smoke_test = _smoke_report(ffmpeg_path, ffprobe_path, timeout)
+        else:
+            smoke_test = {
+                "ok": False,
+                "status": "skipped",
+                "reason": "FFmpeg and FFprobe must both be ready",
+                "video": None,
+            }
     report: dict[str, object] = {
         "schema_version": _JSON_SCHEMA_VERSION,
         "ok": okay,
@@ -2017,16 +2039,22 @@ def _run_doctor(args: argparse.Namespace) -> int:
         "required_command": required_command,
         "command_requirements": command_requirements,
         "command_ready": command_ready,
+        "smoke_test": smoke_test,
     }
     if cast(bool, args.json):
         print(json.dumps(report, indent=2, sort_keys=True))
     else:
         print(_format_doctor(report))
-    requirement_ready = (
-        required_ready if required_group is not None else command_ready
-    )
+    requirement_ready = required_ready if required_group is not None else command_ready
     has_requirement = required_group is not None or required_command is not None
-    return 0 if okay and (not has_requirement or requirement_ready is True) else 3
+    smoke_ready = not smoke_requested or (
+        smoke_test is not None and smoke_test.get("ok") is True
+    )
+    return (
+        0
+        if okay and (not has_requirement or requirement_ready is True) and smoke_ready
+        else 3
+    )
 
 
 def _run_setup(args: argparse.Namespace) -> int:
@@ -2558,9 +2586,7 @@ def _capability_report(ffmpeg: str, timeout: float) -> dict[str, bool | None]:
         for requirement in requirements
     }
     all_requirements.update(
-        requirement
-        for spec in COMMAND_CATALOG
-        for requirement in spec.requirements
+        requirement for spec in COMMAND_CATALOG for requirement in spec.requirements
     )
     listings = {"filter": filters, "encoder": encoders, "muxer": muxers}
     return {
@@ -2570,6 +2596,130 @@ def _capability_report(ffmpeg: str, timeout: float) -> dict[str, bool | None]:
         )
         for requirement in sorted(all_requirements)
     }
+
+
+def _smoke_report(
+    ffmpeg: str,
+    ffprobe: str,
+    timeout: float,
+) -> dict[str, object]:
+    with tempfile.TemporaryDirectory(prefix="flowmpeg-doctor-") as directory:
+        output = os.path.join(directory, "smoke.mkv")
+        try:
+            encoded = subprocess.run(
+                (
+                    ffmpeg,
+                    "-hide_banner",
+                    "-loglevel",
+                    "error",
+                    "-nostdin",
+                    "-y",
+                    "-f",
+                    "lavfi",
+                    "-i",
+                    "color=c=black:s=16x16:r=1",
+                    "-frames:v",
+                    "1",
+                    "-c:v",
+                    "mpeg4",
+                    "-f",
+                    "matroska",
+                    output,
+                ),
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                timeout=timeout,
+                check=False,
+                shell=False,
+            )
+        except subprocess.TimeoutExpired:
+            return {
+                "ok": False,
+                "status": "encode-timeout",
+                "reason": f"Encode exceeded {timeout:g} seconds",
+                "video": None,
+            }
+        except OSError as error:
+            return {
+                "ok": False,
+                "status": "encode-error",
+                "reason": redact_text(str(error))[:400] or None,
+                "video": None,
+            }
+        if encoded.returncode != 0:
+            return {
+                "ok": False,
+                "status": "encode-failed",
+                "reason": _stderr_reason(redact_text(encoded.stderr)),
+                "video": None,
+            }
+
+        try:
+            inspected = subprocess.run(
+                (
+                    ffprobe,
+                    "-v",
+                    "error",
+                    "-select_streams",
+                    "v:0",
+                    "-show_entries",
+                    "stream=codec_name,width,height",
+                    "-of",
+                    "json",
+                    output,
+                ),
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                timeout=timeout,
+                check=False,
+                shell=False,
+            )
+        except subprocess.TimeoutExpired:
+            return {
+                "ok": False,
+                "status": "probe-timeout",
+                "reason": f"Probe exceeded {timeout:g} seconds",
+                "video": None,
+            }
+        except OSError as error:
+            return {
+                "ok": False,
+                "status": "probe-error",
+                "reason": redact_text(str(error))[:400] or None,
+                "video": None,
+            }
+        if inspected.returncode != 0:
+            return {
+                "ok": False,
+                "status": "probe-failed",
+                "reason": _stderr_reason(redact_text(inspected.stderr)),
+                "video": None,
+            }
+
+        try:
+            payload = json.loads(inspected.stdout)
+            streams = payload.get("streams")
+            video = streams[0] if isinstance(streams, list) and streams else None
+        except (json.JSONDecodeError, AttributeError):
+            video = None
+        expected = {"codec_name": "mpeg4", "width": 16, "height": 16}
+        if video != expected:
+            return {
+                "ok": False,
+                "status": "invalid-probe",
+                "reason": "FFprobe did not report the expected video stream",
+                "video": video,
+            }
+        return {
+            "ok": True,
+            "status": "ready",
+            "reason": None,
+            "video": video,
+        }
 
 
 def _feature_report(
@@ -2679,6 +2829,17 @@ def _format_doctor(report: dict[str, object]) -> str:
             if present is None:
                 requirement_state = "unknown"
             lines.append(f"  {requirement}: {requirement_state}")
+    smoke_test = report.get("smoke_test")
+    if isinstance(smoke_test, dict):
+        lines.append(f"Smoke test: {smoke_test['status']}")
+        video = smoke_test.get("video")
+        if isinstance(video, dict):
+            lines.append(
+                f"  video: {video.get('codec_name')} "
+                f"{video.get('width')}x{video.get('height')}"
+            )
+        if smoke_test.get("reason"):
+            lines.append(f"  reason: {smoke_test['reason']}")
     lines.append(f"Core ready: {'yes' if report['ok'] else 'no'}")
     return "\n".join(lines)
 
