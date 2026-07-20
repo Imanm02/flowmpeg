@@ -25,6 +25,7 @@ flowmpeg examples --search subtitle
 |---|---|---|
 | Install FFmpeg or use custom paths | [Installation](installation.md) | Platform commands, setup states, CI checks |
 | Run a one-line terminal edit | [Command guide](cli.md) | Every editing command, aliases, controls |
+| Read the full command matrix | [Generated command reference](command-reference.md) | Aliases, tags, data kinds, doctor groups |
 | Call one Python function | [Shortcut guide](shortcuts.md) | Copyable plan builders and arguments |
 | See input and expected output | [Example guide](examples.md) | Files, commands, graph output, explanations |
 | Follow a real production sequence | [Workflow guide](workflows.md) | Social, podcast, archive, subtitle jobs |

@@ -70,6 +70,19 @@ flowmpeg resize input.mp4 --width 1280 -o smaller.mp4 --overwrite
 
 ## Command map
 
+The [generated command reference](command-reference.md) is the source-backed
+map of every editing, inspection, and help command. It includes aliases, tags,
+input and output kinds, and doctor groups. The installed catalog exposes the
+same fields:
+
+```console
+flowmpeg commands
+flowmpeg commands --tag archive
+flowmpeg commands --json
+```
+
+The table below is a compact editing index for scanning this longer guide.
+
 | Job | Main command | Short form |
 | --- | --- | --- |
 | Convert to web MP4 | `transcode` | `convert` |

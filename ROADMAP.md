@@ -100,7 +100,7 @@ only a discussion or test placeholder.
 - [x] Keep built-in example categories aligned with the command catalog.
 - [x] Add creator, podcast, privacy, archive, copy, inspect, and silent-input
   tags to commands and examples.
-- [ ] Generate the CLI command map from the command catalog.
+- [x] Generate the CLI command map from the command catalog.
 - [x] Add effects and metadata to the documentation task index.
 - [x] Add a before-and-after media comparison command with JSON output.
 - [ ] Expand demo media with a second clip, silent video, logo, music, and image
