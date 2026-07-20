@@ -9,6 +9,15 @@ from flowmpeg.errors import (
     OutputExistsError,
     ProbeError,
 )
+from flowmpeg.model import MediaGraph, StreamKind
+from flowmpeg.streams import (
+    AudioStream,
+    MediaInput,
+    SubtitleStream,
+    VideoStream,
+    apply_filter,
+    input,
+)
 
 __version__ = "0.1.0"
 
@@ -18,7 +27,15 @@ __all__ = [
     "ExecutionError",
     "FlowmpegError",
     "GraphError",
+    "MediaGraph",
+    "MediaInput",
     "OutputExistsError",
     "ProbeError",
+    "StreamKind",
+    "SubtitleStream",
+    "VideoStream",
+    "AudioStream",
     "__version__",
+    "apply_filter",
+    "input",
 ]
