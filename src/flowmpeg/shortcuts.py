@@ -1972,8 +1972,11 @@ def _reject_bitrate(codec: AudioCodec, bitrate: str | None) -> None:
 
 
 def _validate_bitrate(value: str) -> None:
-    if not value or value.startswith("-"):
-        raise GraphError("Audio bitrate cannot be empty or start with a dash")
+    if not isinstance(value, str):
+        raise GraphError("Audio bitrate must be text such as 128k")
+    match = re.fullmatch(r"(\d+(?:\.\d+)?)[kKmMgG]?", value)
+    if match is None or float(match.group(1)) <= 0:
+        raise GraphError("Audio bitrate must be a positive value such as 128k")
 
 
 def _require_suffix(

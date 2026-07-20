@@ -616,6 +616,12 @@ def test_compress_video_exposes_size_controls() -> None:
     ] == ("-b:a", "96k")
 
 
+@pytest.mark.parametrize("bitrate", ["", "0k", "128 kbps", "fast", "-1k"])
+def test_compress_video_rejects_invalid_audio_bitrates(bitrate: str) -> None:
+    with pytest.raises(GraphError, match="positive value"):
+        shortcuts.compress_video("source.mov", "small.mp4", audio_bitrate=bitrate)
+
+
 def test_reframe_and_social_targets_build_expected_frames() -> None:
     reframed = shortcuts.reframe(
         "wide.mp4",

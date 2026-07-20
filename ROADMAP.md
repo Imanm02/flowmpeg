@@ -38,7 +38,7 @@ only a discussion or test placeholder.
 - [x] Prefer the causal FFmpeg line when choosing a short failure reason.
 - [ ] Distinguish missing capabilities from capability checks that failed or
   timed out.
-- [ ] Validate audio bitrate syntax before building a command.
+- [x] Validate audio bitrate syntax before building a command.
 - [ ] Ignore audio bitrate controls when audio output is disabled.
 - [x] Reject Boolean audio, video, and subtitle stream indexes.
 - [ ] Reject unordered filter option collections.
