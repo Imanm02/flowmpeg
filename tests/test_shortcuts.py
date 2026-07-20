@@ -1386,6 +1386,43 @@ def test_compress_video_handles_odd_source_dimensions(tmp_path: Path) -> None:
 
 
 @pytest.mark.integration
+def test_video_filters_accept_a_source_without_audio(tmp_path: Path) -> None:
+    ffmpeg = shutil.which("ffmpeg")
+    if ffmpeg is None:
+        pytest.skip("FFmpeg is required")
+    source = tmp_path / "silent.mp4"
+    subprocess.run(
+        (
+            ffmpeg,
+            "-hide_banner",
+            "-loglevel",
+            "error",
+            "-y",
+            "-f",
+            "lavfi",
+            "-i",
+            "color=black:size=64x48:duration=0.2",
+            "-c:v",
+            "libx264",
+            "-an",
+            str(source),
+        ),
+        check=True,
+    )
+    targets = (
+        shortcuts.transcode(source, tmp_path / "converted.mp4"),
+        shortcuts.resize(source, tmp_path / "resized.mp4", width=32),
+        shortcuts.crop(source, tmp_path / "cropped.mp4", width=32, height=24),
+    )
+
+    for plan in targets:
+        plan.run(ffmpeg=ffmpeg, timeout=10)
+        info = probe(plan.outputs[0].destination)
+        assert info.video_streams
+        assert not info.audio_streams
+
+
+@pytest.mark.integration
 def test_new_timeline_shortcuts_run(
     shortcut_media: tuple[str, Path, Path, Path],
 ) -> None:

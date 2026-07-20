@@ -20,7 +20,7 @@ only a discussion or test placeholder.
 - [x] Reject local output aliases such as `out.mp4` and `.\out.mp4` in one
   plan.
 - [x] Reject a local output that resolves to one of the plan inputs.
-- [ ] Make common video shortcuts work with silent input files without mapping
+- [x] Make common video shortcuts work with silent input files without mapping
   a missing audio stream.
 - [x] Guarantee even H.264 dimensions for compression, resize, crop, and grid
   outputs.
