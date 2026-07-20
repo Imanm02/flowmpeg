@@ -25,6 +25,14 @@ _MARKDOWN_FILES = (_ROOT / "README.md", *sorted((_ROOT / "docs").glob("*.md")))
 _PYTHON_BLOCK = re.compile(r"^```python\s*\n(.*?)^```", re.MULTILINE | re.DOTALL)
 _MARKDOWN_LINK = re.compile(r"\[[^]]+\]\(([^)]+)\)")
 _MARKDOWN_HEADING = re.compile(r"^#{1,6}\s+(.+?)\s*#*$", re.MULTILINE)
+_BATCH_BLOCK = re.compile(
+    r"^```(bat|powershell|bash)\s*\n(.*?)^```",
+    re.MULTILINE | re.DOTALL,
+)
+_BATCH_OPTION = re.compile(
+    r"--(crf|codec|bitrate|factor|columns|rows|interval|target|fill|at)\s+"
+    r"([^\s;|}]+)"
+)
 
 
 def _code_cases() -> list[tuple[str, str]]:
@@ -212,6 +220,57 @@ def test_documented_edit_commands_build() -> None:
 
     assert len(checked) >= 190
     assert not failures, "\n".join(failures)
+
+
+def test_batch_shell_commands_build_without_media() -> None:
+    path = _ROOT / "docs" / "batch-jobs.md"
+    text = path.read_text(encoding="utf-8")
+    calls: list[tuple[str, str]] = []
+    for block in _BATCH_BLOCK.finditer(text):
+        language, source = block.groups()
+        for match in re.finditer(r"\bflowmpeg\s+([a-z][a-z-]*)([^\n}]*)", source):
+            calls.append((language, match.group(0)))
+
+    assert len(calls) == 12
+    for _, call in calls:
+        command = call.split(maxsplit=2)[1]
+        if command == "commands":
+            argv = ["commands", "--json"]
+        else:
+            argv = [command, "input file.mp4"]
+            for option, value in _BATCH_OPTION.findall(call):
+                argv.extend((f"--{option}", value.strip("\"'")))
+            if "--no-audio" in call:
+                argv.append("--no-audio")
+            suffix = (
+                ".mp3"
+                if command == "audio"
+                else ".jpg"
+                if command
+                in {
+                    "sheet",
+                    "thumb",
+                }
+                else ".mp4"
+            )
+            argv.extend(("-o", f"output file{suffix}", "--dry-run"))
+        with (
+            contextlib.redirect_stdout(io.StringIO()),
+            contextlib.redirect_stderr(io.StringIO()),
+        ):
+            assert cli.main(argv) == 0, call
+
+
+def test_batch_shell_examples_show_quoting_and_failure_choices() -> None:
+    text = (_ROOT / "docs" / "batch-jobs.md").read_text(encoding="utf-8")
+    blocks = list(_BATCH_BLOCK.finditer(text))
+
+    assert len(blocks) == 12
+    assert '"%F"' in text and '"%%F"' in text
+    assert "$_.FullName" in text and '"$file"' in text
+    assert "|| exit" in text
+    assert "$LASTEXITCODE -ne 0" in text
+    assert "failed-files.txt" in text
 
 
 def test_shortcut_reference_names_every_factory() -> None:
