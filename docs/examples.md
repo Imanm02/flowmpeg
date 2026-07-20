@@ -1,5 +1,26 @@
 # Flowmpeg by example
 
+## Create small inputs for these examples
+
+The repository includes a generator based on FFmpeg test sources. It creates a
+two-second video with audio, a WAV tone, a cover image, and an SRT file:
+
+```console
+python scripts/make_demo_media.py demo-media
+```
+
+The command refuses to replace its four known outputs unless `--overwrite` is
+set. It also verifies `sample.mp4` with FFprobe and prints a JSON summary. Try
+the generated files with these one-liners:
+
+```console
+flowmpeg probe demo-media/sample.mp4
+flowmpeg cut demo-media/sample.mp4 --duration 1 -o demo-media/clip.mp4
+flowmpeg waveform demo-media/voice.wav -o demo-media/waveform.png
+flowmpeg captions demo-media/sample.mp4 demo-media/captions.srt -o demo-media/captioned.mp4
+flowmpeg audiogram demo-media/voice.wav demo-media/cover.jpg -o demo-media/audiogram.mp4
+```
+
 This guide starts with files and results instead of FFmpeg syntax. Every
 example answers the same questions: what files go in, what Python builds the
 job, what file comes out, and which FFmpeg operation does the work.

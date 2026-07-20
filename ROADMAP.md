@@ -75,7 +75,7 @@ only a discussion or test placeholder.
 - [x] Add a fixed-region privacy blur coordinate diagram.
 - [x] Add probe-first examples for secondary tracks.
 - [ ] Add CMD, PowerShell, and Bash batch examples.
-- [ ] Add a generated demo-media script based on FFmpeg test sources.
+- [x] Add a generated demo-media script based on FFmpeg test sources.
 - [ ] Add an education workflow from trim through selectable captions.
 - [ ] Add a podcast workflow from voice cleanup through tags and audiogram.
 - [ ] Add an archive workflow with deinterlacing and review images.
