@@ -613,7 +613,12 @@ def test_doctor_json_reports_ready(
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    def tool_report(executable: str, timeout: float) -> dict[str, object]:
+    def tool_report(
+        executable: str,
+        timeout: float,
+        expected_tool: str,
+    ) -> dict[str, object]:
+        del expected_tool
         return {"ok": True, "path": executable, "version": f"{executable} 1.0"}
 
     monkeypatch.setattr(cli, "_tool_report", tool_report)
@@ -634,8 +639,12 @@ def test_doctor_returns_three_when_a_tool_is_missing(
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    def tool_report(executable: str, timeout: float) -> dict[str, object]:
-        del timeout
+    def tool_report(
+        executable: str,
+        timeout: float,
+        expected_tool: str,
+    ) -> dict[str, object]:
+        del timeout, expected_tool
         return {"ok": executable == "ffmpeg", "path": executable, "version": None}
 
     monkeypatch.setattr(cli, "_tool_report", tool_report)
@@ -777,8 +786,12 @@ def test_setup_checks_custom_tool_paths(
 ) -> None:
     checked: list[str] = []
 
-    def tool_report(executable: str, timeout: float) -> dict[str, object]:
-        del timeout
+    def tool_report(
+        executable: str,
+        timeout: float,
+        expected_tool: str,
+    ) -> dict[str, object]:
+        del timeout, expected_tool
         checked.append(executable)
         return {"ok": True, "status": "ready", "path": executable}
 
@@ -1115,6 +1128,30 @@ def test_tool_report_keeps_failure_code_and_reason(
     assert report["status"] == "failed"
     assert report["returncode"] == 2
     assert report["reason"] == "configuration rejected"
+
+
+@pytest.mark.parametrize("expected_tool", ["ffmpeg", "ffprobe"])
+def test_tool_report_rejects_a_different_ffmpeg_program(
+    monkeypatch: pytest.MonkeyPatch,
+    expected_tool: str,
+) -> None:
+    monkeypatch.setattr(shutil, "which", lambda executable: "ffplay")
+    monkeypatch.setattr(
+        subprocess,
+        "run",
+        lambda *args, **kwargs: subprocess.CompletedProcess(
+            args[0],
+            0,
+            stdout="ffplay version 7.1\n",
+            stderr="",
+        ),
+    )
+
+    report = cli._tool_report("ffplay", 1, expected_tool)
+
+    assert report["ok"] is False
+    assert report["status"] == "wrong-tool"
+    assert report["reason"] == f"Expected {expected_tool} version output"
 
 
 def test_error_catalog_lists_and_explains_identifiers(

@@ -1878,8 +1878,8 @@ def _run_probe(args: argparse.Namespace) -> int:
 
 def _run_doctor(args: argparse.Namespace) -> int:
     timeout = cast(float, args.timeout)
-    ffmpeg = _tool_report(cast(str, args.ffmpeg), timeout)
-    ffprobe = _tool_report(cast(str, args.ffprobe), timeout)
+    ffmpeg = _tool_report(cast(str, args.ffmpeg), timeout, "ffmpeg")
+    ffprobe = _tool_report(cast(str, args.ffprobe), timeout, "ffprobe")
     capabilities: dict[str, bool | None] = {}
     ffmpeg_path = ffmpeg.get("path")
     if ffmpeg.get("ok") is True and isinstance(ffmpeg_path, str):
@@ -1937,8 +1937,8 @@ def _run_setup(args: argparse.Namespace) -> int:
             "FMG200",
         )
 
-    ffmpeg = _tool_report(ffmpeg_executable, timeout)
-    ffprobe = _tool_report(ffprobe_executable, timeout)
+    ffmpeg = _tool_report(ffmpeg_executable, timeout, "ffmpeg")
+    ffprobe = _tool_report(ffprobe_executable, timeout, "ffprobe")
     ready = ffmpeg.get("ok") is True and ffprobe.get("ok") is True
     installer = _detect_installer()
     report: dict[str, object] = {
@@ -2010,8 +2010,8 @@ def _run_setup(args: argparse.Namespace) -> int:
                 "FMG304",
             )
 
-    ffmpeg = _tool_report(ffmpeg_executable, timeout)
-    ffprobe = _tool_report(ffprobe_executable, timeout)
+    ffmpeg = _tool_report(ffmpeg_executable, timeout, "ffmpeg")
+    ffprobe = _tool_report(ffprobe_executable, timeout, "ffprobe")
     if ffmpeg.get("ok") is True and ffprobe.get("ok") is True:
         print("FFmpeg and FFprobe are ready.")
         return 0
@@ -2273,7 +2273,11 @@ def _format_setup(report: dict[str, object]) -> str:
     return "\n".join(lines)
 
 
-def _tool_report(executable: str, timeout: float) -> dict[str, object]:
+def _tool_report(
+    executable: str,
+    timeout: float,
+    expected_tool: str | None = None,
+) -> dict[str, object]:
     path = shutil.which(executable)
     if path is None:
         return {
@@ -2327,9 +2331,16 @@ def _tool_report(executable: str, timeout: float) -> dict[str, object]:
     reason = None
     if completed.returncode != 0:
         reason = _stderr_reason(redact_text(completed.stderr or completed.stdout))
+    identity_ok = expected_tool is None or (
+        isinstance(first_line, str)
+        and first_line.lower().startswith(f"{expected_tool} version ")
+    )
+    if completed.returncode == 0 and not identity_ok:
+        reason = f"Expected {expected_tool} version output"
+    okay = completed.returncode == 0 and identity_ok
     return {
-        "ok": completed.returncode == 0,
-        "status": "ready" if completed.returncode == 0 else "failed",
+        "ok": okay,
+        "status": "ready" if okay else "wrong-tool" if not identity_ok else "failed",
         "path": path,
         "version": first_line,
         "returncode": completed.returncode,
