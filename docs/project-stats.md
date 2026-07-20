@@ -9,13 +9,13 @@ source change.
 
 | Measure | Count | Source |
 |---|---:|---|
-| Canonical terminal commands | 59 | `COMMAND_CATALOG` |
+| Canonical terminal commands | 60 | `COMMAND_CATALOG` |
 | Command aliases | 53 | `COMMAND_CATALOG` |
 | Python shortcut functions | 52 | `shortcuts.__all__` |
-| One-line terminal examples | 60 | CLI example catalog |
+| One-line terminal examples | 61 | CLI example catalog |
 | Stable error identifiers | 16 | CLI error guide |
 | Doctor feature groups | 12 | Doctor requirements |
-| Test function definitions | 279 | `tests/test_*.py` |
+| Test function definitions | 281 | `tests/test_*.py` |
 | FFmpeg integration tests | 24 | Pytest markers |
 | Documentation pages | 12 | `docs/*.md` |
 | Documented command lines | 271 | Markdown code lines |
@@ -36,7 +36,7 @@ counts distinct canonical commands with at least one built-in example.
 | images | 6 | 7 | 6 | 6/6 (100%) | 6 | `######` |
 | subtitles | 3 | 3 | 3 | 3/3 (100%) | 3 | `###` |
 | metadata | 1 | 1 | 1 | 1/1 (100%) | 1 | `#` |
-| inspect | 3 | 1 | 3 | 3/3 (100%) | 0 | `###` |
+| inspect | 4 | 1 | 4 | 4/4 (100%) | 0 | `####` |
 | help | 4 | 0 | 4 | 4/4 (100%) | 0 | `####` |
 
 ## Use-case coverage
@@ -51,7 +51,7 @@ The bar uses one `#` per canonical command carrying the tag.
 | creator | 37 | 38 | `#####################################` |
 | delivery | 14 | 15 | `##############` |
 | discover | 4 | 4 | `####` |
-| inspect | 3 | 3 | `###` |
+| inspect | 4 | 4 | `####` |
 | podcast | 13 | 13 | `#############` |
 | privacy | 4 | 4 | `####` |
 | silent-input | 27 | 28 | `###########################` |

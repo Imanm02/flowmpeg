@@ -17,6 +17,7 @@ from typing import TextIO, cast
 
 from flowmpeg import __version__, shortcuts
 from flowmpeg.catalog import CATEGORIES, COMMAND_CATALOG, TAGS, command_spec
+from flowmpeg.comparison import MediaComparison, MediaSummary, compare_media
 from flowmpeg.diagnostics import display_argv, redact_text
 from flowmpeg.errors import (
     BinaryNotFoundError,
@@ -137,6 +138,7 @@ _BASE_EXAMPLES = (
     _Example("images", "flowmpeg timelapse frames/frame-%04d.png -o timelapse.mp4"),
     _Example("composition", "flowmpeg audiogram episode.wav cover.jpg -o episode.mp4"),
     _Example("inspect", "flowmpeg probe input.mp4"),
+    _Example("inspect", "flowmpeg compare original.mp4 smaller.mp4"),
     _Example("inspect", "flowmpeg doctor"),
     _Example("inspect", "flowmpeg setup"),
     _Example("help", "flowmpeg errors"),
@@ -465,6 +467,7 @@ def build_parser() -> argparse.ArgumentParser:
     _add_strip_metadata(commands)
     _add_tag_audio(commands)
     _add_probe(commands)
+    _add_compare(commands)
     _add_doctor(commands)
     _add_setup(commands)
     _add_errors(commands)
@@ -1720,6 +1723,22 @@ def _add_probe(commands: argparse._SubParsersAction[argparse.ArgumentParser]) ->
     parser.set_defaults(handler=_run_probe)
 
 
+def _add_compare(commands: argparse._SubParsersAction[argparse.ArgumentParser]) -> None:
+    parser = commands.add_parser(
+        "compare",
+        help="Compare two media files.",
+        description="Compare measured media values before and after a job.",
+        allow_abbrev=False,
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+    parser.add_argument("before", help="Original media path")
+    parser.add_argument("after", help="Changed media path")
+    parser.add_argument("--ffprobe", default="ffprobe", help="FFprobe executable")
+    parser.add_argument("--timeout", type=_positive_float)
+    parser.add_argument("--json", action="store_true", help="Print comparison JSON")
+    parser.set_defaults(handler=_run_compare)
+
+
 def _add_doctor(commands: argparse._SubParsersAction[argparse.ArgumentParser]) -> None:
     parser = commands.add_parser(
         "doctor",
@@ -1897,6 +1916,22 @@ def _run_probe(args: argparse.Namespace) -> int:
         print(json.dumps(_redact_json(data), indent=2, sort_keys=True))
     else:
         print(redact_text(_format_media_info(info)))
+    return 0
+
+
+def _run_compare(args: argparse.Namespace) -> int:
+    result = compare_media(
+        cast(str, args.before),
+        cast(str, args.after),
+        ffprobe=cast(str, args.ffprobe),
+        timeout=cast(float | None, args.timeout),
+    )
+    if cast(bool, args.json):
+        data = asdict(result)
+        data["schema_version"] = _JSON_SCHEMA_VERSION
+        print(json.dumps(_redact_json(data), indent=2, sort_keys=True))
+    else:
+        print(redact_text(_format_comparison(result)))
     return 0
 
 
@@ -2200,6 +2235,55 @@ def _format_media_info(info: MediaInfo) -> str:
             lines.append(f"  subtitle #{stream.index}: {codec}")
         else:
             lines.append(f"  {stream.codec_type} #{stream.index}: {codec}")
+    return "\n".join(lines)
+
+
+def _format_comparison(result: MediaComparison) -> str:
+    before = result.before
+    after = result.after
+    size_change = "unknown"
+    if result.size_delta is not None:
+        size_change = _signed_bytes(result.size_delta)
+    if result.size_change_percent is not None:
+        size_change += f" ({result.size_change_percent:+.1f}%)"
+    duration_change = (
+        "unknown"
+        if result.duration_delta is None
+        else f"{result.duration_delta:+g} seconds"
+    )
+    rows = (
+        ("Size", _bytes(before.size), _bytes(after.size), size_change),
+        (
+            "Duration",
+            _seconds(before.duration),
+            _seconds(after.duration),
+            duration_change,
+        ),
+        ("Bit rate", _bit_rate(before.bit_rate), _bit_rate(after.bit_rate), ""),
+        ("Video codec", before.video_codec or "none", after.video_codec or "none", ""),
+        ("Audio codec", before.audio_codec or "none", after.audio_codec or "none", ""),
+        (
+            "Dimensions",
+            _dimensions(before.width, before.height),
+            _dimensions(after.width, after.height),
+            "",
+        ),
+        (
+            "Frame rate",
+            _frame_rate(before.frame_rate),
+            _frame_rate(after.frame_rate),
+            "",
+        ),
+        ("Streams", _stream_counts(before), _stream_counts(after), ""),
+    )
+    lines = [
+        f"Before: {before.source}",
+        f"After: {after.source}",
+        "",
+        "Measure | Before | After | Change",
+        "---|---:|---:|---:",
+    ]
+    lines.extend(" | ".join(row) for row in rows)
     return "\n".join(lines)
 
 
@@ -2594,6 +2678,32 @@ def _bytes(value: int | None) -> str:
             break
         size /= 1024
     return f"{size:.2f} {unit}"
+
+
+def _signed_bytes(value: int) -> str:
+    prefix = "+" if value >= 0 else "-"
+    return prefix + _bytes(abs(value))
+
+
+def _bit_rate(value: int | None) -> str:
+    return "unknown" if value is None else f"{value / 1000:g} kb/s"
+
+
+def _dimensions(width: int | None, height: int | None) -> str:
+    if width is None or height is None:
+        return "unknown"
+    return f"{width}x{height}"
+
+
+def _frame_rate(value: float | None) -> str:
+    return "unknown" if value is None else f"{value:g} fps"
+
+
+def _stream_counts(summary: MediaSummary) -> str:
+    return (
+        f"{summary.video_streams} video, {summary.audio_streams} audio, "
+        f"{summary.subtitle_streams} subtitle"
+    )
 
 
 def _positive_int(value: str) -> int:

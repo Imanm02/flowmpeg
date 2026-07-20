@@ -430,6 +430,13 @@ _BASE_COMMAND_CATALOG = (
         output_kind="report",
     ),
     CommandSpec(
+        "compare",
+        "inspect",
+        "Compare media values before and after a job",
+        input_kind="two media files",
+        output_kind="report",
+    ),
+    CommandSpec(
         "doctor",
         "inspect",
         "Check tools and media capabilities",

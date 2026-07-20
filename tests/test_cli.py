@@ -14,6 +14,7 @@ import pytest
 
 from flowmpeg import cli, diagnostics
 from flowmpeg.catalog import COMMAND_CATALOG
+from flowmpeg.comparison import MediaComparison, MediaSummary
 from flowmpeg.errors import (
     BinaryNotFoundError,
     BinaryUnusableError,
@@ -608,6 +609,36 @@ def test_probe_error_returns_five(
 
     assert cli.main(["probe", "movie.mp4"]) == 5
     assert "cannot inspect input" in capsys.readouterr().err
+
+
+def test_compare_prints_a_before_and_after_table(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    monkeypatch.setattr(cli, "compare_media", lambda *args, **kwargs: _comparison())
+
+    assert cli.main(["compare", "before.mp4", "after.mp4"]) == 0
+    output = capsys.readouterr().out
+
+    assert "Measure | Before | After | Change" in output
+    assert "Size | 1000.00 B | 600.00 B | -400.00 B (-40.0%)" in output
+    assert "Video codec | h264 | hevc" in output
+    assert "Streams | 1 video, 1 audio, 1 subtitle" in output
+
+
+def test_compare_json_reports_source_values(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    monkeypatch.setattr(cli, "compare_media", lambda *args, **kwargs: _comparison())
+
+    assert cli.main(["compare", "before.mp4", "after.mp4", "--json"]) == 0
+    report = json.loads(capsys.readouterr().out)
+
+    assert report["schema_version"] == 1
+    assert report["size_delta"] == -400
+    assert report["before"]["video_codec"] == "h264"
+    assert report["after"]["width"] == 1280
 
 
 def test_doctor_json_reports_ready(
@@ -1530,3 +1561,35 @@ def _media_info() -> MediaInfo:
             ),
         ),
     )
+
+
+def _comparison() -> MediaComparison:
+    before = MediaSummary(
+        "before.mp4",
+        1_000,
+        10.0,
+        800_000,
+        "h264",
+        "aac",
+        1920,
+        1080,
+        30.0,
+        1,
+        1,
+        1,
+    )
+    after = MediaSummary(
+        "after.mp4",
+        600,
+        9.5,
+        500_000,
+        "hevc",
+        "aac",
+        1280,
+        720,
+        24.0,
+        1,
+        1,
+        0,
+    )
+    return MediaComparison(before, after, -400, -40.0, -0.5)
