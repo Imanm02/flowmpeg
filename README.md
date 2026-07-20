@@ -142,6 +142,8 @@ outputs for common jobs:
 The [real-world workflow guide](docs/workflows.md) adds 30 paired terminal and
 Python examples. It covers social formats, privacy edits, voice cleanup,
 subtitles, metadata, image sequences, and podcast audiograms. The
+[batch job guide](docs/batch-jobs.md) has folder patterns for CMD, PowerShell,
+and Bash, including failure handling and silent inputs. The
 [error guide](docs/errors.md) explains every `FMG` identifier and process exit
 code.
 

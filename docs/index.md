@@ -28,6 +28,7 @@ flowmpeg examples --search subtitle
 | Call one Python function | [Shortcut guide](shortcuts.md) | Copyable plan builders and arguments |
 | See input and expected output | [Example guide](examples.md) | Files, commands, graph output, explanations |
 | Follow a real production sequence | [Workflow guide](workflows.md) | Social, podcast, archive, subtitle jobs |
+| Process a folder from a shell | [Batch jobs](batch-jobs.md) | CMD, PowerShell, Bash, failure choices |
 | Understand a failure | [Error guide](errors.md) | Exit codes, `FMG` identifiers, recovery steps |
 | Extend the graph layer | [Design notes](design.md) | Nodes, streams, compilation, runner boundary |
 | Check current and planned work | [Roadmap](../ROADMAP.md) | Verified bugs, release gates, current limits |
