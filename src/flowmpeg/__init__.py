@@ -2,6 +2,12 @@
 
 from flowmpeg import shortcuts
 from flowmpeg.clip import Clip, concat_clips, media, replace_audio
+from flowmpeg.comparison import (
+    MediaComparison,
+    MediaSummary,
+    compare_media,
+    compare_media_info,
+)
 from flowmpeg.errors import (
     BinaryNotFoundError,
     BinaryUnusableError,
@@ -74,6 +80,8 @@ __all__ = [
     "MediaGraph",
     "MediaInput",
     "MediaInfo",
+    "MediaComparison",
+    "MediaSummary",
     "OutputExistsError",
     "OutputSpec",
     "Plan",
@@ -91,6 +99,8 @@ __all__ = [
     "apply_filter",
     "change_audio_speed",
     "change_video_speed",
+    "compare_media",
+    "compare_media_info",
     "concat_clips",
     "crop_video",
     "delay_audio",
