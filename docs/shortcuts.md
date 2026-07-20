@@ -1243,6 +1243,19 @@ ff.fade_audio_edges(
 The required duration places the ending fade. Set either fade length to zero
 to disable that edge. The combined fades cannot exceed the source duration.
 
+### Delay an audio track for synchronization
+
+```python
+ff.delay_audio_file(
+    "narration.wav",
+    "narration-synced.wav",
+    seconds=0.35,
+).run()
+```
+
+The shortcut inserts silence before every channel. Delays from zero through
+3600 seconds are accepted.
+
 ### Crossfade two tracks
 
 ```python
@@ -1541,6 +1554,7 @@ ff.trim("input.mp4", "clip.mp4", start=5, duration=20).run(
 | `resample_audio` | Standardized audio file | Sets sample rate and mono or stereo layout |
 | `set_audio_volume` | Gain-adjusted audio file | Applies a fixed decibel change |
 | `fade_audio_edges` | Faded audio file | Places optional fades at both edges |
+| `delay_audio_file` | Delayed audio file | Inserts leading silence on every channel |
 | `crossfade_audio` | Joined audio file | Transitions between two inputs |
 | `extract_subtitles` | SRT, WebVTT, or ASS | Maps and encodes one text subtitle track |
 | `add_subtitles` | MP4 with selectable text | Adds one `mov_text` subtitle stream |

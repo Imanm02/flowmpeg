@@ -254,6 +254,15 @@ _BASE_COMMAND_CATALOG = (
         capability_group="audio-processing",
     ),
     CommandSpec(
+        "delay-audio",
+        "audio",
+        "Insert silence before audio",
+        ("audio-delay", "sync-audio"),
+        input_kind="audio",
+        output_kind="audio",
+        capability_group="audio-processing",
+    ),
+    CommandSpec(
         "crossfade-audio",
         "audio",
         "Crossfade two audio files",
@@ -743,6 +752,7 @@ _COMMAND_REQUIREMENTS = {
     "resample-audio": _requirements(*_WAV, "filter:aformat", "filter:aresample"),
     "volume-audio": _requirements(*_WAV, "filter:volume"),
     "fade-audio": _requirements(*_WAV, "filter:afade"),
+    "delay-audio": _requirements(*_WAV, "filter:adelay"),
     "crossfade-audio": _requirements(*_WAV, "filter:acrossfade"),
     "add-music": _requirements(*_MP4, "filter:amix", "filter:volume"),
     "duck-music": _requirements(

@@ -21,6 +21,9 @@ from flowmpeg.recipes.audio import (
     volume,
 )
 from flowmpeg.recipes.audio import (
+    delay_audio as delay_audio_stream,
+)
+from flowmpeg.recipes.audio import (
     normalize_loudness as normalize_audio_stream,
 )
 from flowmpeg.recipes.audio import (
@@ -129,6 +132,7 @@ __all__ = [
     "duck_music",
     "deinterlace",
     "denoise_audio",
+    "delay_audio_file",
     "extract_audio",
     "extract_subtitles",
     "fade_audio_edges",
@@ -1920,6 +1924,24 @@ def fade_audio_edges(
             start=duration - fade_out,
             duration=fade_out,
         )
+    return _audio_plan(audio, to, (source,), codec, bitrate, overwrite)
+
+
+def delay_audio_file(
+    source: Pathish,
+    to: Pathish,
+    *,
+    seconds: float,
+    track: int = 0,
+    codec: AudioCodec = "wav",
+    bitrate: str | None = None,
+    overwrite: bool = False,
+) -> Plan:
+    """Insert silence before one selected audio track."""
+
+    _bounded_number("seconds", seconds, 0, 3_600)
+    _nonnegative_integer("track", track)
+    audio = delay_audio_stream(_audio_track(source, track), seconds)
     return _audio_plan(audio, to, (source,), codec, bitrate, overwrite)
 
 

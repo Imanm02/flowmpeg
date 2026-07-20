@@ -137,6 +137,7 @@ only a discussion or test placeholder.
 - [x] Add direct audio-track trimming with end or duration.
 - [x] Add bounded decibel gain for selected audio tracks.
 - [x] Add matched audio edge fades with duration checks.
+- [x] Add bounded audio synchronization delays.
 
 ## Current limits
 

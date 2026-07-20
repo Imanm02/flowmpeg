@@ -141,6 +141,7 @@ The table below is a compact editing index for scanning this longer guide.
 | Set audio rate and layout | `resample-audio` | `resample`, `audio-standard` |
 | Apply fixed audio gain | `volume-audio` | `gain`, `volume` |
 | Fade audio edges | `fade-audio` | `audio-fade` |
+| Delay one audio track | `delay-audio` | `audio-delay`, `sync-audio` |
 | Crossfade two audio files | `crossfade-audio` | `crossfade` |
 | Extract a subtitle track | `extract-subtitles` | `subtitles` |
 | Add selectable subtitles | `add-subtitles` | `captions` |
@@ -886,6 +887,7 @@ flowmpeg mono stereo.wav --codec mp3 --bitrate 128k -o mono.mp3
 flowmpeg resample field.wav --sample-rate 48000 --layout stereo -o standard.wav
 flowmpeg gain quiet.wav --gain-db 6 -o louder.wav
 flowmpeg audio-fade music.wav --duration 120 --fade-in 2 --fade-out 4 -o faded.wav
+flowmpeg sync-audio narration.wav --seconds 0.35 -o narration-synced.wav
 ```
 
 Silence trimming keeps pauses inside the recording. Its required duration must
@@ -899,6 +901,8 @@ zero. It can select another audio-only track with `--track`.
 negative values lower it. Check for clipping with `flowmpeg loudness`.
 `audio-fade` needs the source duration so it can place the ending fade. Set
 either fade length to zero to disable that edge.
+`sync-audio` inserts silence before every channel. The delay can range from zero
+through one hour.
 
 ### Crossfade two audio files
 

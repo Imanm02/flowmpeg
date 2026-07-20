@@ -43,6 +43,7 @@ def test_shortcuts_namespace_is_public() -> None:
         "contact_sheet",
         "crop",
         "deinterlace",
+        "delay_audio_file",
         "denoise_audio",
         "duck_music",
         "extract_audio",
@@ -888,6 +889,16 @@ def test_fade_audio_edges_places_the_out_fade() -> None:
     )
 
 
+def test_delay_audio_file_converts_seconds_to_milliseconds() -> None:
+    plan = shortcuts.delay_audio_file(
+        "narration.wav",
+        "synced.wav",
+        seconds=0.35,
+    )
+
+    assert plan.filter_graph() == "[0:a:0]adelay=delays=350:all=1[a0]"
+
+
 def test_crossfade_audio_maps_two_inputs() -> None:
     plan = shortcuts.crossfade_audio(
         "first.wav",
@@ -1325,6 +1336,11 @@ def test_shortcuts_accept_path_objects_and_overwrite() -> None:
             duration=3,
             fade_in=2,
             fade_out=2,
+        ),
+        lambda: shortcuts.delay_audio_file(
+            "in.wav",
+            "out.wav",
+            seconds=3_601,
         ),
     ],
 )
@@ -1855,6 +1871,7 @@ def test_new_audio_shortcuts_run(
     trimmed = source.parent / "trimmed-audio.wav"
     louder = source.parent / "louder.wav"
     faded_audio = source.parent / "faded-audio.wav"
+    delayed = source.parent / "delayed.wav"
     crossfaded = source.parent / "crossfaded.wav"
 
     shortcuts.denoise_audio(voice, denoised).run(ffmpeg=ffmpeg, timeout=10)
@@ -1887,6 +1904,10 @@ def test_new_audio_shortcuts_run(
         fade_in=0.05,
         fade_out=0.05,
     ).run(ffmpeg=ffmpeg, timeout=10)
+    shortcuts.delay_audio_file(voice, delayed, seconds=0.1).run(
+        ffmpeg=ffmpeg,
+        timeout=10,
+    )
     shortcuts.crossfade_audio(
         voice,
         voice,
@@ -1904,6 +1925,10 @@ def test_new_audio_shortcuts_run(
     assert probe(trimmed).duration == pytest.approx(0.1, abs=0.03)
     assert probe(louder).audio_streams
     assert probe(faded_audio).audio_streams
+    assert probe(delayed).duration == pytest.approx(
+        (probe(voice).duration or 0) + 0.1,
+        abs=0.03,
+    )
     assert probe(crossfaded).duration == pytest.approx(0.35, abs=0.1)
 
 

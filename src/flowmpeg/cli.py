@@ -120,6 +120,7 @@ _BASE_EXAMPLES = (
         "audio",
         "flowmpeg audio-fade music.wav --duration 120 --fade-in 2 --fade-out 4 -o faded.wav",
     ),
+    _Example("audio", "flowmpeg sync-audio narration.wav --seconds 0.35 -o synced.wav"),
     _Example(
         "audio", "flowmpeg crossfade intro.wav main.wav --duration 2 -o program.wav"
     ),
@@ -523,6 +524,7 @@ def build_parser() -> argparse.ArgumentParser:
     _add_resample_audio(commands)
     _add_volume_audio(commands)
     _add_fade_audio(commands)
+    _add_delay_audio(commands)
     _add_crossfade_audio(commands)
     _add_extract_subtitles(commands)
     _add_add_subtitles(commands)
@@ -1777,6 +1779,23 @@ def _add_fade_audio(
     parser.add_argument("--duration", type=_positive_float, required=True)
     parser.add_argument("--fade-in", type=_nonnegative_float, default=1.0)
     parser.add_argument("--fade-out", type=_nonnegative_float, default=1.0)
+    _audio_file_options(parser)
+    _output(parser)
+
+
+def _add_delay_audio(
+    commands: argparse._SubParsersAction[argparse.ArgumentParser],
+) -> None:
+    parser = _command(
+        commands,
+        "delay-audio",
+        "Insert silence before one selected audio track.",
+        shortcuts.delay_audio_file,
+        ("source",),
+        aliases=("audio-delay", "sync-audio"),
+    )
+    _source(parser)
+    parser.add_argument("--seconds", type=_nonnegative_float, required=True)
     _audio_file_options(parser)
     _output(parser)
 
