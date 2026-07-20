@@ -7,8 +7,9 @@ job, what file comes out, and which FFmpeg operation does the work.
 Building a plan does not start FFmpeg. A file is written only after
 `plan.run()` is called.
 
-For compact path-to-path calls, the [one-line shortcut guide](shortcuts.md)
-contains more than 50 variants.
+For compact path-to-path calls, the [Python shortcut guide](shortcuts.md)
+contains more than 80 variants. The [command guide](cli.md) covers installed
+`flowmpeg` calls for CMD and other terminals.
 
 ```text
 input files -> media graph -> plan -> FFmpeg process -> output files
@@ -20,8 +21,7 @@ Install Flowmpeg from GitHub and make sure FFmpeg is on `PATH`:
 
 ```console
 python -m pip install "git+https://github.com/Imanm02/flowmpeg.git"
-ffmpeg -version
-ffprobe -version
+flowmpeg doctor
 ```
 
 The examples use short filenames so the generated commands stay readable.

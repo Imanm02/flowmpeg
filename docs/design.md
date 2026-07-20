@@ -6,6 +6,8 @@ boundary keeps most behavior testable without an FFmpeg process.
 ## Layers
 
 ```text
+Installed command
+        |
 Path-to-path shortcuts
         |
 Clip methods and recipes
@@ -29,6 +31,11 @@ low-level API.
 
 Shortcuts are a thin path-level layer. They return ordinary `Plan` objects and
 do not probe inputs, start processes, or introduce another graph format.
+
+The installed command parses terminal arguments, calls those same shortcuts,
+and either prints or runs the returned plan. It does not maintain a second set
+of media operations. `probe` and `doctor` are direct read-only commands because
+their result is information rather than an output plan.
 
 ## Compiler rules
 

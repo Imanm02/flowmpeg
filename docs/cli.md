@@ -1,0 +1,835 @@
+# One-line commands
+
+The installed `flowmpeg` program is the shortest way to run a Flowmpeg job.
+I can use it directly in CMD, PowerShell, Bash, or another terminal without
+writing a Python file.
+
+```console
+flowmpeg cut input.mp4 --start 10 --duration 20 -o clip.mp4
+```
+
+That command reads `input.mp4`, keeps 20 seconds starting at second 10, and
+writes `clip.mp4` with H.264 video and AAC audio.
+
+Editing commands run immediately. Add `--dry-run` when the goal is to inspect
+the FFmpeg command without starting a process.
+
+## Install and check the tools
+
+Flowmpeg needs Python 3.10 or newer. FFmpeg and FFprobe are separate programs
+and must be available on `PATH`.
+
+```console
+python -m pip install "git+https://github.com/Imanm02/flowmpeg.git"
+flowmpeg --version
+flowmpeg doctor
+```
+
+`doctor` checks both executables, 51 filters and output capabilities, then
+groups the results by the kind of job they support.
+
+The module form runs the same program:
+
+```console
+python -m flowmpeg doctor
+python -m flowmpeg cut input.mp4 --duration 5 -o clip.mp4
+```
+
+## The four command rules
+
+1. Editing commands execute unless `--dry-run` is present.
+2. Existing local outputs are protected. Add `--overwrite` to replace one.
+3. `-o` and `--output` mean the same thing.
+4. Execution options belong after the command name.
+
+For example, this is a preview:
+
+```console
+flowmpeg resize input.mp4 --width 1280 -o smaller.mp4 --dry-run
+```
+
+This runs the job and allows replacement:
+
+```console
+flowmpeg resize input.mp4 --width 1280 -o smaller.mp4 --overwrite
+```
+
+## Command map
+
+| Job | Main command | Short form |
+| --- | --- | --- |
+| Convert to web MP4 | `transcode` | `convert` |
+| Cut a time range | `trim` | `cut` |
+| Resize by one side | `resize` | `scale` |
+| Remove the audio stream | `remove-audio` | `mute`, `strip-audio` |
+| Save one audio track | `extract-audio` | `audio` |
+| Replace video audio | `replace-audio` | `swap-audio` |
+| Add an image mark | `watermark` | `mark` |
+| Mix music under video | `add-music` | `music` |
+| Join matching clips | `join-matching` | `join` |
+| Mix audio files | `mix-audio` | `mix`, `mix-audio-files` |
+| Arrange video cells | `grid` | `grid` |
+| Save one frame | `thumbnail` | `thumb` |
+| Create an animated GIF | `make-gif` | `gif` |
+| Rotate displayed video | `rotate` | `rotate` |
+| Crop a rectangle | `crop` | `crop` |
+| Change playback speed | `change-speed` | `speed` |
+| Normalize loudness | `normalize-loudness` | `normalize` |
+| Fit a fixed canvas | `fit-canvas` | `fit` |
+| Add an inset video | `picture-in-picture` | `pip` |
+| Draw a waveform | `waveform-image` | `waveform` |
+| Draw a spectrum | `spectrum-image` | `spectrum` |
+| Pair an image with audio | `still-image-video` | `still-video` |
+| Build a contact sheet | `contact-sheet` | `sheet` |
+| Lower music under speech | `duck-music` | `duck` |
+| Trim and fade a clip | `fade-edges` | `fade` |
+| Fill a wide canvas with blur | `blurred-background` | `blur-bg` |
+| Reverse a bounded clip | `reverse-clip` | `reverse` |
+
+Run help for the full option list and current defaults:
+
+```console
+flowmpeg --help
+flowmpeg cut --help
+flowmpeg waveform --help
+```
+
+## Conversion and timing
+
+### Convert MOV to web MP4
+
+**Input:** `recording.mov`
+
+**Output:** `recording.mp4` with H.264 video and AAC audio.
+
+```console
+flowmpeg convert recording.mov -o recording.mp4
+```
+
+Use `--no-audio` for a source with no audio stream:
+
+```console
+flowmpeg convert animation.mov --no-audio -o animation.mp4
+```
+
+### Cut by start and duration
+
+**Input:** `meeting.mp4`
+
+**Output:** `answer.mp4`, containing 15 seconds beginning at second 90.
+
+```console
+flowmpeg cut meeting.mp4 --start 90 --duration 15 -o answer.mp4
+```
+
+The command resets the video and audio timelines to zero.
+
+### Cut between two timestamps
+
+**Output:** `scene.mp4`, containing seconds 42 through 68.
+
+```console
+flowmpeg trim interview.mp4 --start 42 --end 68 -o scene.mp4
+```
+
+Use `--start` alone to keep everything after that point:
+
+```console
+flowmpeg trim lecture.mp4 --start 120 -o final-section.mp4
+```
+
+### Resize by width
+
+**Input:** `camera.mp4`
+
+**Output:** `camera-720p.mp4`, 1280 pixels wide with an even calculated
+height.
+
+```console
+flowmpeg scale camera.mp4 --width 1280 -o camera-720p.mp4
+```
+
+### Resize by height
+
+**Output:** `portrait-1080.mp4`, 1080 pixels tall with a calculated width.
+
+```console
+flowmpeg resize portrait.mp4 --height 1080 -o portrait-1080.mp4
+```
+
+`resize` requires exactly one dimension so it does not stretch the source.
+
+### Change playback speed
+
+**Input:** `lesson.mp4`
+
+**Output:** `faster.mp4`, with video and audio at 1.5 times the source speed.
+
+```console
+flowmpeg speed lesson.mp4 --factor 1.5 -o faster.mp4
+```
+
+Use a factor below one for slow motion:
+
+```console
+flowmpeg speed action.mp4 --factor 0.5 -o slow.mp4
+```
+
+### Rotate clockwise
+
+**Output:** `upright.mp4`, rotated 90 degrees clockwise.
+
+```console
+flowmpeg rotate sideways.mp4 --degrees 90 -o upright.mp4
+```
+
+The accepted values are 90, 180, and 270. A 270 degree clockwise turn has the
+same displayed result as a 90 degree counterclockwise turn.
+
+```console
+flowmpeg rotate sideways.mp4 --degrees 270 -o left-turn.mp4
+```
+
+### Crop a fixed rectangle
+
+**Output:** `square.mp4`, a 1080 by 1080 region from the source center.
+
+```console
+flowmpeg crop wide.mp4 --width 1080 --height 1080 -o square.mp4
+```
+
+Set nonnegative coordinates when the crop should begin at a fixed point:
+
+```console
+flowmpeg crop wide.mp4 --width 640 --height 360 --x 100 --y 50 -o corner.mp4
+```
+
+### Reverse a short clip
+
+**Input:** `action.mp4`
+
+**Output:** `reverse.mp4`, containing a reversed six-second section beginning
+at second 12.
+
+```console
+flowmpeg reverse action.mp4 --start 12 --duration 6 -o reverse.mp4
+```
+
+Reverse filters buffer their selected section in memory. Flowmpeg limits this
+command to 60 seconds.
+
+## Audio jobs
+
+### Remove audio without re-encoding video
+
+**Input:** `interview.mp4`
+
+**Output:** `silent.mp4`, containing copied video and no audio stream.
+
+```console
+flowmpeg strip-audio interview.mp4 -o silent.mp4
+```
+
+This removes audio. It does not add a silent audio track.
+
+### Extract MP3 audio
+
+**Output:** `voice.mp3`, made from the first audio stream at 192 kbit/s.
+
+```console
+flowmpeg audio interview.mp4 -o voice.mp3
+```
+
+Set another bitrate when file size matters:
+
+```console
+flowmpeg audio interview.mp4 --bitrate 96k -o voice-small.mp3
+```
+
+### Extract AAC, WAV, or FLAC
+
+```console
+flowmpeg extract-audio movie.mkv --codec aac -o soundtrack.m4a
+flowmpeg extract-audio lesson.mp4 --codec wav -o lesson.wav
+flowmpeg extract-audio concert.mkv --codec flac -o concert.flac
+```
+
+The output suffix must match the selected codec.
+
+### Select another audio track
+
+`--track 1` selects the second audio stream because track indexes begin at
+zero.
+
+```console
+flowmpeg audio movie.mkv --track 1 -o commentary.mp3
+```
+
+### Copy audio packets
+
+**Output:** `track.mka`, containing source audio without encoding.
+
+```console
+flowmpeg extract-audio source.mkv --codec copy -o track.mka
+```
+
+The destination container must accept the source audio codec.
+
+### Replace a video's audio
+
+**Inputs:** `video.mp4` and `narration.wav`
+
+**Output:** `narrated.mp4`, with copied video and AAC narration. Short
+narration is padded to the video duration.
+
+```console
+flowmpeg swap-audio video.mp4 narration.wav -o narrated.mp4
+```
+
+Stop at the shorter stream and copy compatible AAC audio like this:
+
+```console
+flowmpeg replace-audio video.mp4 music.m4a --duration shortest --audio-codec copy -o shortest.mp4
+```
+
+### Add background music
+
+**Inputs:** `talk.mp4` and `music.mp3`
+
+**Output:** `scored.mp4`, with music at 15 percent of its source level.
+
+```console
+flowmpeg music talk.mp4 music.mp3 -o scored.mp4
+```
+
+Set both levels explicitly:
+
+```console
+flowmpeg add-music talk.mp4 music.mp3 --source-volume 0.85 --music-volume 0.2 -o balanced.mp4
+```
+
+Loop a short music file beneath a longer talk:
+
+```console
+flowmpeg add-music long-talk.mp4 short-music.mp3 --loop-music -o looped.mp4
+```
+
+For video without a source audio track, use `--silent-source`:
+
+```console
+flowmpeg add-music animation.mp4 music.mp3 --silent-source -o scored-animation.mp4
+```
+
+### Mix audio files
+
+**Inputs:** `host.wav` and `guest.wav`
+
+**Output:** `conversation.wav`, following the longest input.
+
+```console
+flowmpeg mix host.wav guest.wav -o conversation.wav
+```
+
+Set an input level for each file:
+
+```console
+flowmpeg mix-audio host.wav guest.wav music.wav --volumes 1 0.9 0.12 -o show.wav
+```
+
+Write the mix as MP3:
+
+```console
+flowmpeg mix-audio-files left.wav right.wav --codec mp3 --bitrate 256k -o mix.mp3
+```
+
+Stop with the shortest input:
+
+```console
+flowmpeg mix one.wav two.wav --duration shortest -o short.wav
+```
+
+### Normalize spoken audio
+
+**Input:** `voice.wav`
+
+**Output:** `normalized.wav` at a minus 16 LUFS target and 48 kHz sample rate.
+
+```console
+flowmpeg normalize voice.wav -o normalized.wav
+```
+
+Use a broadcast target or write MP3:
+
+```console
+flowmpeg normalize voice.wav --integrated -23 --true-peak -2 -o broadcast.wav
+flowmpeg normalize voice.wav --codec mp3 -o normalized.mp3
+```
+
+The command performs one-pass FFmpeg `loudnorm` processing.
+
+### Duck music beneath speech
+
+**Inputs:** `talk.mp4` with speech and `music.mp3`
+
+**Output:** `ducked.mp4`, with music lowered while speech crosses the
+compression threshold.
+
+```console
+flowmpeg duck talk.mp4 music.mp3 -o ducked.mp4
+```
+
+Tune the response for a louder music bed:
+
+```console
+flowmpeg duck-music talk.mp4 music.mp3 --music-volume 0.4 --threshold 0.08 --ratio 10 --attack 15 --release 300 -o tuned-duck.mp4
+```
+
+Music loops by default. Add `--no-loop-music` when the source music length
+should be kept.
+
+## Composition and layout
+
+### Add a logo
+
+**Inputs:** `video.mp4` and `logo.png`
+
+**Output:** `branded.mp4`, with the image at the top-right and 24 pixels of
+padding.
+
+```console
+flowmpeg mark video.mp4 logo.png -o branded.mp4
+```
+
+Place a resized translucent mark in the center:
+
+```console
+flowmpeg watermark video.mp4 mark.png --position center --width 240 --opacity 0.4 -o centered.mp4
+```
+
+The position choices are `top-left`, `top-right`, `bottom-left`,
+`bottom-right`, and `center`.
+
+### Add picture in picture
+
+**Inputs:** `main.mp4` and `camera.mp4`
+
+**Output:** `with-camera.mp4`, with a 480 pixel wide inset at the bottom-right.
+The main video's audio is retained.
+
+```console
+flowmpeg pip main.mp4 camera.mp4 -o with-camera.mp4
+```
+
+Move the inset and change its size:
+
+```console
+flowmpeg picture-in-picture main.mp4 camera.mp4 --inset-width 320 --position top-left --padding 16 -o top-camera.mp4
+```
+
+### Join matching clips
+
+**Inputs:** `part-1.mp4` and `part-2.mp4` with matching decoded formats.
+
+**Output:** `joined.mp4`, with the second clip after the first.
+
+```console
+flowmpeg join part-1.mp4 part-2.mp4 -o joined.mp4
+```
+
+Three silent clips can be joined with:
+
+```console
+flowmpeg join-matching one.mp4 two.mp4 three.mp4 --no-audio -o joined-silent.mp4
+```
+
+The command does not repair different resolutions, frame rates, pixel
+formats, sample rates, or channel layouts.
+
+### Arrange a video grid
+
+**Inputs:** four camera videos
+
+**Output:** `grid.mp4`, a 2 by 2 grid with 640 by 360 cells and no audio.
+
+```console
+flowmpeg grid camera-1.mp4 camera-2.mp4 camera-3.mp4 camera-4.mp4 -o grid.mp4
+```
+
+Build a one-row grid with smaller cells:
+
+```console
+flowmpeg grid one.mp4 two.mp4 three.mp4 --columns 3 --cell-width 320 --cell-height 180 -o row.mp4
+```
+
+The default stops with the shortest input. Continue until the longest input
+ends with:
+
+```console
+flowmpeg grid short.mp4 long.mp4 --keep-longest -o long-grid.mp4
+```
+
+### Fit a fixed canvas
+
+**Input:** `portrait.mp4`
+
+**Output:** `portrait-wide.mp4`, a 1920 by 1080 video with the portrait source
+centered and black padding. The source is not stretched.
+
+```console
+flowmpeg fit portrait.mp4 -o portrait-wide.mp4
+```
+
+Use another even canvas size and color:
+
+```console
+flowmpeg fit-canvas square.mp4 --width 1280 --height 720 --color white -o square-wide.mp4
+```
+
+### Fill a canvas with a blurred copy
+
+**Input:** `portrait.mp4`
+
+**Output:** `blurred-wide.mp4`, with the full portrait video over a blurred
+wide background made from the same frames.
+
+```console
+flowmpeg blur-bg portrait.mp4 -o blurred-wide.mp4
+```
+
+Set a smaller canvas and softer blur:
+
+```console
+flowmpeg blurred-background portrait.mp4 --width 1280 --height 720 --blur 12 -o soft-background.mp4
+```
+
+### Trim and fade both edges
+
+**Input:** `source.mp4`
+
+**Output:** `faded.mp4`, a ten-second clip with one-second video and audio
+fades at both ends.
+
+```console
+flowmpeg fade source.mp4 --start 20 --duration 10 -o faded.mp4
+```
+
+Set different fade lengths:
+
+```console
+flowmpeg fade-edges source.mp4 --duration 12 --fade-in 0.5 --fade-out 2 -o custom-fades.mp4
+```
+
+The combined fade lengths cannot exceed the selected clip duration.
+
+## Images and previews
+
+### Save a thumbnail
+
+**Input:** `video.mp4`
+
+**Output:** `cover.jpg`, made from the first frame.
+
+```console
+flowmpeg thumb video.mp4 -o cover.jpg
+```
+
+Save a resized PNG from second 12.5:
+
+```console
+flowmpeg thumbnail video.mp4 --at 12.5 --width 640 -o moment.png
+```
+
+For JPEG output, quality values range from 1 through 31. Smaller values mean
+higher quality.
+
+```console
+flowmpeg thumb video.mp4 --at 3 --quality 1 -o high-quality.jpg
+```
+
+### Create an animated GIF
+
+**Input:** `demo.mp4`
+
+**Output:** `preview.gif`, using the first five seconds at 12 frames per
+second and 480 pixels wide.
+
+```console
+flowmpeg gif demo.mp4 -o preview.gif
+```
+
+Choose another range and size:
+
+```console
+flowmpeg gif demo.mp4 --start 20 --duration 3 --width 320 --fps 8 -o feature.gif
+```
+
+Use the full source length and original width:
+
+```console
+flowmpeg gif short-demo.mp4 --full-length --original-width -o complete.gif
+```
+
+Set `--loop -1` for a GIF that does not repeat:
+
+```console
+flowmpeg gif demo.mp4 --loop -1 -o once.gif
+```
+
+### Draw a waveform
+
+**Input:** `song.mp3`
+
+**Output:** `waveform.png`, a 1200 by 400 peak waveform.
+
+```console
+flowmpeg waveform song.mp3 -o waveform.png
+```
+
+Choose dimensions, color, and logarithmic scale:
+
+```console
+flowmpeg waveform-image song.mp3 --width 1600 --height 500 --color yellow --scale-mode log -o wide-waveform.png
+```
+
+Draw channels separately or select another audio track:
+
+```console
+flowmpeg waveform movie.mkv --track 1 --split-channels -o commentary-waveform.png
+```
+
+### Draw a frequency spectrum
+
+**Input:** `song.mp3`
+
+**Output:** `spectrum.png`, a 1600 by 900 combined-channel spectrum with a
+legend.
+
+```console
+flowmpeg spectrum song.mp3 -o spectrum.png
+```
+
+Draw separate channels with another color map and no legend:
+
+```console
+flowmpeg spectrum-image song.mp3 --mode separate --color magma --no-legend --width 1200 --height 600 -o separate-spectrum.png
+```
+
+### Build a contact sheet
+
+**Input:** `movie.mp4`
+
+**Output:** `sheet.jpg`, a 4 by 4 image made from frames sampled every five
+seconds.
+
+```console
+flowmpeg sheet movie.mp4 -o sheet.jpg
+```
+
+Build a 5 by 3 sheet sampled every ten seconds:
+
+```console
+flowmpeg contact-sheet movie.mp4 --columns 5 --rows 3 --interval 10 --cell-width 240 --cell-height 135 -o overview.jpg
+```
+
+### Create video from one image and audio
+
+**Inputs:** `cover.jpg` and `episode.mp3`
+
+**Output:** `episode.mp4`, a 1920 by 1080 video that ends with the audio.
+
+```console
+flowmpeg still-video cover.jpg episode.mp3 -o episode.mp4
+```
+
+Choose another canvas or audio track:
+
+```console
+flowmpeg still-image-video cover.png album.mka --track 1 --width 1280 --height 720 --color white -o track-video.mp4
+```
+
+## Inspection and control
+
+### Preview a command
+
+`--dry-run` builds and compiles the plan, but it does not start FFmpeg or read
+the input file.
+
+```console
+flowmpeg pip main.mp4 inset.mp4 -o result.mp4 --dry-run
+```
+
+The displayed FFmpeg command is redacted and intended for inspection.
+
+### Explain the plan
+
+`--explain` prints inputs, filters, mapped stream counts, outputs, and the
+replacement policy.
+
+```console
+flowmpeg duck talk.mp4 music.mp3 -o result.mp4 --explain --dry-run
+```
+
+### Protect or replace output files
+
+The default policy compiles FFmpeg's `-n` flag and checks local output paths
+before starting the process.
+
+```console
+flowmpeg cut input.mp4 --duration 5 -o existing.mp4
+```
+
+If the output exists, the command exits with code 4. Replacement is explicit:
+
+```console
+flowmpeg cut input.mp4 --duration 5 -o existing.mp4 --overwrite
+```
+
+### Set a timeout
+
+```console
+flowmpeg convert large.mov -o large.mp4 --timeout 300
+```
+
+Timeout values must be finite and greater than zero.
+
+### Control progress output
+
+Progress is written to stderr. When stderr is redirected, intermediate updates
+are hidden and the final update is kept.
+
+```console
+flowmpeg cut source.mp4 --duration 20 -o clip.mp4 --no-progress
+```
+
+Commands with a known duration use it for percent progress. An explicit value
+can be supplied for another job:
+
+```console
+flowmpeg convert source.mov -o output.mp4 --expected-duration 95
+```
+
+### Use a specific FFmpeg executable
+
+```console
+flowmpeg convert input.mov -o output.mp4 --ffmpeg "C:\Tools\ffmpeg\bin\ffmpeg.exe"
+```
+
+Flowmpeg always starts the process with `shell=False`.
+
+## Probe media from the terminal
+
+### Read a short report
+
+```console
+flowmpeg probe movie.mp4
+```
+
+A representative result is:
+
+```text
+File: movie.mp4
+Container: QuickTime / MOV
+Duration: 42.08 seconds
+Size: 18.40 MiB
+Streams: 2
+  video #0: h264, 1920x1080
+  audio #1: aac, 48000 Hz, 2 channel(s)
+```
+
+### Read typed JSON
+
+```console
+flowmpeg probe movie.mp4 --json
+```
+
+Typed JSON follows the Python `MediaInfo` model. Values missing from FFprobe
+become `null`.
+
+### Read raw FFprobe fields
+
+```console
+flowmpeg probe movie.mp4 --raw
+```
+
+Raw mode keeps the FFprobe object shape. All three display modes redact URL
+user information in string values.
+
+Use a custom executable or timeout when needed:
+
+```console
+flowmpeg probe movie.mp4 --ffprobe "C:\Tools\ffmpeg\bin\ffprobe.exe" --timeout 10
+```
+
+## Diagnose an installation
+
+The human report is suitable for a bug report:
+
+```console
+flowmpeg doctor
+```
+
+The JSON form is suitable for scripts:
+
+```console
+flowmpeg doctor --json
+```
+
+Core readiness means FFmpeg and FFprobe can both run. Feature groups say which
+parts of the command set are supported by the installed FFmpeg build:
+
+- `web-video`
+- `audio-files`
+- `composition`
+- `video-effects`
+- `animated-gif`
+- `analysis-images`
+- `audio-processing`
+- `reverse`
+
+A limited feature group does not make `doctor` fail when both core tools work.
+The detailed JSON report contains every tested capability.
+
+## Paths in CMD
+
+Quote a path that contains spaces, parentheses, or CMD metacharacters:
+
+```console
+flowmpeg cut "C:\Media Files\source (final).mp4" --duration 8 -o "C:\Media Files\clip (final).mp4"
+```
+
+Arguments are passed directly to the process. Flowmpeg does not build a shell
+string for execution.
+
+Unicode file names can be passed in the same way:
+
+```console
+flowmpeg thumb "C:\Media\گفتگو.mp4" --at 5 -o "C:\Media\تصویر.jpg"
+```
+
+## Exit codes
+
+| Code | Meaning |
+| ---: | --- |
+| 0 | The command completed or a preview was printed |
+| 1 | Another Flowmpeg error occurred |
+| 2 | Arguments or the media plan were invalid |
+| 3 | A required executable was unavailable, or core doctor checks failed |
+| 4 | A local output already exists |
+| 5 | FFprobe could not inspect the input |
+| 6 | FFmpeg exited with an error |
+| 7 | The FFmpeg job reached its timeout |
+| 130 | The command was interrupted |
+
+Argparse also uses code 2 for missing flags and invalid choices.
+
+## Print built-in examples
+
+The installed program carries a small set of commands for quick recall:
+
+```console
+flowmpeg examples
+```
+
+This file is the longer reference. The [Python shortcut guide](shortcuts.md)
+shows the same kinds of jobs as one-call `Plan` builders, while the
+[graph examples](examples.md) cover custom stream work.

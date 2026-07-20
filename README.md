@@ -11,10 +11,45 @@ review once it has several inputs, filter labels, and stream maps. Flowmpeg
 keeps those details in a typed media graph, then gives me the exact command
 before I choose to run it.
 
-Nothing starts while a plan is being built. I can inspect the command, read a
-plain explanation, validate the graph, or pass the plan to the process runner.
+Python plans do not start work while they are being built. I can inspect a
+command, read its explanation, or pass the plan to the process runner. The
+installed command is there when I want to run the same kind of job from CMD.
 
-## One-line jobs
+## Install from GitHub
+
+Flowmpeg needs Python 3.10 or newer. FFmpeg and FFprobe must be installed
+separately and available on `PATH`.
+
+```console
+python -m pip install "git+https://github.com/Imanm02/flowmpeg.git"
+flowmpeg --version
+flowmpeg doctor
+```
+
+The package has no required Python dependencies.
+
+## One-line terminal jobs
+
+```console
+flowmpeg cut input.mp4 --start 10 --duration 20 -o clip.mp4
+flowmpeg scale input.mp4 --width 1280 -o small.mp4
+flowmpeg audio input.mp4 -o audio.mp3
+flowmpeg pip input.mp4 camera.mp4 -o with-camera.mp4
+flowmpeg waveform audio.mp3 -o waveform.png
+```
+
+Editing commands run immediately, protect existing outputs, and report
+progress. `--dry-run` prints the redacted FFmpeg command without starting it.
+The [command guide](docs/cli.md) covers all 27 jobs, their short forms, inputs,
+outputs, and exit codes.
+
+The module form runs the same interface:
+
+```console
+python -m flowmpeg cut input.mp4 --duration 5 -o clip.mp4
+```
+
+## One-line Python jobs
 
 ```python
 from flowmpeg import shortcuts as ff
@@ -23,11 +58,13 @@ ff.trim("input.mp4", "clip.mp4", start=10, end=30).run()
 ff.resize("input.mp4", "small.mp4", width=1280).run()
 ff.extract_audio("input.mp4", "audio.mp3").run()
 ff.watermark("input.mp4", "logo.png", "branded.mp4").run()
+ff.contact_sheet("input.mp4", "sheet.jpg").run()
+ff.duck_music("talk.mp4", "music.mp3", "ducked.mp4").run()
 ```
 
 Shortcuts still return normal plans. They support command inspection,
 overwrite protection, progress callbacks, and timeouts. The
-[one-line guide](docs/shortcuts.md) contains more than 50 copyable calls.
+[Python shortcut guide](docs/shortcuts.md) contains more than 80 copyable calls.
 
 ## One plan from several inputs
 
@@ -66,19 +103,6 @@ The clip API keeps the original audio attached while video filters are added.
 Each method expands into ordinary graph nodes, so the result can still be
 combined with lower-level filters.
 
-## Install from GitHub
-
-Flowmpeg needs Python 3.10 or newer. FFmpeg and FFprobe must be installed
-separately and available on `PATH`.
-
-```console
-python -m pip install "git+https://github.com/Imanm02/flowmpeg.git"
-ffmpeg -version
-ffprobe -version
-```
-
-The package has no required Python dependencies.
-
 ## Start with a task
 
 The [example guide](docs/examples.md) shows complete inputs and expected
@@ -91,7 +115,8 @@ outputs for common jobs:
 - Copy subtitles and call raw FFmpeg filters
 - Produce multiple outputs, inspect metadata, and report progress
 
-For shorter file-to-file calls, see the [shortcut guide](docs/shortcuts.md).
+For terminal calls, see the [command guide](docs/cli.md). For one-call Python
+plans, see the [shortcut guide](docs/shortcuts.md).
 
 ## What works today
 
@@ -99,8 +124,10 @@ For shorter file-to-file calls, see the [shortcut guide](docs/shortcuts.md).
 - Deterministic `filter_complex` labels and argv compilation
 - Typed FFprobe container and stream results
 - Synchronous execution with progress callbacks and timeouts
+- An installed `flowmpeg` command with aliases, dry runs, probe, and doctor
 - Audio gain, delay, fades, mixing, and sidechain ducking
-- Video trim, scale, overlays, grids, and compatible clip concatenation
+- Video trim, canvas fitting, overlays, grids, and compatible concatenation
+- Waveform, spectrum, thumbnail, GIF, and contact sheet output
 - Paired `Clip` operations that keep audio with video
 - A web MP4 preset and ordered raw argument escape hatches
 
@@ -129,12 +156,13 @@ command for display.
 
 ## How a plan is built
 
-Flowmpeg has four public levels:
+Flowmpeg has five public levels:
 
-1. File shortcuts build plans for common jobs.
-2. `Clip` methods and recipe functions describe media intent.
-3. Typed streams form an immutable directed graph.
-4. The compiler produces an argv tuple for one FFmpeg process.
+1. The installed command runs common jobs from a terminal.
+2. File shortcuts build plans for the same path-level jobs.
+3. `Clip` methods and recipe functions describe media intent.
+4. Typed streams form an immutable directed graph.
+5. The compiler produces an argv tuple for one FFmpeg process.
 
 Compilation does not read input files, create temporary files, or start a
 process. Probing and execution are separate operations. More detail is in the
@@ -146,7 +174,8 @@ fanout before starting FFmpeg.
 
 ## Safety defaults
 
-- Existing local outputs are not replaced unless `.overwrite()` is used.
+- Existing local outputs are not replaced unless `.overwrite()` or the CLI
+  `--overwrite` flag is used.
 - Commands run as argv with `shell=False`.
 - Displayed commands and captured errors redact URL user information and known
   secret-bearing headers.

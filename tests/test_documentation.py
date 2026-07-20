@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import argparse
 import ast
 import re
 from pathlib import Path
@@ -7,6 +8,7 @@ from pathlib import Path
 import pytest
 
 from flowmpeg import shortcuts
+from flowmpeg.cli import build_parser
 from flowmpeg.plan import Plan
 
 _ROOT = Path(__file__).parents[1]
@@ -66,3 +68,24 @@ def test_shortcut_guide_examples_build(monkeypatch: pytest.MonkeyPatch) -> None:
         line = text.count("\n", 0, match.start()) + 1
         code = compile(match.group(1), f"{path.name}:{line}", "exec")
         exec(code, namespace)
+
+
+def test_command_guide_uses_known_commands() -> None:
+    parser = build_parser()
+    subparsers = next(
+        action
+        for action in parser._actions
+        if isinstance(action, argparse._SubParsersAction)
+    )
+    known = {*subparsers.choices, "--help", "--version"}
+    path = _ROOT / "docs" / "cli.md"
+    command_lines = [
+        line
+        for line in path.read_text(encoding="utf-8").splitlines()
+        if line.startswith("flowmpeg ")
+    ]
+
+    assert len(command_lines) >= 80
+    for line in command_lines:
+        command = line.split(maxsplit=2)[1]
+        assert command in known, line

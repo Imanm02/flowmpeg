@@ -14,4 +14,10 @@
 - Paired clip operations and a web MP4 output preset
 - Python 3.10 through 3.14 test coverage
 - A task-based guide with input and output examples
-- Seventeen path-to-path shortcuts with a one-line guide
+- Twenty-seven path-to-path shortcuts with input and output examples
+- Installed `flowmpeg` and `python -m flowmpeg` command entry points
+- Short command aliases for common terminal jobs
+- CLI dry runs, explanations, progress, timeouts, and overwrite control
+- Terminal `probe` and `doctor` reports with JSON output
+- Waveform, spectrum, contact sheet, and still-image video shortcuts
+- Canvas fitting, picture in picture, fades, blur, ducking, and reverse shortcuts

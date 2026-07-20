@@ -509,6 +509,378 @@ For the FFmpeg GIF muxer, `-1` means no loop and `0` means infinite looping.
 ff.make_gif("demo.mp4", "once.gif", loop=-1).run()
 ```
 
+## Canvas, analysis, and finishing shortcuts
+
+### Fit portrait video inside a wide canvas
+
+**Input:** `portrait.mp4`
+
+**Output:** `portrait-wide.mp4`, a 1920 by 1080 video with the source centered
+over black padding. The source aspect ratio is kept.
+
+```python
+ff.fit_canvas("portrait.mp4", "portrait-wide.mp4").run()
+```
+
+### Fit a smaller white canvas
+
+```python
+ff.fit_canvas(
+    "square.mp4",
+    "square-wide.mp4",
+    width=1280,
+    height=720,
+    color="white",
+).run()
+```
+
+Canvas dimensions must be positive even integers because the web preset uses
+the YUV 4:2:0 pixel format.
+
+### Fit a silent source
+
+```python
+ff.fit_canvas(
+    "animation.mp4",
+    "animation-wide.mp4",
+    include_audio=False,
+).run()
+```
+
+### Add picture in picture
+
+**Inputs:** `main.mp4` and `camera.mp4`.
+
+**Output:** `with-camera.mp4`, with a 480 pixel wide inset at the bottom-right.
+The main video's audio is retained.
+
+```python
+ff.picture_in_picture("main.mp4", "camera.mp4", "with-camera.mp4").run()
+```
+
+### Move and resize the inset
+
+```python
+ff.picture_in_picture(
+    "main.mp4",
+    "camera.mp4",
+    "top-camera.mp4",
+    inset_width=320,
+    position="top-left",
+    padding=16,
+).run()
+```
+
+### Make the inset translucent
+
+```python
+ff.picture_in_picture(
+    "main.mp4",
+    "camera.mp4",
+    "soft-camera.mp4",
+    opacity=0.75,
+).run()
+```
+
+When the inset ends first, the main video continues without a frozen inset.
+
+### Draw a waveform image
+
+**Input:** `song.mp3`
+
+**Output:** `waveform.png`, a 1200 by 400 peak waveform from the first audio
+track.
+
+```python
+ff.waveform_image("song.mp3", "waveform.png").run()
+```
+
+### Choose waveform size and color
+
+```python
+ff.waveform_image(
+    "song.mp3",
+    "wide-waveform.png",
+    width=1600,
+    height=500,
+    color="yellow",
+).run()
+```
+
+### Split channels and use logarithmic scale
+
+```python
+ff.waveform_image(
+    "movie.mkv",
+    "commentary-waveform.png",
+    track=1,
+    split_channels=True,
+    scale_mode="log",
+).run()
+```
+
+The output may be JPEG, PNG, or WebP.
+
+### Draw a frequency spectrum
+
+**Input:** `song.mp3`
+
+**Output:** `spectrum.png`, a 1600 by 900 combined-channel spectrum with a
+legend.
+
+```python
+ff.spectrum_image("song.mp3", "spectrum.png").run()
+```
+
+### Draw separate spectrum channels
+
+```python
+ff.spectrum_image(
+    "song.mp3",
+    "separate-spectrum.png",
+    mode="separate",
+    color="magma",
+    legend=False,
+).run()
+```
+
+### Draw a compact spectrum
+
+```python
+ff.spectrum_image(
+    "voice.wav",
+    "voice-spectrum.jpg",
+    width=1000,
+    height=400,
+    color="viridis",
+).run()
+```
+
+### Create video from one image and audio
+
+**Inputs:** `cover.jpg` and `episode.mp3`.
+
+**Output:** `episode.mp4`, a 1920 by 1080 video that ends with the audio.
+
+```python
+ff.still_image_video("cover.jpg", "episode.mp3", "episode.mp4").run()
+```
+
+### Use another canvas and track
+
+```python
+ff.still_image_video(
+    "cover.png",
+    "album.mka",
+    "track-video.mp4",
+    track=1,
+    width=1280,
+    height=720,
+    color="white",
+).run()
+```
+
+### Set the image frame rate
+
+```python
+ff.still_image_video(
+    "cover.jpg",
+    "speech.wav",
+    "speech-video.mp4",
+    frame_rate=30,
+).run()
+```
+
+The still image input is looped, while `-shortest` ends the result with the
+selected audio stream.
+
+### Build a contact sheet
+
+**Input:** `movie.mp4`
+
+**Output:** `sheet.jpg`, a 4 by 4 image sampled every five seconds.
+
+```python
+ff.contact_sheet("movie.mp4", "sheet.jpg").run()
+```
+
+### Change the contact sheet layout
+
+```python
+ff.contact_sheet(
+    "movie.mp4",
+    "overview.jpg",
+    columns=5,
+    rows=3,
+    interval=10,
+    cell_width=240,
+    cell_height=135,
+).run()
+```
+
+### Change spacing and background color
+
+```python
+ff.contact_sheet(
+    "movie.mp4",
+    "spaced-sheet.png",
+    columns=3,
+    rows=3,
+    padding=8,
+    margin=16,
+    color="white",
+).run()
+```
+
+The shortcut samples from the beginning. If the source ends before every cell
+is filled, FFmpeg may produce fewer populated cells.
+
+### Lower music while speech is active
+
+**Inputs:** `talk.mp4` and `music.mp3`.
+
+**Output:** `ducked.mp4`, with music lowered while source speech crosses the
+compression threshold.
+
+```python
+ff.duck_music("talk.mp4", "music.mp3", "ducked.mp4").run()
+```
+
+### Tune ducking response
+
+```python
+ff.duck_music(
+    "talk.mp4",
+    "music.mp3",
+    "tuned-duck.mp4",
+    music_volume=0.4,
+    threshold=0.08,
+    ratio=10,
+    attack=15,
+    release=300,
+).run()
+```
+
+### Keep the original music length
+
+Music loops by default. Disable looping when that is not wanted.
+
+```python
+ff.duck_music(
+    "talk.mp4",
+    "music.mp3",
+    "one-pass-music.mp4",
+    loop_music=False,
+).run()
+```
+
+The speech track is split because it controls the compressor and remains in
+the final mix.
+
+### Trim and fade both clip edges
+
+**Input:** `source.mp4`
+
+**Output:** `faded.mp4`, a ten-second clip beginning at second 20 with matched
+one-second video and audio fades.
+
+```python
+ff.fade_edges(
+    "source.mp4",
+    "faded.mp4",
+    start=20,
+    duration=10,
+).run()
+```
+
+### Set different fade lengths
+
+```python
+ff.fade_edges(
+    "source.mp4",
+    "custom-fades.mp4",
+    duration=12,
+    fade_in=0.5,
+    fade_out=2,
+).run()
+```
+
+### Fade a silent video
+
+```python
+ff.fade_edges(
+    "animation.mp4",
+    "faded-animation.mp4",
+    duration=8,
+    include_audio=False,
+).run()
+```
+
+The combined fade lengths cannot exceed the selected duration.
+
+### Fill a wide canvas with a blurred copy
+
+**Input:** `portrait.mp4`
+
+**Output:** `blurred-wide.mp4`, with the full portrait video over a blurred
+1920 by 1080 background made from the same frames.
+
+```python
+ff.blurred_background("portrait.mp4", "blurred-wide.mp4").run()
+```
+
+### Set another canvas and blur strength
+
+```python
+ff.blurred_background(
+    "portrait.mp4",
+    "soft-background.mp4",
+    width=1280,
+    height=720,
+    blur=12,
+).run()
+```
+
+### Blur a silent source
+
+```python
+ff.blurred_background(
+    "animation.mp4",
+    "blurred-animation.mp4",
+    include_audio=False,
+).run()
+```
+
+### Reverse a bounded clip
+
+**Input:** `action.mp4`
+
+**Output:** `reverse.mp4`, containing six reversed seconds beginning at second
+12.
+
+```python
+ff.reverse_clip(
+    "action.mp4",
+    "reverse.mp4",
+    start=12,
+    duration=6,
+).run()
+```
+
+### Reverse video without audio
+
+```python
+ff.reverse_clip(
+    "animation.mp4",
+    "reverse-animation.mp4",
+    duration=4,
+    include_audio=False,
+).run()
+```
+
+Reverse filters buffer the selected media. The shortcut requires a duration
+and limits it to 60 seconds.
+
 ## Inspect or control any shortcut
 
 Every shortcut returns the same `Plan` used by the graph API.
@@ -593,6 +965,16 @@ ff.trim("input.mp4", "clip.mp4", start=5, duration=20).run(
 | `crop` | Fixed-size MP4 | Encodes video and keeps optional audio |
 | `change_speed` | Faster or slower MP4 | Changes paired video and audio timing |
 | `normalize_loudness` | One-pass normalized audio | Filters and encodes one audio track |
+| `fit_canvas` | Fixed canvas MP4 | Scales, pads, and keeps optional audio |
+| `picture_in_picture` | MP4 with video inset | Keeps the main audio |
+| `waveform_image` | JPEG, PNG, or WebP | Renders one selected audio track |
+| `spectrum_image` | JPEG, PNG, or WebP | Draws a frequency spectrum |
+| `still_image_video` | MP4 from image and audio | Ends with the selected audio track |
+| `contact_sheet` | JPEG, PNG, or WebP | Samples frames into one image |
+| `duck_music` | MP4 with speech-aware music | Loops and lowers the music input |
+| `fade_edges` | Trimmed MP4 with paired fades | Fades selected video and optional audio |
+| `blurred_background` | Fixed canvas MP4 | Composes sharp and blurred source copies |
+| `reverse_clip` | Reversed MP4 section | Buffers at most 60 seconds |
 
 When a task needs custom stream selection, filter expressions, more than one
 output, or another container, use the [full example guide](examples.md) and the
