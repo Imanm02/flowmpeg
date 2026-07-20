@@ -2100,6 +2100,8 @@ def _tool_report(executable: str, timeout: float) -> dict[str, object]:
             "status": "missing",
             "path": None,
             "version": None,
+            "returncode": None,
+            "reason": None,
         }
     try:
         completed = subprocess.run(
@@ -2112,12 +2114,14 @@ def _tool_report(executable: str, timeout: float) -> dict[str, object]:
             check=False,
             shell=False,
         )
-    except PermissionError:
+    except PermissionError as error:
         return {
             "ok": False,
             "status": "permission-denied",
             "path": path,
             "version": None,
+            "returncode": None,
+            "reason": redact_text(str(error))[:400] or None,
         }
     except subprocess.TimeoutExpired:
         return {
@@ -2125,20 +2129,30 @@ def _tool_report(executable: str, timeout: float) -> dict[str, object]:
             "status": "timeout",
             "path": path,
             "version": None,
+            "returncode": None,
+            "reason": f"Version check timed out after {timeout:g} seconds",
         }
-    except OSError:
+    except OSError as error:
         return {
             "ok": False,
             "status": "unusable",
             "path": path,
             "version": None,
+            "returncode": None,
+            "reason": redact_text(str(error))[:400] or None,
         }
-    first_line = completed.stdout.splitlines()[0] if completed.stdout else None
+    version_text = completed.stdout or completed.stderr
+    first_line = version_text.splitlines()[0] if version_text else None
+    reason = None
+    if completed.returncode != 0:
+        reason = _stderr_reason(completed.stderr or completed.stdout)
     return {
         "ok": completed.returncode == 0,
         "status": "ready" if completed.returncode == 0 else "failed",
         "path": path,
         "version": first_line,
+        "returncode": completed.returncode,
+        "reason": reason,
     }
 
 
@@ -2265,6 +2279,10 @@ def _format_doctor(report: dict[str, object]) -> str:
             lines.append(f"  path: {item['path']}")
         if item.get("version"):
             lines.append(f"  version: {item['version']}")
+        if item.get("returncode") is not None:
+            lines.append(f"  return code: {item['returncode']}")
+        if item.get("reason"):
+            lines.append(f"  reason: {item['reason']}")
     capabilities = cast(dict[str, bool], report["capabilities"])
     if capabilities:
         available = sum(capabilities.values())

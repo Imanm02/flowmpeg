@@ -47,7 +47,7 @@ only a discussion or test placeholder.
 - [x] Add a package-manager timeout and map timeout failures to `FMG304`.
 - [x] Treat end-of-file at the setup confirmation prompt as cancellation.
 - [x] Let setup inspect custom FFmpeg and FFprobe executable paths.
-- [ ] Include tool return codes and bounded failure reasons in doctor JSON.
+- [x] Include tool return codes and bounded failure reasons in doctor JSON.
 
 ## Product and discovery work
 

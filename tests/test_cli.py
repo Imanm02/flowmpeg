@@ -991,6 +991,28 @@ def test_tool_report_describes_start_failures(
     assert cli._tool_report("ffmpeg", 1)["status"] == status
 
 
+def test_tool_report_keeps_failure_code_and_reason(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(shutil, "which", lambda executable: "tool")
+    monkeypatch.setattr(
+        subprocess,
+        "run",
+        lambda *args, **kwargs: subprocess.CompletedProcess(
+            args[0],
+            2,
+            stdout="",
+            stderr="configuration rejected\n",
+        ),
+    )
+
+    report = cli._tool_report("ffmpeg", 1)
+
+    assert report["status"] == "failed"
+    assert report["returncode"] == 2
+    assert report["reason"] == "configuration rejected"
+
+
 def test_error_catalog_lists_and_explains_identifiers(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
