@@ -1634,6 +1634,8 @@ def _add_setup(commands: argparse._SubParsersAction[argparse.ArgumentParser]) ->
         action="store_true",
         help="Confirm installation without an interactive prompt",
     )
+    parser.add_argument("--ffmpeg", default="ffmpeg", help="FFmpeg executable")
+    parser.add_argument("--ffprobe", default="ffprobe", help="FFprobe executable")
     parser.add_argument("--timeout", type=_positive_float, default=10.0)
     parser.add_argument(
         "--install-timeout",
@@ -1773,6 +1775,8 @@ def _run_setup(args: argparse.Namespace) -> int:
     as_json = cast(bool, args.json)
     timeout = cast(float, args.timeout)
     install_timeout = cast(float, args.install_timeout)
+    ffmpeg_executable = cast(str, args.ffmpeg)
+    ffprobe_executable = cast(str, args.ffprobe)
     if assume_yes and not install:
         return _error(
             GraphError("--yes requires --install"),
@@ -1786,8 +1790,8 @@ def _run_setup(args: argparse.Namespace) -> int:
             "FMG200",
         )
 
-    ffmpeg = _tool_report("ffmpeg", timeout)
-    ffprobe = _tool_report("ffprobe", timeout)
+    ffmpeg = _tool_report(ffmpeg_executable, timeout)
+    ffprobe = _tool_report(ffprobe_executable, timeout)
     ready = ffmpeg.get("ok") is True and ffprobe.get("ok") is True
     installer = _detect_installer()
     report: dict[str, object] = {
@@ -1858,8 +1862,8 @@ def _run_setup(args: argparse.Namespace) -> int:
                 "FMG304",
             )
 
-    ffmpeg = _tool_report("ffmpeg", timeout)
-    ffprobe = _tool_report("ffprobe", timeout)
+    ffmpeg = _tool_report(ffmpeg_executable, timeout)
+    ffprobe = _tool_report(ffprobe_executable, timeout)
     if ffmpeg.get("ok") is True and ffprobe.get("ok") is True:
         print("FFmpeg and FFprobe are ready.")
         return 0

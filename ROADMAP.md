@@ -46,7 +46,7 @@ only a discussion or test placeholder.
 - [x] Strengthen runtime validation for graph model values.
 - [x] Add a package-manager timeout and map timeout failures to `FMG304`.
 - [x] Treat end-of-file at the setup confirmation prompt as cancellation.
-- [ ] Let setup inspect custom FFmpeg and FFprobe executable paths.
+- [x] Let setup inspect custom FFmpeg and FFprobe executable paths.
 - [ ] Include tool return codes and bounded failure reasons in doctor JSON.
 
 ## Product and discovery work

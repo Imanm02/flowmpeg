@@ -689,6 +689,31 @@ def test_setup_ready_is_read_only(
     assert "No changes were made" in output
 
 
+def test_setup_checks_custom_tool_paths(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    checked: list[str] = []
+
+    def tool_report(executable: str, timeout: float) -> dict[str, object]:
+        del timeout
+        checked.append(executable)
+        return {"ok": True, "status": "ready", "path": executable}
+
+    monkeypatch.setattr(cli, "_tool_report", tool_report)
+    monkeypatch.setattr(cli, "_detect_installer", lambda: None)
+
+    assert cli.main(
+        [
+            "setup",
+            "--ffmpeg",
+            "C:/media/ffmpeg.exe",
+            "--ffprobe",
+            "C:/media/ffprobe.exe",
+        ]
+    ) == 0
+    assert checked == ["C:/media/ffmpeg.exe", "C:/media/ffprobe.exe"]
+
+
 def test_setup_missing_prints_exact_suggestion(
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
