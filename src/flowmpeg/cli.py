@@ -16,7 +16,7 @@ from dataclasses import asdict, dataclass
 from typing import TextIO, cast
 
 from flowmpeg import __version__, shortcuts
-from flowmpeg.catalog import CATEGORIES, COMMAND_CATALOG
+from flowmpeg.catalog import CATEGORIES, COMMAND_CATALOG, TAGS
 from flowmpeg.diagnostics import display_argv, redact_text
 from flowmpeg.errors import (
     BinaryNotFoundError,
@@ -1820,6 +1820,7 @@ def _add_commands(
         choices=CATEGORIES,
         help="Show one task category",
     )
+    parser.add_argument("--tag", choices=TAGS, help="Show one use case")
     parser.add_argument("--json", action="store_true", help="Print catalog JSON")
     parser.set_defaults(handler=_run_commands)
 
@@ -2083,8 +2084,15 @@ def _run_examples(args: argparse.Namespace) -> int:
 
 def _run_commands(args: argparse.Namespace) -> int:
     selected = cast(str | None, args.category)
-    categories = (selected,) if selected is not None else CATEGORIES
-    specs = [spec for spec in COMMAND_CATALOG if spec.category in categories]
+    selected_tag = cast(str | None, args.tag)
+    specs = [
+        spec
+        for spec in COMMAND_CATALOG
+        if (selected is None or spec.category == selected)
+        and (selected_tag is None or selected_tag in spec.tags)
+    ]
+    if not specs:
+        return _error(GraphError("no commands matched"), 2, "FMG200")
     if cast(bool, args.json):
         report = {
             "schema_version": _JSON_SCHEMA_VERSION,
@@ -2092,6 +2100,15 @@ def _run_commands(args: argparse.Namespace) -> int:
         }
         print(json.dumps(report, indent=2, sort_keys=True))
         return 0
+    categories = (
+        (selected,)
+        if selected is not None
+        else tuple(
+            category
+            for category in CATEGORIES
+            if any(spec.category == category for spec in specs)
+        )
+    )
     for category in categories:
         category_specs = [spec for spec in specs if spec.category == category]
         print(f"{category.upper()} ({len(category_specs)})")

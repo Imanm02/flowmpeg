@@ -76,6 +76,8 @@ tools, or documentation checks:
 ```console
 flowmpeg commands --json
 flowmpeg commands --category images --json
+flowmpeg commands --tag privacy
 ```
 
-The JSON object has a `schema_version` field and a `commands` array.
+Category and tag filters can be combined. The JSON object has a
+`schema_version` field and a `commands` array, including each command's tags.

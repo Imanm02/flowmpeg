@@ -1360,6 +1360,24 @@ def test_commands_filter_one_task_category(
     assert "VIDEO (" not in output
 
 
+def test_commands_filter_by_use_case_tag(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    assert cli.main(["commands", "--tag", "privacy"]) == 0
+    output = capsys.readouterr().out
+
+    assert "remove-audio" in output
+    assert "blur-region" in output
+    assert "transcode" not in output
+
+
+def test_commands_report_empty_category_and_tag_pair(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    assert cli.main(["commands", "--category", "help", "--tag", "privacy"]) == 2
+    assert "no commands matched" in capsys.readouterr().err
+
+
 def test_commands_json_exposes_discovery_fields(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
@@ -1373,6 +1391,7 @@ def test_commands_json_exposes_discovery_fields(
         "remove-subtitles",
     }
     assert data[0]["category"] == "subtitles"
+    assert data[0]["tags"] == ["accessibility", "archive", "copy"]
     assert "input_kind" in data[0]
     assert "capability_group" in data[0]
 
