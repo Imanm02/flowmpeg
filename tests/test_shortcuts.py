@@ -1874,10 +1874,29 @@ def test_av1_transcode_runs(
     ).stdout
     if "libsvtav1" not in encoders:
         pytest.skip("The FFmpeg build does not include libsvtav1")
+    av1_source = source.parent / "av1-source.mp4"
     target = source.parent / "delivery-av1.webm"
+    subprocess.run(
+        (
+            ffmpeg,
+            "-hide_banner",
+            "-loglevel",
+            "error",
+            "-y",
+            "-f",
+            "lavfi",
+            "-i",
+            "color=blue:size=128x128:duration=0.2",
+            "-c:v",
+            "libx264",
+            "-an",
+            str(av1_source),
+        ),
+        check=True,
+    )
 
     shortcuts.transcode_av1(
-        source,
+        av1_source,
         target,
         crf=45,
         speed=13,
