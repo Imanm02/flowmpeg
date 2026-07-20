@@ -14,9 +14,9 @@ source change.
 | Python shortcut functions | 67 | `shortcuts.__all__` |
 | One-line terminal examples | 81 | CLI example catalog |
 | Stable error identifiers | 16 | CLI error guide |
-| Stable audit findings | 12 | Media audit |
+| Stable audit findings | 20 | Media audit |
 | Doctor feature groups | 15 | Doctor requirements |
-| Test function definitions | 362 | `tests/test_*.py` |
+| Test function definitions | 369 | `tests/test_*.py` |
 | FFmpeg integration tests | 35 | Pytest markers |
 | Documentation pages | 16 | `docs/*.md` |
 | Documented command lines | 383 | Markdown code lines |

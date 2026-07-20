@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from flowmpeg.audit import AUDIT_CODES, audit_media
+from flowmpeg.audit import AUDIT_CODES, AuditConstraints, audit_media
 from flowmpeg.probe import (
     AudioStreamInfo,
     FormatInfo,
@@ -68,7 +68,7 @@ def test_audit_accepts_complete_audio_video_media() -> None:
     assert result.summary.video_streams == 1
     assert result.summary.audio_streams == 1
     assert result.summary.frame_rate == 30
-    assert len(AUDIT_CODES) == 12
+    assert len(AUDIT_CODES) == 20
 
 
 def test_audit_finds_missing_audio_and_odd_dimensions() -> None:
@@ -97,6 +97,80 @@ def test_audit_rejects_unknown_policy_values() -> None:
         result.passes("all")  # type: ignore[arg-type]
     with pytest.raises(ValueError, match="expectation"):
         audit_media(_media(_audio()), expect="pictures")  # type: ignore[arg-type]
+
+
+def test_audit_accepts_matching_delivery_constraints() -> None:
+    constraints = AuditConstraints(
+        minimum_duration=1,
+        maximum_duration=3,
+        width=1920,
+        height=1080,
+        video_codec="H264",
+        audio_codec="AAC",
+        sample_rate=48_000,
+        channels=2,
+    )
+
+    result = audit_media(
+        _media(_video(), _audio()), expect="av", constraints=constraints
+    )
+
+    assert result.passes()
+    assert result.findings == ()
+    assert result.constraints == constraints
+
+
+def test_audit_reports_delivery_constraint_mismatches() -> None:
+    constraints = AuditConstraints(
+        maximum_duration=1,
+        width=1280,
+        height=720,
+        video_codec="hevc",
+        audio_codec="opus",
+        sample_rate=44_100,
+        channels=1,
+    )
+
+    result = audit_media(_media(_video(), _audio()), constraints=constraints)
+
+    assert {item.code for item in result.findings} == {
+        "AUD204",
+        "AUD215",
+        "AUD216",
+        "AUD217",
+        "AUD224",
+        "AUD225",
+        "AUD226",
+    }
+    assert not result.passes()
+    assert "expected hevc" in next(
+        item.message for item in result.findings if item.code == "AUD217"
+    )
+
+
+def test_audit_fails_when_minimum_duration_is_not_met() -> None:
+    result = audit_media(
+        _media(_video()),
+        constraints=AuditConstraints(minimum_duration=3),
+    )
+
+    assert "AUD203" in {item.code for item in result.findings}
+
+
+@pytest.mark.parametrize(
+    "constraints",
+    [
+        AuditConstraints(minimum_duration=0),
+        AuditConstraints(maximum_duration=float("nan")),
+        AuditConstraints(minimum_duration=3, maximum_duration=2),
+        AuditConstraints(width=True),
+        AuditConstraints(channels=0),
+        AuditConstraints(video_codec=""),
+    ],
+)
+def test_audit_rejects_invalid_constraints(constraints: AuditConstraints) -> None:
+    with pytest.raises(ValueError, match="Audit"):
+        audit_media(_media(_video()), constraints=constraints)
 
 
 @pytest.mark.integration

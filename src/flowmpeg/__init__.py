@@ -3,6 +3,7 @@
 from flowmpeg import shortcuts
 from flowmpeg.audit import (
     AUDIT_CODES,
+    AuditConstraints,
     AuditFinding,
     AuditSummary,
     MediaAudit,
@@ -80,6 +81,7 @@ __all__ = [
     "AudioStreamInfo",
     "AUDIT_CODES",
     "AuditFinding",
+    "AuditConstraints",
     "AuditSummary",
     "BinaryNotFoundError",
     "BinaryUnusableError",

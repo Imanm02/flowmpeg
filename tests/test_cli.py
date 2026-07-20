@@ -737,6 +737,80 @@ def test_audit_json_warning_policy_controls_exit_code(
     assert data["findings"][0]["code"] == "AUD214"
 
 
+def test_audit_applies_exact_delivery_constraints(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    monkeypatch.setattr(cli, "probe", lambda *args, **kwargs: _media_info())
+
+    assert (
+        cli.main(
+            [
+                "audit",
+                "movie.mp4",
+                "--expect",
+                "av",
+                "--min-duration",
+                "10",
+                "--max-duration",
+                "90",
+                "--width",
+                "1920",
+                "--height",
+                "1080",
+                "--video-codec",
+                "h264",
+                "--audio-codec",
+                "aac",
+                "--sample-rate",
+                "48000",
+                "--channels",
+                "2",
+            ]
+        )
+        == 0
+    )
+    output = capsys.readouterr().out
+    assert "Media audit: pass" in output
+    assert "duration >= 10s" in output
+    assert "video codec = h264" in output
+
+
+def test_audit_constraint_failure_returns_nine(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    monkeypatch.setattr(cli, "probe", lambda *args, **kwargs: _media_info())
+
+    assert cli.main(["audit", "movie.mp4", "--width", "1280", "--json"]) == 9
+    data = json.loads(capsys.readouterr().out)
+
+    assert data["constraints"]["width"] == 1280
+    assert any(item["code"] == "AUD215" for item in data["findings"])
+
+
+def test_audit_rejects_reversed_duration_bounds(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    monkeypatch.setattr(cli, "probe", lambda *args, **kwargs: _media_info())
+
+    assert (
+        cli.main(
+            [
+                "audit",
+                "movie.mp4",
+                "--min-duration",
+                "20",
+                "--max-duration",
+                "10",
+            ]
+        )
+        == 2
+    )
+    assert "minimum duration cannot exceed" in capsys.readouterr().err
+
+
 def test_probe_error_returns_five(
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],

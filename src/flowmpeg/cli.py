@@ -17,7 +17,13 @@ from dataclasses import asdict, dataclass, replace
 from typing import TextIO, cast
 
 from flowmpeg import __version__, shortcuts
-from flowmpeg.audit import AuditExpectation, AuditThreshold, MediaAudit, audit_media
+from flowmpeg.audit import (
+    AuditConstraints,
+    AuditExpectation,
+    AuditThreshold,
+    MediaAudit,
+    audit_media,
+)
 from flowmpeg.black import BlackReport, detect_black
 from flowmpeg.catalog import CATEGORIES, COMMAND_CATALOG, TAGS, command_spec
 from flowmpeg.comparison import MediaComparison, MediaSummary, compare_media
@@ -2165,6 +2171,14 @@ def _add_audit(commands: argparse._SubParsersAction[argparse.ArgumentParser]) ->
         default="error",
         help="Finding severity that returns exit code 9",
     )
+    parser.add_argument("--min-duration", type=_positive_float)
+    parser.add_argument("--max-duration", type=_positive_float)
+    parser.add_argument("--width", type=_positive_int)
+    parser.add_argument("--height", type=_positive_int)
+    parser.add_argument("--video-codec")
+    parser.add_argument("--audio-codec")
+    parser.add_argument("--sample-rate", type=_positive_int)
+    parser.add_argument("--channels", type=_positive_int)
     parser.add_argument("--ffprobe", default="ffprobe", help="FFprobe executable")
     parser.add_argument("--timeout", type=_positive_float)
     parser.add_argument("--json", action="store_true", help="Print audit JSON")
@@ -2522,7 +2536,20 @@ def _run_audit(args: argparse.Namespace) -> int:
     )
     expectation = cast(AuditExpectation, args.expect)
     fail_on = cast(AuditThreshold, args.fail_on)
-    result = audit_media(info, expect=expectation)
+    constraints = AuditConstraints(
+        minimum_duration=cast(float | None, args.min_duration),
+        maximum_duration=cast(float | None, args.max_duration),
+        width=cast(int | None, args.width),
+        height=cast(int | None, args.height),
+        video_codec=cast(str | None, args.video_codec),
+        audio_codec=cast(str | None, args.audio_codec),
+        sample_rate=cast(int | None, args.sample_rate),
+        channels=cast(int | None, args.channels),
+    )
+    try:
+        result = audit_media(info, expect=expectation, constraints=constraints)
+    except ValueError as error:
+        raise GraphError(str(error)) from error
     passed = result.passes(fail_on)
     if cast(bool, args.json):
         data = asdict(result)
@@ -3000,6 +3027,7 @@ def _format_audit(
         f"Source: {redact_text(source)}",
         f"Expectation: {result.expectation}",
         f"Failure threshold: {fail_on}",
+        f"Constraints: {_format_audit_constraints(result.constraints)}",
         f"Container: {summary.container or 'unknown'}",
         f"Duration: {_seconds(summary.duration)}",
         f"Size: {_bytes(summary.size)}",
@@ -3015,7 +3043,8 @@ def _format_audit(
         frame_rate = (
             "unknown" if summary.frame_rate is None else f"{summary.frame_rate:g} fps"
         )
-        lines.append(f"Video: {dimensions}, {frame_rate}")
+        codec = summary.video_codec or "unknown codec"
+        lines.append(f"Video: {dimensions}, {frame_rate}, {codec}")
     if summary.audio_streams:
         sample_rate = (
             "unknown" if summary.sample_rate is None else f"{summary.sample_rate} Hz"
@@ -3023,7 +3052,8 @@ def _format_audit(
         channels = (
             "unknown" if summary.channels is None else f"{summary.channels} channel(s)"
         )
-        lines.append(f"Audio: {sample_rate}, {channels}")
+        codec = summary.audio_codec or "unknown codec"
+        lines.append(f"Audio: {sample_rate}, {channels}, {codec}")
     lines.append("Findings:")
     if result.findings:
         lines.extend(
@@ -3033,6 +3063,27 @@ def _format_audit(
     else:
         lines.append("  none")
     return "\n".join(lines)
+
+
+def _format_audit_constraints(constraints: AuditConstraints) -> str:
+    values: list[str] = []
+    if constraints.minimum_duration is not None:
+        values.append(f"duration >= {constraints.minimum_duration:g}s")
+    if constraints.maximum_duration is not None:
+        values.append(f"duration <= {constraints.maximum_duration:g}s")
+    if constraints.width is not None:
+        values.append(f"width = {constraints.width}")
+    if constraints.height is not None:
+        values.append(f"height = {constraints.height}")
+    if constraints.video_codec is not None:
+        values.append(f"video codec = {constraints.video_codec}")
+    if constraints.audio_codec is not None:
+        values.append(f"audio codec = {constraints.audio_codec}")
+    if constraints.sample_rate is not None:
+        values.append(f"sample rate = {constraints.sample_rate} Hz")
+    if constraints.channels is not None:
+        values.append(f"channels = {constraints.channels}")
+    return ", ".join(values) if values else "none"
 
 
 def _format_comparison(result: MediaComparison) -> str:
