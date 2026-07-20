@@ -30,7 +30,7 @@ def test_integer_speed_factor_builds_float_tempo_stages() -> None:
     )
 
 
-@pytest.mark.parametrize("value", [True, "fast"])
+@pytest.mark.parametrize("value", [True, "fast", 10**1_000])
 def test_audio_recipes_reject_non_numeric_factors(value: object) -> None:
     source = input("voice.wav").audio()
 

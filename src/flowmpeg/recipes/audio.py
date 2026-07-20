@@ -222,11 +222,13 @@ def _tempo_stages(factor: float) -> tuple[float, ...]:
 
 
 def _finite(name: str, value: float) -> None:
-    if (
-        isinstance(value, bool)
-        or not isinstance(value, (int, float))
-        or not math.isfinite(value)
-    ):
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise GraphError(f"{name} must be finite")
+    try:
+        finite = math.isfinite(value)
+    except OverflowError:
+        finite = False
+    if not finite:
         raise GraphError(f"{name} must be finite")
 
 
