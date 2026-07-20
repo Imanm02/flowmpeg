@@ -70,7 +70,7 @@ only a discussion or test placeholder.
 - [x] Add an encode, copy, and filter behavior matrix.
 - [x] Add a stream retention and track-selection matrix.
 - [x] Add a social frame dimension and fill-mode comparison.
-- [ ] Add a plan lifecycle and failure-path diagram.
+- [x] Add a plan lifecycle and failure-path diagram.
 - [ ] Add a podcast voice-chain diagram.
 - [ ] Add a fixed-region privacy blur coordinate diagram.
 - [x] Add probe-first examples for secondary tracks.

@@ -124,3 +124,39 @@ flowmpeg social wide.mp4 --target vertical --fill crop -o crop.mp4
 Use `fit` when every source pixel must remain visible. Use `crop` when filling
 the frame matters more than its outer edges. `blur` keeps the full foreground
 and fills unused space with a scaled, blurred copy.
+
+## Plan lifecycle and failure path
+
+Building a Python plan does not start a process. Validation and command
+inspection happen before the runner boundary.
+
+```mermaid
+flowchart TD
+    A["Build immutable inputs and filters"] --> B["Validate graph and outputs"]
+    B -->|"Invalid"| C["GraphError, FMG200 in CLI"]
+    B -->|"Valid"| D{"Choose an action"}
+    D -->|"command()"| E["Compile and print redacted command"]
+    D -->|"explain()"| F["Describe inputs, filters, and maps"]
+    D -->|"run()"| G["Check output conflicts and reserved pipes"]
+    G -->|"Conflict"| H["OutputExistsError, exit 4"]
+    G -->|"Ready"| I["Start FFmpeg without a shell"]
+    I --> J["Read progress and bounded stderr"]
+    J -->|"Exit 0"| K["RunResult with outputs and elapsed time"]
+    J -->|"Timeout"| L["JobTimeoutError, exit 7"]
+    J -->|"FFmpeg failure"| M["ExecutionError, exit 6"]
+```
+
+The CLI maps typed failures to stable exit codes. It prints one bounded reason
+from FFmpeg and keeps the bounded stderr text on `ExecutionError` for Python
+callers. Displayed commands and explanations hide recognized URL credentials,
+signed query values, and sensitive header values.
+
+```python
+from flowmpeg import shortcuts as ff
+
+plan = ff.resize("input.mp4", "small.mp4", width=1280)
+print(plan.command())
+print(plan.explain())
+result = plan.run(timeout=120)
+print(result.elapsed)
+```
