@@ -320,6 +320,17 @@ def test_grid_scales_cells_and_stops_at_shortest() -> None:
     assert "0:a:0" not in plan.raw_argv()
 
 
+@pytest.mark.parametrize("width,height", [(639, 360), (640, 359)])
+def test_grid_rejects_odd_cell_dimensions(width: int, height: int) -> None:
+    with pytest.raises(GraphError, match="must be even"):
+        shortcuts.grid(
+            ("one.mp4", "two.mp4"),
+            "grid.mp4",
+            cell_width=width,
+            cell_height=height,
+        )
+
+
 def test_thumbnail_uses_input_seek_and_one_frame() -> None:
     plan = shortcuts.thumbnail("in.mp4", "cover.jpg", at=5)
 

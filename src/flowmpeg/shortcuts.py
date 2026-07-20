@@ -808,8 +808,8 @@ def grid(
     if len(source_values) < 2:
         raise GraphError("Video grids require at least two sources")
     _positive_integer("columns", columns)
-    _positive_integer("cell_width", cell_width)
-    _positive_integer("cell_height", cell_height)
+    _even_positive_integer("cell_width", cell_width)
+    _even_positive_integer("cell_height", cell_height)
     videos = tuple(
         scale(input(source).video(), width=cell_width, height=cell_height)
         for source in source_values
