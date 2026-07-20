@@ -256,7 +256,10 @@ def _parse_stream(data: Mapping[str, object]) -> StreamInfo:
             height=_integer(data.get("height")),
             pixel_format=_string(data.get("pix_fmt")),
             average_frame_rate=_rational(data.get("avg_frame_rate")),
-            sample_aspect_ratio=_rational(data.get("sample_aspect_ratio")),
+            sample_aspect_ratio=_rational(
+                data.get("sample_aspect_ratio"),
+                separator=":",
+            ),
         )
     if codec_type == "audio":
         return AudioStreamInfo(
@@ -323,10 +326,10 @@ def _float(value: object) -> float | None:
         return None
 
 
-def _rational(value: object) -> Rational | None:
-    if not isinstance(value, str) or "/" not in value:
+def _rational(value: object, *, separator: str = "/") -> Rational | None:
+    if not isinstance(value, str) or separator not in value:
         return None
-    numerator_text, denominator_text = value.split("/", 1)
+    numerator_text, denominator_text = value.split(separator, 1)
     try:
         numerator = int(numerator_text)
         denominator = int(denominator_text)

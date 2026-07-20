@@ -33,6 +33,7 @@ def test_parse_probe_data_returns_typed_streams() -> None:
                     "width": 1920,
                     "height": 1080,
                     "avg_frame_rate": "30000/1001",
+                    "sample_aspect_ratio": "4:3",
                     "time_base": "1/90000",
                 },
                 {
@@ -49,6 +50,7 @@ def test_parse_probe_data_returns_typed_streams() -> None:
     assert info.duration == 2.5
     assert info.video_streams[0].width == 1920
     assert info.video_streams[0].average_frame_rate == Rational(30000, 1001)
+    assert info.video_streams[0].sample_aspect_ratio == Rational(4, 3)
     assert isinstance(info.audio_streams[0], AudioStreamInfo)
     assert info.audio_streams[0].sample_rate == 48000
     assert info.format is not None
