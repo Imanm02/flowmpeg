@@ -1,3 +1,6 @@
+import argparse
+from typing import cast
+
 from flowmpeg.catalog import CATEGORIES, COMMAND_CATALOG, command_spec
 from flowmpeg.cli import build_parser
 
@@ -7,7 +10,7 @@ def test_catalog_matches_every_cli_command_and_alias() -> None:
     command_action = next(
         action for action in parser._actions if action.dest == "command"
     )
-    choices = command_action.choices
+    choices = cast(dict[str, argparse.ArgumentParser], command_action.choices)
     assert choices is not None
 
     catalog_names = {spec.name for spec in COMMAND_CATALOG}

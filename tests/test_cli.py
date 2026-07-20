@@ -956,7 +956,8 @@ def test_setup_install_timeout_returns_eight(
     )
 
     def time_out(*args: object, **kwargs: object) -> None:
-        raise subprocess.TimeoutExpired(args[0], kwargs["timeout"])
+        del args, kwargs
+        raise subprocess.TimeoutExpired(("manager", "install", "ffmpeg"), 2.0)
 
     monkeypatch.setattr(subprocess, "run", time_out)
 
