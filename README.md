@@ -64,6 +64,18 @@ ffprobe -version
 
 The package has no required Python dependencies.
 
+## Start with a task
+
+The [example guide](docs/examples.md) shows complete inputs and expected
+outputs for common jobs:
+
+- Trim a clip or change its size
+- Remove video audio or extract it as MP3
+- Add a logo, music, fades, or speech ducking
+- Join clips or arrange four videos in a grid
+- Copy subtitles and call raw FFmpeg filters
+- Produce multiple outputs, inspect metadata, and report progress
+
 ## What works today
 
 - Immutable audio, video, and subtitle stream references

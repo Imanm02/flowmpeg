@@ -13,3 +13,4 @@
 - Video trim, scale, overlay, grid, and concat recipes
 - Paired clip operations and a web MP4 output preset
 - Python 3.10 through 3.14 test coverage
+- A task-based guide with input and output examples
