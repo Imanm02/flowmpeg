@@ -7,6 +7,7 @@ from typing import cast
 import pytest
 
 from flowmpeg import GraphError, probe, shortcuts
+from flowmpeg.plan import Plan
 from flowmpeg.recipes.video import Rotation
 
 
@@ -96,7 +97,7 @@ def test_transcode_builds_web_output() -> None:
         "-map",
         "0:v:0",
         "-map",
-        "0:a:0",
+        "0:a:0?",
         "-c:v",
         "libx264",
         "-crf",
@@ -122,6 +123,18 @@ def test_transcode_can_select_video_only() -> None:
     assert "-c:a" not in plan.raw_argv()
 
 
+@pytest.mark.parametrize(
+    "plan",
+    [
+        shortcuts.transcode("silent.mov", "out.mp4"),
+        shortcuts.resize("silent.mov", "out.mp4", width=640),
+        shortcuts.crop("silent.mov", "out.mp4", width=640, height=360),
+    ],
+)
+def test_video_only_filters_map_audio_optionally(plan: Plan) -> None:
+    assert "0:a:0?" in plan.raw_argv()
+
+
 def test_trim_accepts_duration() -> None:
     plan = shortcuts.trim("in.mp4", "clip.mp4", start=2, duration=3)
 
@@ -141,10 +154,13 @@ def test_resize_preserves_aspect_ratio() -> None:
     assert height_plan.filter_graph() == "[0:v:0]scale=-2:720[v0]"
 
 
-@pytest.mark.parametrize("size", [{"width": 1279}, {"height": 719}])
-def test_resize_rejects_odd_web_dimensions(size: dict[str, int]) -> None:
+@pytest.mark.parametrize(("width", "height"), [(1279, None), (None, 719)])
+def test_resize_rejects_odd_web_dimensions(
+    width: int | None,
+    height: int | None,
+) -> None:
     with pytest.raises(GraphError, match="must be even"):
-        shortcuts.resize("in.mp4", "out.mp4", **size)
+        shortcuts.resize("in.mp4", "out.mp4", width=width, height=height)
 
 
 def test_remove_audio_copies_only_video() -> None:

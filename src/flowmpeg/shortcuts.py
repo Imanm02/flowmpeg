@@ -173,7 +173,7 @@ def transcode(
 ) -> Plan:
     """Build a web video transcode plan."""
 
-    clip = media(source, audio=include_audio)
+    clip = _media_with_optional_audio(source, include_audio)
     return _web_plan(clip, to, (source,), preset, overwrite)
 
 
@@ -193,7 +193,7 @@ def compress_video(
     if isinstance(crf, bool) or not isinstance(crf, int) or not 0 <= crf <= 51:
         raise GraphError("CRF must be an integer between 0 and 51")
     _validate_encoder_preset(encoder_preset)
-    clip = media(source, audio=include_audio)
+    clip = _media_with_optional_audio(source, include_audio)
     if clip.audio is not None:
         _validate_bitrate(audio_bitrate)
     video = _require_video(clip)
@@ -233,7 +233,7 @@ def reframe(
 
     _even_positive_integer("width", width)
     _even_positive_integer("height", height)
-    clip = media(source, audio=include_audio)
+    clip = _media_with_optional_audio(source, include_audio)
     video = _require_video(clip).filter(
         "scale",
         w=width,
@@ -316,7 +316,7 @@ def set_frame_rate(
 
     if isinstance(fps, bool) or not isinstance(fps, int) or not 1 <= fps <= 120:
         raise GraphError("Frame rate must be an integer between 1 and 120")
-    clip = media(source, audio=include_audio)
+    clip = _media_with_optional_audio(source, include_audio)
     video = _require_video(clip).filter("fps", fps=fps)
     return _web_plan(Clip(video, clip.audio), to, (source,), preset, overwrite)
 
@@ -334,7 +334,7 @@ def deinterlace(
 
     if mode not in {"bwdif", "yadif"}:
         raise GraphError(f"Unknown deinterlace mode: {mode}")
-    clip = media(source, audio=include_audio)
+    clip = _media_with_optional_audio(source, include_audio)
     video = _require_video(clip).filter(mode, mode="send_frame", parity="auto")
     return _web_plan(Clip(video, clip.audio), to, (source,), preset, overwrite)
 
@@ -350,7 +350,7 @@ def flip_video(
 ) -> Plan:
     """Mirror video on one axis or both axes."""
 
-    clip = media(source, audio=include_audio)
+    clip = _media_with_optional_audio(source, include_audio)
     video = _require_video(clip)
     if direction in {"horizontal", "both"}:
         video = video.filter("hflip")
@@ -379,7 +379,7 @@ def adjust_colors(
     _bounded_number("contrast", contrast, 0, 2)
     _bounded_number("saturation", saturation, 0, 3)
     _bounded_number("gamma", gamma, 0.1, 10)
-    clip = media(source, audio=include_audio)
+    clip = _media_with_optional_audio(source, include_audio)
     video = _require_video(clip).filter(
         "eq",
         brightness=brightness,
@@ -410,7 +410,7 @@ def sharpen(
         or matrix_size % 2 == 0
     ):
         raise GraphError("Sharpen matrix size must be odd and between 3 and 23")
-    clip = media(source, audio=include_audio)
+    clip = _media_with_optional_audio(source, include_audio)
     video = _require_video(clip).filter(
         "unsharp",
         luma_msize_x=matrix_size,
@@ -492,7 +492,7 @@ def blur_region(
     _bounded_integer("power", power, 0, 6)
     if radius > min(width, height) // 2:
         raise GraphError("Blur radius cannot exceed half the smaller region side")
-    clip = media(source, audio=include_audio)
+    clip = _media_with_optional_audio(source, include_audio)
     base, region_source = _require_video(clip).split()
     region = crop_video(region_source, width=width, height=height, x=x, y=y)
     region = region.filter(
@@ -581,7 +581,9 @@ def resize(
         _even_positive_integer("width", width)
     if height is not None:
         _even_positive_integer("height", height)
-    clip = media(source, audio=include_audio).scale(width=width, height=height)
+    clip = _media_with_optional_audio(source, include_audio).scale(
+        width=width, height=height
+    )
     return _web_plan(clip, to, (source,), preset, overwrite)
 
 
@@ -679,7 +681,7 @@ def watermark(
 ) -> Plan:
     """Build a plan that places a still image over a video."""
 
-    base = media(source, audio=include_audio)
+    base = _media_with_optional_audio(source, include_audio)
     base_video = _require_video(base)
     mark = input(image).video()
     if width is not None:
@@ -911,7 +913,7 @@ def rotate(
 ) -> Plan:
     """Build a plan that rotates displayed video by a quarter turn."""
 
-    clip = media(source, audio=include_audio)
+    clip = _media_with_optional_audio(source, include_audio)
     video = rotate_video(_require_video(clip), degrees)
     return _web_plan(Clip(video, clip.audio), to, (source,), preset, overwrite)
 
@@ -932,7 +934,7 @@ def crop(
 
     _even_positive_integer("width", width)
     _even_positive_integer("height", height)
-    clip = media(source, audio=include_audio)
+    clip = _media_with_optional_audio(source, include_audio)
     video = crop_video(
         _require_video(clip),
         width=width,
@@ -1005,7 +1007,7 @@ def fit_canvas(
     _even_positive_integer("width", width)
     _even_positive_integer("height", height)
     _nonempty_text("color", color)
-    clip = media(source, audio=include_audio)
+    clip = _media_with_optional_audio(source, include_audio)
     video = _fit_canvas_video(
         _require_video(clip),
         width=width,
@@ -1031,7 +1033,7 @@ def picture_in_picture(
     """Overlay a video inset while keeping the main audio."""
 
     _positive_integer("inset_width", inset_width)
-    base = media(source, audio=include_audio)
+    base = _media_with_optional_audio(source, include_audio)
     main = _require_video(base).filter("setpts", expr("PTS-STARTPTS"))
     inset = input(inset_source).video().filter("setpts", expr("PTS-STARTPTS"))
     inset = scale(inset, width=inset_width)
@@ -1356,7 +1358,7 @@ def blurred_background(
     _even_positive_integer("width", width)
     _even_positive_integer("height", height)
     _positive_number("blur", blur)
-    clip = media(source, audio=include_audio)
+    clip = _media_with_optional_audio(source, include_audio)
     background_input, foreground_input = _require_video(clip).split()
     background = background_input.filter(
         "scale",
@@ -1643,7 +1645,7 @@ def remove_subtitles(
 ) -> Plan:
     """Create an MP4 with only the first video and optional first audio."""
 
-    clip = media(source, audio=include_audio)
+    clip = _media_with_optional_audio(source, include_audio)
     return _web_plan(clip, to, (source,), preset, overwrite)
 
 
@@ -2066,6 +2068,14 @@ def _require_video(clip: Clip) -> VideoStream:
     if clip.video is None:
         raise GraphError("Shortcut requires a video stream")
     return clip.video
+
+
+def _media_with_optional_audio(source: Pathish, include_audio: bool) -> Clip:
+    return media(
+        source,
+        audio=include_audio,
+        optional_audio=include_audio,
+    )
 
 
 def _require_audio(clip: Clip) -> AudioStream:
