@@ -196,3 +196,41 @@ flowmpeg voice raw.wav --no-denoise --no-compress -o level-only.wav
 The chain is meant for a useful first pass, not restoration of clipped or
 heavily distorted speech. Run `flowmpeg waveform` or inspect the result in an
 audio editor when gain changes are important.
+
+## Fixed privacy blur coordinates
+
+`privacy-blur` uses pixels measured from the top-left corner of the video.
+The rectangle stays at that position for the whole output.
+
+```text
+(0,0) frame origin
+  +--------------------------------------------------+
+  |                                                  |
+  |       x                                          |
+  |       <------>                                   |
+  |              (x,y) +-------------------+         |
+  |                    |                   |         |
+  |                  y |    blurred area   | height  |
+  |                    |                   |         |
+  |                    +-------------------+         |
+  |                         width                    |
+  |                                                  |
+  +--------------------------------------------------+
+```
+
+| Value | Unit | Constraint | Meaning |
+|---|---|---|---|
+| `x` | pixels | 0 or greater | Left edge of the region |
+| `y` | pixels | 0 or greater | Top edge of the region |
+| `width` | pixels | Positive | Region width |
+| `height` | pixels | Positive | Region height |
+| `radius` | pixels | 1 through 100 | Blur strength and spread |
+
+```console
+flowmpeg probe driveway.mp4
+flowmpeg privacy-blur driveway.mp4 --x 820 --y 700 --width 260 --height 90 --radius 18 -o private.mp4
+```
+
+The rectangle must fit inside the source frame. This shortcut does not track a
+moving face, plate, or screen. Split a moving subject into shorter sections
+with different coordinates, or use a tracking tool before Flowmpeg.

@@ -72,7 +72,7 @@ only a discussion or test placeholder.
 - [x] Add a social frame dimension and fill-mode comparison.
 - [x] Add a plan lifecycle and failure-path diagram.
 - [x] Add a podcast voice-chain diagram.
-- [ ] Add a fixed-region privacy blur coordinate diagram.
+- [x] Add a fixed-region privacy blur coordinate diagram.
 - [x] Add probe-first examples for secondary tracks.
 - [ ] Add CMD, PowerShell, and Bash batch examples.
 - [ ] Add a generated demo-media script based on FFmpeg test sources.
