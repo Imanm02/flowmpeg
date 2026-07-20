@@ -66,6 +66,18 @@ def test_invalid_filter_name_is_rejected() -> None:
         input("movie.mp4").video().filter("scale;movie=bad")
 
 
+def test_unordered_filter_options_are_rejected() -> None:
+    video = input("movie.mp4").video()
+
+    with pytest.raises(GraphError, match="stable order"):
+        apply_filter(
+            (video,),
+            "scale",
+            output_kinds=(StreamKind.VIDEO,),
+            options={("width", 640), ("height", 360)},
+        )
+
+
 def test_subtitle_split_is_rejected() -> None:
     with pytest.raises(GraphError, match="Subtitle streams cannot be split"):
         input("movie.mkv").subtitle().split()

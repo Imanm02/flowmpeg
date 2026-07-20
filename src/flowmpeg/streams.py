@@ -159,6 +159,8 @@ def apply_filter(
 
     graph = MediaGraph.merge(stream.graph for stream in streams)
     key = new_node_key()
+    if isinstance(options, (set, frozenset)):
+        raise GraphError("Filter options must have a stable order")
     option_items = options.items() if isinstance(options, Mapping) else options
     node = FilterNode(
         key=key,

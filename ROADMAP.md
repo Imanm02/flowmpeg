@@ -41,7 +41,7 @@ only a discussion or test placeholder.
 - [x] Validate audio bitrate syntax before building a command.
 - [x] Ignore audio bitrate controls when audio output is disabled.
 - [x] Reject Boolean audio, video, and subtitle stream indexes.
-- [ ] Reject unordered filter option collections.
+- [x] Reject unordered filter option collections.
 - [ ] Reject duplicate filter option names.
 - [ ] Strengthen runtime validation for graph model values.
 - [ ] Add a package-manager timeout and map timeout failures to `FMG304`.
