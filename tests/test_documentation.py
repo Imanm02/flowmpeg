@@ -2,8 +2,11 @@ from __future__ import annotations
 
 import argparse
 import ast
+import contextlib
 import inspect
+import io
 import re
+import shlex
 import subprocess
 import sys
 from pathlib import Path
@@ -93,6 +96,36 @@ def test_documentation_uses_known_commands() -> None:
     for line in command_lines:
         command = line.split(maxsplit=2)[1]
         assert command in known, line
+
+
+def test_documented_terminal_options_parse() -> None:
+    parser = build_parser()
+    checked: list[str] = []
+    failures: list[str] = []
+    for path in _MARKDOWN_FILES:
+        for number, line in enumerate(
+            path.read_text(encoding="utf-8").splitlines(),
+            start=1,
+        ):
+            if not line.startswith("flowmpeg ") or line.startswith("flowmpeg ["):
+                continue
+            argv = shlex.split(line)[1:]
+            if "--help" in argv or "--version" in argv:
+                continue
+            if any(token in argv for token in ("|", ">", "<", "&&")):
+                continue
+            checked.append(line)
+            try:
+                with (
+                    contextlib.redirect_stdout(io.StringIO()),
+                    contextlib.redirect_stderr(io.StringIO()),
+                ):
+                    parser.parse_args(argv)
+            except SystemExit:
+                failures.append(f"{path.relative_to(_ROOT)}:{number}: {line}")
+
+    assert len(checked) >= 200
+    assert not failures, "\n".join(failures)
 
 
 def test_workflow_guide_examples_build(monkeypatch: pytest.MonkeyPatch) -> None:

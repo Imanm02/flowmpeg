@@ -65,7 +65,7 @@ only a discussion or test placeholder.
 - [x] Add a documentation landing page organized by task.
 - [x] Add a generated project statistics report from source metadata.
 - [x] Test that generated statistics remain current.
-- [ ] Parse documented terminal options, not only command names.
+- [x] Parse documented terminal options, not only command names.
 - [ ] Build safe graph examples without starting FFmpeg.
 - [ ] Add an encode, copy, and filter behavior matrix.
 - [ ] Add a stream retention and track-selection matrix.
