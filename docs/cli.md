@@ -1076,7 +1076,11 @@ The installed program carries a small set of commands for quick recall:
 
 ```console
 flowmpeg examples
+flowmpeg examples --category images --json
 ```
+
+JSON output keeps the active category and search filters. Each item contains
+its category and copyable command text.
 
 This file is the longer reference. The [Python shortcut guide](shortcuts.md)
 shows the same kinds of jobs as one-call `Plan` builders, while the

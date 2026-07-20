@@ -1323,6 +1323,26 @@ def test_examples_report_an_empty_search(
     assert "no examples matched" in capsys.readouterr().err
 
 
+def test_examples_json_keeps_active_filters(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    assert (
+        cli.main(
+            ["examples", "--category", "images", "--search", "wave", "--json"]
+        )
+        == 0
+    )
+    report = json.loads(capsys.readouterr().out)
+
+    assert report["schema_version"] == 1
+    assert report["examples"] == [
+        {
+            "category": "images",
+            "command": "flowmpeg waveform song.mp3 -o waveform.png",
+        }
+    ]
+
+
 def test_commands_are_grouped_by_task(capsys: pytest.CaptureFixture[str]) -> None:
     assert cli.main(["commands"]) == 0
     output = capsys.readouterr().out

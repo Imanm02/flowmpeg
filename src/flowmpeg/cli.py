@@ -1802,6 +1802,7 @@ def _add_examples(
         help="Show one category",
     )
     parser.add_argument("--search", help="Find text in example commands")
+    parser.add_argument("--json", action="store_true", help="Print example JSON")
     parser.set_defaults(handler=_run_examples)
 
 
@@ -2069,6 +2070,13 @@ def _run_examples(args: argparse.Namespace) -> int:
         ]
     if not examples:
         return _error(GraphError("no examples matched"), 2, "FMG200")
+    if cast(bool, args.json):
+        report = {
+            "schema_version": _JSON_SCHEMA_VERSION,
+            "examples": [asdict(example) for example in examples],
+        }
+        print(json.dumps(report, indent=2, sort_keys=True))
+        return 0
     print("\n".join(example.command for example in examples))
     return 0
 
