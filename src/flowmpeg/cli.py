@@ -120,7 +120,7 @@ _EXAMPLES = (
         "effects",
         "flowmpeg privacy-blur street.mp4 --x 20 --y 20 --width 200 --height 80 -o private.mp4",
     ),
-    _Example("effects", "flowmpeg bounce jump.mp4 --duration 2 -o jump-bounce.mp4"),
+    _Example("video", "flowmpeg bounce jump.mp4 --duration 2 -o jump-bounce.mp4"),
     _Example("video", "flowmpeg compress input.mov -o smaller.mp4"),
     _Example("video", "flowmpeg social input.mp4 --target vertical -o vertical.mp4"),
     _Example("audio", "flowmpeg voice recording.wav -o finished.wav"),

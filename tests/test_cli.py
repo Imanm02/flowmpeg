@@ -13,6 +13,7 @@ from io import StringIO
 import pytest
 
 from flowmpeg import cli, diagnostics
+from flowmpeg.catalog import COMMAND_CATALOG
 from flowmpeg.errors import (
     BinaryNotFoundError,
     BinaryUnusableError,
@@ -1270,6 +1271,18 @@ def test_example_catalog_parses_every_command() -> None:
     for example in cli._EXAMPLES:
         args = parser.parse_args(shlex.split(example.command)[1:])
         assert callable(args.handler), example.command
+
+
+def test_example_categories_match_the_command_catalog() -> None:
+    commands = {
+        name: spec
+        for spec in COMMAND_CATALOG
+        for name in (spec.name, *spec.aliases)
+    }
+
+    for example in cli._EXAMPLES:
+        command = shlex.split(example.command)[1]
+        assert commands[command].category == example.category, example.command
 
 
 def test_editing_examples_build_dry_run_plans(
