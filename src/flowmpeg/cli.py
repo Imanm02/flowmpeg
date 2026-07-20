@@ -156,6 +156,7 @@ _FEATURE_REQUIREMENTS = {
         "encoder:libmp3lame",
         "encoder:pcm_s16le",
         "muxer:flac",
+        "muxer:ipod",
         "muxer:mp3",
         "muxer:wav",
     ),
@@ -164,9 +165,13 @@ _FEATURE_REQUIREMENTS = {
         "encoder:libx264",
         "filter:concat",
         "filter:crop",
+        "filter:gblur",
         "filter:overlay",
         "filter:pad",
         "filter:scale",
+        "filter:setpts",
+        "filter:setsar",
+        "filter:split",
         "filter:xstack",
         "muxer:mp4",
     ),
@@ -195,6 +200,10 @@ _FEATURE_REQUIREMENTS = {
         "encoder:libwebp",
         "encoder:mjpeg",
         "encoder:png",
+        "filter:fps",
+        "filter:pad",
+        "filter:scale",
+        "filter:setsar",
         "filter:showspectrumpic",
         "filter:showwavespic",
         "filter:tile",
@@ -259,9 +268,12 @@ _FEATURE_REQUIREMENTS = {
     "audiogram": (
         "encoder:aac",
         "encoder:libx264",
+        "filter:asplit",
         "filter:colorkey",
         "filter:overlay",
+        "filter:pad",
         "filter:scale",
+        "filter:setsar",
         "filter:showwaves",
         "muxer:mp4",
     ),
@@ -2394,7 +2406,7 @@ def _capability_report(ffmpeg: str, timeout: float) -> dict[str, bool | None]:
         "webvtt",
     ):
         report[f"encoder:{name}"] = _listing_has(encoders, name)
-    for name in ("flac", "gif", "image2", "mp3", "mp4", "wav"):
+    for name in ("flac", "gif", "image2", "ipod", "mp3", "mp4", "wav"):
         report[f"muxer:{name}"] = _listing_has(muxers, name)
     return report
 

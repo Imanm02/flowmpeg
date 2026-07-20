@@ -685,7 +685,17 @@ def test_doctor_checks_filters_and_ass_subtitles(
 
     report = cli._capability_report("ffmpeg", 1)
 
-    for name in ("acrossfade", "adelay", "aformat", "yadif", "ass"):
+    for name in (
+        "acrossfade",
+        "adelay",
+        "aformat",
+        "asplit",
+        "gblur",
+        "ipod",
+        "setsar",
+        "yadif",
+        "ass",
+    ):
         assert name in checked
     assert report["encoder:ass"] is True
 
