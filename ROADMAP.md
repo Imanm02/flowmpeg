@@ -165,7 +165,7 @@ only a discussion or test placeholder.
 
 - [x] Turn FFmpeg silence detection into typed intervals and terminal JSON.
 - [x] Report black video intervals with configurable picture and time levels.
-- [ ] Report scene-change timecodes for chapter and thumbnail candidates.
+- [x] Report scene-change timecodes for chapter and thumbnail candidates.
 - [ ] Suggest crop rectangles from measured border data.
 - [ ] Check delivery constraints such as duration, dimensions, and codecs.
 - [ ] Add measured two-pass loudness normalization as a workflow.

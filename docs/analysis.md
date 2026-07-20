@@ -14,6 +14,7 @@ choose settings from measured input instead of guessing.
 | How loud is an audio track? | `loudness` | EBU R128 measurements |
 | Where are the quiet gaps? | `find-silence` | Start, end, and duration intervals |
 | Where is the picture black? | `find-black` | Black picture intervals |
+| Where does the picture change sharply? | `scenes` | Timecodes and scene scores |
 | Can this machine run a command? | `doctor --command NAME` | Exact capability checks |
 
 Add `--json` when another program will read the result. Human reports favor
@@ -253,3 +254,78 @@ flowmpeg doctor --command find-black
 
 The check requires FFmpeg's `blackdetect` filter. The scan maps one selected
 video track and does not encode an output file.
+
+## Find scene-change timecodes
+
+```console
+flowmpeg scenes interview.mp4
+```
+
+The scene score is normalized from 0 through 1. Higher scores mean a larger
+visual difference from the preceding frame. The default threshold is 0.35:
+
+```text
+Scene report: 3 changes
+Source: interview.mp4
+Video track: 0
+Threshold: 0.35
+Strongest change: 48.200s (score 0.910)
+
+Changes:
+  1. 12.400s (score 0.430)
+  2. 31.750s (score 0.620)
+  3. 48.200s (score 0.910)
+```
+
+```text
+time       0        12.40             31.75             48.20
+           |==========|=================|=================|
+candidate             cut               chapter           thumbnail
+score                  0.43              0.62              0.91
+```
+
+The score is not a semantic understanding of the scene. A camera flash or a
+hard exposure change can score highly, while a slow dissolve may not cross the
+threshold.
+
+## Choose a scene threshold
+
+```console
+flowmpeg scenes lecture.mp4 --threshold 0.5
+flowmpeg find-scenes music-video.mp4 --threshold 0.2
+flowmpeg scene-report multi-angle.mkv --track 1 --threshold 0.4 --json
+```
+
+| Goal | Starting threshold | Expected effect |
+|---|---:|---|
+| Major chapter boundaries | 0.5 | Fewer, stronger candidates |
+| General shot changes | 0.35 | Balanced starting list |
+| Fast montage review | 0.2 | More candidates, including smaller changes |
+
+Lower the value when known cuts are missing. Raise it when flashes or camera
+movement create too many candidates. The report always stays in timeline
+order, and `strongest_change` points to the highest score.
+
+## Use scene candidates in Python
+
+```python
+from flowmpeg import detect_scenes
+
+report = detect_scenes("interview.mp4", threshold=0.4, timeout=60)
+
+for change in report.changes:
+    print(f"{change.time:.3f}s", change.score)
+
+if report.strongest_change is not None:
+    print(report.strongest_change.time)
+```
+
+Possible next steps include creating chapter candidates, choosing contact-sheet
+frames, or reviewing a long recording around its strongest changes. Flowmpeg
+reports measurements and leaves the editorial choice to the caller.
+
+```console
+flowmpeg doctor --command scenes
+```
+
+The exact check requires FFmpeg's `select` and `metadata` video filters.
