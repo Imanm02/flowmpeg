@@ -197,3 +197,35 @@ def test_output_cannot_alias_an_input() -> None:
 
     with pytest.raises(GraphError, match="cannot replace a plan input"):
         output(source.video(), to="same.mp4")
+
+
+def test_file_url_output_cannot_alias_an_input(tmp_path: Path) -> None:
+    source_path = tmp_path / "same.mp4"
+    source = input(source_path)
+
+    with pytest.raises(GraphError, match="cannot replace a plan input"):
+        output(source.video(), to=source_path.as_uri())
+
+
+def test_existing_hardlink_outputs_are_not_unique(tmp_path: Path) -> None:
+    first = tmp_path / "first.mp4"
+    second = tmp_path / "second.mp4"
+    first.touch()
+    second.hardlink_to(first)
+    source = input("in.mp4")
+
+    with pytest.raises(GraphError, match="must be unique"):
+        output(source.video(), to=first).add_output(source.video(), to=second)
+
+
+def test_symlink_output_cannot_alias_an_input(tmp_path: Path) -> None:
+    source_path = tmp_path / "source.mp4"
+    alias_path = tmp_path / "alias.mp4"
+    source_path.touch()
+    try:
+        alias_path.symlink_to(source_path)
+    except OSError:
+        pytest.skip("Creating symlinks is not permitted")
+
+    with pytest.raises(GraphError, match="cannot replace a plan input"):
+        output(input(source_path).video(), to=alias_path)

@@ -11,6 +11,7 @@ from typing import Literal, TypeAlias
 from flowmpeg.clip import Clip, concat_clips, media
 from flowmpeg.errors import GraphError
 from flowmpeg.model import Expression, FilterValue, StreamKind, expr
+from flowmpeg.pathing import same_destination
 from flowmpeg.plan import Plan, output
 from flowmpeg.recipes.audio import (
     MixDuration,
@@ -83,7 +84,6 @@ SpectrumColor = Literal[
     "terrain",
 ]
 
-_protocol = re.compile(r"^[A-Za-z][A-Za-z0-9+.-]+:")
 _audio_suffixes: dict[AudioCodec, frozenset[str]] = {
     "mp3": frozenset({".mp3"}),
     "aac": frozenset({".aac", ".m4a"}),
@@ -2011,13 +2011,9 @@ def _metadata_value(name: str, value: str) -> None:
 
 def _validate_paths(sources: Sequence[Pathish], to: Pathish) -> None:
     destination = _path_text("Output", to)
-    destination_id = _local_path_id(destination)
     for source in sources:
         source_text = _path_text("Input", source)
-        source_id = _local_path_id(source_text)
-        if destination_id is not None and source_id == destination_id:
-            raise GraphError("Output path must differ from every input path")
-        if _same_existing_file(source_text, destination):
+        if same_destination(source_text, destination):
             raise GraphError("Output path must differ from every input path")
 
 
@@ -2034,24 +2030,6 @@ def _path_text(label: str, value: Pathish) -> str:
     if text.startswith("-"):
         raise GraphError(f"{label} path cannot start with a dash")
     return text
-
-
-def _local_path_id(value: str) -> str | None:
-    if value == "-" or value.upper() == "NUL" or value == "/dev/null":
-        return None
-    drive, _ = os.path.splitdrive(value)
-    if not drive and _protocol.match(value):
-        return None
-    return os.path.normcase(os.path.realpath(os.path.abspath(value)))
-
-
-def _same_existing_file(first: str, second: str) -> bool:
-    if _local_path_id(first) is None or _local_path_id(second) is None:
-        return False
-    try:
-        return os.path.samefile(first, second)
-    except (FileNotFoundError, OSError):
-        return False
 
 
 def _set_overwrite(plan: Plan, overwrite: bool) -> Plan:

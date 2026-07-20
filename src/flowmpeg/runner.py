@@ -2,16 +2,13 @@
 
 from __future__ import annotations
 
-import os
 import queue
-import re
 import subprocess
 import threading
 import time
 from collections import deque
 from collections.abc import Callable
 from dataclasses import dataclass
-from pathlib import Path
 from typing import TextIO
 
 from flowmpeg.diagnostics import display_argv, redact_text
@@ -23,10 +20,9 @@ from flowmpeg.errors import (
     JobTimeoutError,
     OutputExistsError,
 )
+from flowmpeg.pathing import local_path
 from flowmpeg.plan import Plan
 from flowmpeg.progress import Progress, ProgressParser
-
-_protocol = re.compile(r"^[A-Za-z][A-Za-z0-9+.-]+:")
 
 
 @dataclass(frozen=True, slots=True)
@@ -194,7 +190,7 @@ def _check_outputs(plan: Plan) -> None:
     if plan.overwrite_enabled:
         return
     for output in plan.outputs:
-        path = _local_path(output.destination)
+        path = local_path(output.destination)
         if path is not None and path.exists():
             raise OutputExistsError(f"Output already exists: {path}")
 
@@ -210,15 +206,6 @@ def _check_pipes(plan: Plan) -> None:
         for output in plan.outputs
     ):
         raise GraphError("The synchronous runner reserves standard output")
-
-
-def _local_path(destination: str) -> Path | None:
-    if destination == "-" or destination.upper() == "NUL" or destination == "/dev/null":
-        return None
-    drive, _ = os.path.splitdrive(destination)
-    if not drive and _protocol.match(destination):
-        return None
-    return Path(destination)
 
 
 class _TextTail:

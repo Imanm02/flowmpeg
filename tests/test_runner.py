@@ -49,6 +49,15 @@ def test_runner_refuses_existing_output(tmp_path: Path) -> None:
         plan.run()
 
 
+def test_runner_refuses_existing_file_url(tmp_path: Path) -> None:
+    target = tmp_path / "copy file.mp4"
+    target.touch()
+    plan = output(input("movie.mp4").video(), to=target.as_uri())
+
+    with pytest.raises(OutputExistsError, match="already exists"):
+        plan.run()
+
+
 def test_plan_rejects_dash_output() -> None:
     with pytest.raises(GraphError, match="start with a dash"):
         output(input("movie.mp4").video(), to="-")

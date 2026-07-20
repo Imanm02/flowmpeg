@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import os
-import re
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass, replace
 from typing import TYPE_CHECKING
@@ -11,9 +10,8 @@ from typing import TYPE_CHECKING
 from flowmpeg.diagnostics import redact_text
 from flowmpeg.errors import GraphError
 from flowmpeg.model import MediaGraph, StreamRef
+from flowmpeg.pathing import same_destination
 from flowmpeg.streams import Stream
-
-_protocol = re.compile(r"^[A-Za-z][A-Za-z0-9+.-]+:")
 
 if TYPE_CHECKING:
     from flowmpeg.compiler import CompiledCommand
@@ -92,14 +90,15 @@ class Plan:
         if not self.outputs:
             raise GraphError("Plans require at least one output")
 
-        destinations = [
-            _destination_id(output.destination) for output in self.outputs
-        ]
-        if len(destinations) != len(set(destinations)):
+        destinations = [output.destination for output in self.outputs]
+        if _contains_alias(destinations):
             raise GraphError("Output destinations must be unique")
 
-        input_sources = {_destination_id(node.source) for node in self.graph.inputs}
-        if input_sources.intersection(destinations):
+        if any(
+            same_destination(node.source, destination)
+            for node in self.graph.inputs
+            for destination in destinations
+        ):
             raise GraphError("An output destination cannot replace a plan input")
 
         input_keys = {node.key for node in self.graph.inputs}
@@ -215,8 +214,9 @@ def _ordered_args(args: Iterable[str]) -> tuple[str, ...]:
     return values
 
 
-def _destination_id(destination: str) -> str:
-    drive, _ = os.path.splitdrive(destination)
-    if not drive and _protocol.match(destination):
-        return destination
-    return os.path.normcase(os.path.abspath(destination))
+def _contains_alias(destinations: list[str]) -> bool:
+    return any(
+        same_destination(destination, other)
+        for index, destination in enumerate(destinations)
+        for other in destinations[index + 1 :]
+    )
