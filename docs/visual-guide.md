@@ -160,3 +160,39 @@ print(plan.explain())
 result = plan.run(timeout=120)
 print(result.elapsed)
 ```
+
+## Podcast voice chain
+
+`voice` is a fixed one-pass chain for spoken audio. Each stage has a separate
+job, so the order matters.
+
+```mermaid
+flowchart LR
+    A["Selected audio track"] --> B["highpass, remove low rumble"]
+    B --> C["lowpass, limit very high content"]
+    C --> D{"Denoise enabled?"}
+    D -->|"Yes"| E["afftdn, reduce steady noise"]
+    D -->|"No"| F{"Compression enabled?"}
+    E --> F
+    F -->|"Yes"| G["acompressor, reduce level range"]
+    F -->|"No"| H["loudnorm, target minus 16 LUFS"]
+    G --> H
+    H --> I["Encoded audio output"]
+```
+
+| Stage | Default control | What a larger value changes |
+|---|---:|---|
+| High-pass | 80 Hz | Removes more low-frequency content |
+| Low-pass | 12000 Hz | A larger cutoff keeps more high-frequency content |
+| Noise reduction | 12 dB | Applies stronger steady-noise reduction |
+| Compressor ratio | 3:1 | Pushes loud sections closer to quieter sections |
+| Loudness target | -16 LUFS | Fixed delivery target in this shortcut |
+
+```console
+flowmpeg voice raw.wav -o finished.wav
+flowmpeg voice raw.wav --no-denoise --no-compress -o level-only.wav
+```
+
+The chain is meant for a useful first pass, not restoration of clipped or
+heavily distorted speech. Run `flowmpeg waveform` or inspect the result in an
+audio editor when gain changes are important.

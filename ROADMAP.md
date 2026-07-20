@@ -71,7 +71,7 @@ only a discussion or test placeholder.
 - [x] Add a stream retention and track-selection matrix.
 - [x] Add a social frame dimension and fill-mode comparison.
 - [x] Add a plan lifecycle and failure-path diagram.
-- [ ] Add a podcast voice-chain diagram.
+- [x] Add a podcast voice-chain diagram.
 - [ ] Add a fixed-region privacy blur coordinate diagram.
 - [x] Add probe-first examples for secondary tracks.
 - [ ] Add CMD, PowerShell, and Bash batch examples.
