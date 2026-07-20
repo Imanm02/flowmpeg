@@ -20,7 +20,7 @@ job.
 These staged examples encode video at several boundaries. That makes restart
 and inspection points clear, but it takes more time and can add generation
 loss. For a quality-sensitive final path, combine the stages in one graph and
-use the [encoding behavior matrix](visual-guide.md#encode-copy-and-filter-behavior)
+use the [encoding behavior matrix](visual-guide.md#copy-encode-or-filter)
 to identify each encode boundary.
 
 ## Lesson with selectable captions
