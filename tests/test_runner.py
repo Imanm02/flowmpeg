@@ -1,4 +1,5 @@
 import io
+import os
 import shutil
 import subprocess
 import threading
@@ -48,6 +49,23 @@ def test_runner_refuses_existing_output(tmp_path: Path) -> None:
     target = tmp_path / "copy.mp4"
     target.touch()
     plan = output(input("movie.mp4").video(), to=target)
+
+    with pytest.raises(OutputExistsError, match="already exists"):
+        plan.run()
+
+
+def test_runner_refuses_dangling_output_symlink(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    target = tmp_path / "copy.mp4"
+    plan = output(input("movie.mp4").video(), to=target)
+    original_lexists = os.path.lexists
+
+    def report_dangling_link(path: str | os.PathLike[str]) -> bool:
+        return os.fspath(path) == os.fspath(target) or original_lexists(path)
+
+    monkeypatch.setattr(os.path, "lexists", report_dangling_link)
 
     with pytest.raises(OutputExistsError, match="already exists"):
         plan.run()

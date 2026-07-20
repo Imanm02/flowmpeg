@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import math
+import os
 import queue
 import subprocess
 import threading
@@ -249,7 +250,7 @@ def _check_outputs(plan: Plan) -> None:
         return
     for output in plan.outputs:
         path = local_path(output.destination)
-        if path is not None and path.exists():
+        if path is not None and os.path.lexists(path):
             raise OutputExistsError(f"Output already exists: {path}")
 
 
