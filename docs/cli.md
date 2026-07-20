@@ -151,6 +151,14 @@ Use `--no-audio` for a source with no audio stream:
 flowmpeg convert animation.mov --no-audio -o animation.mp4
 ```
 
+Commands that change audio timing cannot discover a missing track while they
+build a plan. Pass `--no-audio` to `cut`, `join`, `speed`, `fade`, `freeze`,
+`reverse`, or `bounce` when the input is silent.
+
+```console
+flowmpeg speed silent-demo.mp4 --factor 2 --no-audio -o fast.mp4
+```
+
 ### Cut by start and duration
 
 **Input:** `meeting.mp4`

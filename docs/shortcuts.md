@@ -23,6 +23,15 @@ writes `clip.mp4`.
 5. A missing stream is reported by FFmpeg at execution time. Building a plan
    does not probe the input.
 
+Shortcuts that only pass audio through use an optional map. Shortcuts that
+filter audio need the stream to exist. For a silent source, set
+`include_audio=False` on `trim`, `join_matching`, `change_speed`, `freeze_end`,
+`fade_edges`, `reverse_clip`, or `boomerang`.
+
+```python
+ff.change_speed("silent-demo.mp4", "fast.mp4", factor=2, include_audio=False).run()
+```
+
 The examples below assume this import:
 
 ```python

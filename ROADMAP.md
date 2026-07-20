@@ -17,16 +17,19 @@ only a discussion or test placeholder.
   typed Flowmpeg error instead of a traceback.
 - [x] Reject `-` as a synchronous runner input or output because the runner
   reserves stdin and stdout.
-- [x] Reject local output aliases such as `out.mp4` and `.\out.mp4` in one
-  plan.
-- [x] Reject a local output that resolves to one of the plan inputs.
-- [x] Make common video shortcuts work with silent input files without mapping
-  a missing audio stream.
+- [x] Reject local output aliases such as relative paths, file URLs, hard
+  links, and symbolic links in one plan.
+- [x] Reject a local output that resolves to one of the plan inputs, including
+  file URLs and filesystem links.
+- [x] Make passthrough-audio video shortcuts work with silent input files
+  without mapping a missing audio stream.
 - [x] Guarantee even H.264 dimensions for compression, resize, crop, and grid
   outputs.
 - [ ] Put a safe resource bound around two-pass edge-silence trimming.
 - [ ] Make doctor requirements cover every filter and output capability used by
   each public command.
+- [ ] Let audio-transforming timeline shortcuts detect a missing input audio
+  stream without a separate probe or `--no-audio` choice.
 
 ### P2
 
@@ -44,6 +47,9 @@ only a discussion or test placeholder.
 - [x] Reject unordered filter option collections.
 - [x] Reject duplicate filter option names.
 - [x] Strengthen runtime validation for graph model values.
+- [x] Reject optional filter inputs and optional filter outputs built through
+  low-level model values.
+- [x] Validate direct Python probe timeouts before starting FFprobe.
 - [x] Add a package-manager timeout and map timeout failures to `FMG304`.
 - [x] Treat end-of-file at the setup confirmation prompt as cancellation.
 - [x] Let setup inspect custom FFmpeg and FFprobe executable paths.
@@ -84,6 +90,8 @@ only a discussion or test placeholder.
 ## Current limits
 
 - Shortcuts select explicit first streams unless a track option says otherwise.
+- Audio-transforming video shortcuts require `include_audio=False` or
+  `--no-audio` when the source has no audio stream.
 - Fixed-region blur does not track a moving face, plate, or screen area.
 - Compression quality settings do not guarantee a smaller file than every
   possible input. Measure the result before choosing a delivery setting.
