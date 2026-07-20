@@ -1635,6 +1635,12 @@ def _add_setup(commands: argparse._SubParsersAction[argparse.ArgumentParser]) ->
         help="Confirm installation without an interactive prompt",
     )
     parser.add_argument("--timeout", type=_positive_float, default=10.0)
+    parser.add_argument(
+        "--install-timeout",
+        type=_positive_float,
+        default=600.0,
+        help="Maximum seconds for each package manager command",
+    )
     parser.add_argument("--json", action="store_true")
     parser.set_defaults(handler=_run_setup)
 
@@ -1766,6 +1772,7 @@ def _run_setup(args: argparse.Namespace) -> int:
     assume_yes = cast(bool, args.yes)
     as_json = cast(bool, args.json)
     timeout = cast(float, args.timeout)
+    install_timeout = cast(float, args.install_timeout)
     if assume_yes and not install:
         return _error(
             GraphError("--yes requires --install"),
@@ -1822,7 +1829,20 @@ def _run_setup(args: argparse.Namespace) -> int:
 
     for command in installer.commands:
         try:
-            completed = subprocess.run(command, check=False, shell=False)
+            completed = subprocess.run(
+                command,
+                check=False,
+                shell=False,
+                timeout=install_timeout,
+            )
+        except subprocess.TimeoutExpired:
+            return _error(
+                FlowmpegError(
+                    f"{installer.manager} timed out after {install_timeout:g} seconds"
+                ),
+                8,
+                "FMG304",
+            )
         except OSError as error:
             return _error(error, 8, "FMG304")
         if completed.returncode != 0:

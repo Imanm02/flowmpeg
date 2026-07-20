@@ -758,7 +758,7 @@ def test_setup_install_yes_runs_fixed_argv(
     assert calls == [
         (
             ("manager", "install", "ffmpeg"),
-            {"check": False, "shell": False},
+            {"check": False, "shell": False, "timeout": 600.0},
         )
     ]
     assert "FFmpeg and FFprobe are ready" in capsys.readouterr().out
@@ -824,6 +824,38 @@ def test_setup_install_failure_returns_eight(
 
     assert cli.main(["setup", "--install", "--yes"]) == 8
     assert "FMG304" in capsys.readouterr().err
+
+
+def test_setup_install_timeout_returns_eight(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    monkeypatch.setattr(
+        cli,
+        "_tool_report",
+        lambda *args: {"ok": False, "status": "missing", "path": None},
+    )
+    monkeypatch.setattr(
+        cli,
+        "_detect_installer",
+        lambda: cli._Installer(
+            "manager",
+            (("manager", "install", "ffmpeg"),),
+            "Test package source.",
+        ),
+    )
+
+    def time_out(*args: object, **kwargs: object) -> None:
+        raise subprocess.TimeoutExpired(args[0], kwargs["timeout"])
+
+    monkeypatch.setattr(subprocess, "run", time_out)
+
+    assert cli.main(
+        ["setup", "--install", "--yes", "--install-timeout", "2"]
+    ) == 8
+    output = capsys.readouterr().err
+    assert "timed out after 2 seconds" in output
+    assert "FMG304" in output
 
 
 def test_setup_json_describes_state_without_changes(

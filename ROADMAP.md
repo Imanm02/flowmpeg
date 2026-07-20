@@ -44,7 +44,7 @@ only a discussion or test placeholder.
 - [x] Reject unordered filter option collections.
 - [x] Reject duplicate filter option names.
 - [x] Strengthen runtime validation for graph model values.
-- [ ] Add a package-manager timeout and map timeout failures to `FMG304`.
+- [x] Add a package-manager timeout and map timeout failures to `FMG304`.
 - [ ] Treat end-of-file at the setup confirmation prompt as cancellation.
 - [ ] Let setup inspect custom FFmpeg and FFprobe executable paths.
 - [ ] Include tool return codes and bounded failure reasons in doctor JSON.
