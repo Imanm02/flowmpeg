@@ -64,20 +64,69 @@ class _Example:
 
 
 _EXAMPLES = (
+    _Example("video", "flowmpeg convert recording.mov -o recording.mp4"),
+    _Example("video", "flowmpeg convert animation.mov --no-audio -o animation.mp4"),
     _Example("video", "flowmpeg cut input.mp4 --start 5 --duration 12 -o clip.mp4"),
     _Example("video", "flowmpeg resize input.mp4 --width 1280 -o smaller.mp4"),
     _Example("video", "flowmpeg mute input.mp4 -o silent.mp4"),
+    _Example(
+        "video", "flowmpeg reframe screen.mp4 --width 720 --height 1280 -o short.mp4"
+    ),
+    _Example("video", "flowmpeg fps phone.mp4 --fps 30 -o constant.mp4"),
+    _Example("video", "flowmpeg deinterlace tape.mpg --mode yadif -o progressive.mp4"),
+    _Example("video", "flowmpeg mirror selfie.mp4 -o normal-view.mp4"),
+    _Example(
+        "video", "flowmpeg crop wide.mp4 --width 1080 --height 1080 -o square.mp4"
+    ),
+    _Example("video", "flowmpeg speed lesson.mp4 --factor 1.5 -o faster.mp4"),
+    _Example("video", "flowmpeg freeze announcement.mp4 --seconds 3 -o held.mp4"),
+    _Example(
+        "video",
+        "flowmpeg silence-section meeting.mp4 --start 73 --end 81 -o redacted.mp4",
+    ),
     _Example("audio", "flowmpeg audio input.mp4 -o track.mp3"),
+    _Example("audio", "flowmpeg swap-audio video.mp4 narration.wav -o narrated.mp4"),
+    _Example("audio", "flowmpeg mix host.wav guest.wav -o conversation.wav"),
+    _Example("audio", "flowmpeg normalize voice.wav --integrated -23 -o broadcast.wav"),
+    _Example("audio", "flowmpeg denoise room.wav --reduction 10 -o clean.wav"),
+    _Example("audio", "flowmpeg dynamics uneven.wav --ratio 4 -o controlled.wav"),
+    _Example("audio", "flowmpeg desilence take.wav --threshold-db -45 -o tight.wav"),
+    _Example("audio", "flowmpeg mono interview.wav --codec mp3 -o interview.mp3"),
+    _Example(
+        "audio", "flowmpeg crossfade intro.wav main.wav --duration 2 -o program.wav"
+    ),
+    _Example("audio", "flowmpeg music talk.mp4 music.mp3 -o scored.mp4"),
+    _Example("audio", "flowmpeg duck talk.mp4 music.mp3 -o ducked.mp4"),
+    _Example("audio", 'flowmpeg tag episode.m4a --title "Episode 12" -o tagged.m4a'),
     _Example("composition", "flowmpeg pip main.mp4 inset.mp4 -o result.mp4"),
+    _Example("composition", "flowmpeg mark video.mp4 logo.png -o branded.mp4"),
+    _Example("composition", "flowmpeg join part-1.mp4 part-2.mp4 -o joined.mp4"),
+    _Example("composition", "flowmpeg grid cam-1.mp4 cam-2.mp4 -o grid.mp4"),
+    _Example("composition", "flowmpeg fit portrait.mp4 -o portrait-wide.mp4"),
+    _Example(
+        "composition", "flowmpeg still-video cover.jpg episode.mp3 -o episode.mp4"
+    ),
     _Example("images", "flowmpeg gif input.mp4 --start 3 --duration 4 -o preview.gif"),
+    _Example("images", "flowmpeg thumb video.mp4 --at 12 -o moment.jpg"),
     _Example("images", "flowmpeg waveform song.mp3 -o waveform.png"),
     _Example("images", "flowmpeg spectrum song.mp3 -o spectrum.png"),
     _Example("images", "flowmpeg sheet input.mp4 --interval 8 -o sheet.jpg"),
     _Example("effects", "flowmpeg reverse input.mp4 --duration 6 -o reversed.mp4"),
+    _Example("effects", "flowmpeg fade video.mp4 --duration 12 -o faded.mp4"),
+    _Example("effects", "flowmpeg color flat.mp4 --contrast 1.12 -o graded.mp4"),
+    _Example("effects", "flowmpeg sharpen soft.mp4 --amount 1.2 -o sharp.mp4"),
+    _Example(
+        "effects",
+        "flowmpeg privacy-blur street.mp4 --x 20 --y 20 --width 200 --height 80 -o private.mp4",
+    ),
+    _Example("effects", "flowmpeg bounce jump.mp4 --duration 2 -o jump-bounce.mp4"),
     _Example("video", "flowmpeg compress input.mov -o smaller.mp4"),
     _Example("video", "flowmpeg social input.mp4 --target vertical -o vertical.mp4"),
     _Example("audio", "flowmpeg voice recording.wav -o finished.wav"),
     _Example("subtitles", "flowmpeg captions movie.mp4 subtitles.srt -o captioned.mp4"),
+    _Example("subtitles", "flowmpeg subtitles film.mkv -o captions.srt"),
+    _Example("subtitles", "flowmpeg strip-subtitles film.mkv -o clean.mkv"),
+    _Example("metadata", "flowmpeg clean-metadata camera.mkv -o share.mkv"),
     _Example("images", "flowmpeg timelapse frames/frame-%04d.png -o timelapse.mp4"),
     _Example("composition", "flowmpeg audiogram episode.wav cover.jpg -o episode.mp4"),
     _Example("inspect", "flowmpeg probe input.mp4"),

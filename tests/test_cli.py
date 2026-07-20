@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import platform
+import shlex
 import shutil
 import subprocess
 import sys
@@ -1154,7 +1155,15 @@ def test_examples_are_ready_to_edit(capsys: pytest.CaptureFixture[str]) -> None:
     output = capsys.readouterr().out
     assert "flowmpeg cut" in output
     assert "flowmpeg doctor" in output
-    assert output.count("flowmpeg ") >= 10
+    assert output.count("flowmpeg ") >= 50
+
+
+def test_example_catalog_parses_every_command() -> None:
+    parser = cli.build_parser()
+
+    for example in cli._EXAMPLES:
+        args = parser.parse_args(shlex.split(example.command)[1:])
+        assert callable(args.handler), example.command
 
 
 def test_examples_filter_by_category_and_search(
