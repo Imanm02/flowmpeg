@@ -23,11 +23,10 @@ from flowmpeg import (
     input,
     output,
 )
+from flowmpeg.processes import _signal_process_tree, stop_process_tree
 from flowmpeg.runner import (
     _put_latest,
     _read_stderr,
-    _signal_process_tree,
-    _stop_process,
     _TextTail,
     _warn_unconfirmed_cleanup,
 )
@@ -201,7 +200,7 @@ def test_process_cleanup_does_not_mask_a_job_error() -> None:
 
     process = cast(subprocess.Popen[str], BrokenProcess())
 
-    assert _stop_process(process, 0.0) is False
+    assert stop_process_tree(process, 0.0) is False
 
 
 def test_cleanup_warning_cannot_mask_a_job_error(
@@ -233,7 +232,7 @@ def test_process_cleanup_kills_after_poll_failure() -> None:
     value = PollFailure()
     process = cast(subprocess.Popen[str], value)
 
-    assert _stop_process(process, 0.0) is True
+    assert stop_process_tree(process, 0.0) is True
     assert value.killed
 
 
@@ -260,7 +259,7 @@ def test_process_cleanup_reports_unconfirmed_exit() -> None:
     value = StuckProcess()
     process = cast(subprocess.Popen[str], value)
 
-    assert _stop_process(process, 0.0) is False
+    assert stop_process_tree(process, 0.0) is False
     assert value.killed
 
 
@@ -306,7 +305,7 @@ def test_posix_cleanup_signals_the_process_group(
     class Process:
         pid = 123
 
-    monkeypatch.setattr("flowmpeg.runner._WINDOWS", False)
+    monkeypatch.setattr("flowmpeg.processes._WINDOWS", False)
     monkeypatch.setattr(os, "getpgid", lambda pid: pid + 1, raising=False)
     monkeypatch.setattr(signal, "SIGKILL", 9, raising=False)
     monkeypatch.setattr(
@@ -340,7 +339,7 @@ def test_windows_cleanup_targets_descendants(
         commands.append(command)
         return subprocess.CompletedProcess(command, 0)
 
-    monkeypatch.setattr("flowmpeg.runner._WINDOWS", True)
+    monkeypatch.setattr("flowmpeg.processes._WINDOWS", True)
     monkeypatch.setattr(subprocess, "run", run_taskkill)
     process = cast(subprocess.Popen[str], Process())
 
@@ -381,7 +380,7 @@ def test_slow_progress_callback_does_not_block_timeout(
 
     process = RunningProcess()
     monkeypatch.setattr(subprocess, "Popen", lambda *args, **kwargs: process)
-    monkeypatch.setattr("flowmpeg.runner._stop_process", lambda *args: True)
+    monkeypatch.setattr("flowmpeg.runner.stop_process_tree", lambda *args: True)
     plan = output(input("movie.mp4").video(), to=tmp_path / "copy.mp4")
 
     def wait_on_progress(event: Progress) -> None:
