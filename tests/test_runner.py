@@ -1,6 +1,7 @@
 import shutil
 import subprocess
 from pathlib import Path
+from typing import cast
 
 import pytest
 
@@ -14,7 +15,7 @@ from flowmpeg import (
     input,
     output,
 )
-from flowmpeg.runner import _TextTail
+from flowmpeg.runner import _stop_process, _TextTail
 
 
 def test_runner_reports_missing_binary(tmp_path: Path) -> None:
@@ -85,6 +86,22 @@ def test_stderr_tail_keeps_the_latest_text() -> None:
     tail.append("abcde")
 
     assert tail.text() == "45678abcde"
+
+
+def test_process_cleanup_does_not_mask_a_job_error() -> None:
+    class BrokenProcess:
+        def poll(self) -> None:
+            return None
+
+        def terminate(self) -> None:
+            raise OSError("terminate failed")
+
+        def kill(self) -> None:
+            raise OSError("kill failed")
+
+    process = cast(subprocess.Popen[str], BrokenProcess())
+
+    _stop_process(process, 0.0)
 
 
 @pytest.mark.integration

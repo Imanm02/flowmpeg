@@ -176,14 +176,32 @@ def _read_stderr(stream: TextIO, tail: _TextTail) -> None:
 
 
 def _stop_process(process: subprocess.Popen[str], grace: float) -> None:
-    if process.poll() is not None:
+    try:
+        stopped = process.poll() is not None
+    except OSError:
         return
-    process.terminate()
+    if stopped:
+        return
+    try:
+        process.terminate()
+    except OSError:
+        _kill_process(process, grace)
+        return
     try:
         process.wait(timeout=grace)
-    except subprocess.TimeoutExpired:
+    except (subprocess.TimeoutExpired, OSError):
+        _kill_process(process, grace)
+
+
+def _kill_process(process: subprocess.Popen[str], grace: float) -> None:
+    try:
         process.kill()
-        process.wait()
+    except OSError:
+        return
+    try:
+        process.wait(timeout=grace)
+    except (subprocess.TimeoutExpired, OSError):
+        return
 
 
 def _check_outputs(plan: Plan) -> None:
