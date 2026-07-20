@@ -483,6 +483,25 @@ def test_graph_error_returns_usage_code(capsys: pytest.CaptureFixture[str]) -> N
     assert "Combined fades" in capsys.readouterr().err
 
 
+def test_probe_error_prints_one_bounded_reason(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    error = ProbeError(
+        "FFprobe exited with code 1",
+        returncode=1,
+        stderr="x" * 2_000,
+        command="ffprobe input.mp4",
+    )
+    monkeypatch.setattr(cli, "_run_probe", lambda args: (_ for _ in ()).throw(error))
+
+    assert cli.main(["probe", "input.mp4"]) == 5
+    captured = capsys.readouterr().err
+    assert "FFprobe exited with code 1" in captured
+    assert "Reason: " in captured
+    assert len(captured) < 700
+
+
 def test_ffmpeg_path_containing_probe_uses_ffmpeg_error_id(
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],

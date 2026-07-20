@@ -181,9 +181,12 @@ def probe_raw(
     if completed.returncode != 0:
         stderr = redact_text(completed.stderr[-8_000:]).strip()
         message = f"FFprobe exited with code {completed.returncode}"
-        if stderr:
-            message += f": {stderr}"
-        raise ProbeError(message)
+        raise ProbeError(
+            message,
+            returncode=completed.returncode,
+            stderr=stderr,
+            command=display_argv(argv),
+        )
 
     try:
         value = json.loads(completed.stdout)

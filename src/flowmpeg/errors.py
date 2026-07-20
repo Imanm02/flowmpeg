@@ -32,6 +32,19 @@ class CompilationError(FlowmpegError):
 class ProbeError(FlowmpegError):
     """Raised when FFprobe cannot inspect an input."""
 
+    def __init__(
+        self,
+        message: str,
+        *,
+        returncode: int | None = None,
+        stderr: str = "",
+        command: str = "",
+    ) -> None:
+        super().__init__(message)
+        self.returncode = returncode
+        self.stderr = stderr
+        self.command = command
+
 
 class ExecutionError(FlowmpegError):
     """Raised when FFmpeg exits with an error."""

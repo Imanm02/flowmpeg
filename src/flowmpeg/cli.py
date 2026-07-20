@@ -381,7 +381,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         print("flowmpeg: add --overwrite to replace it", file=sys.stderr)
         return 4
     except ProbeError as error:
-        return _error(error, 5, "FMG500")
+        return _probe_error(error)
     except ExecutionError as error:
         return _execution_error(error)
     except JobTimeoutError as error:
@@ -2333,6 +2333,16 @@ def _execution_error(error: ExecutionError) -> int:
         file=sys.stderr,
     )
     return 6
+
+
+def _probe_error(error: ProbeError) -> int:
+    print(f"flowmpeg [FMG500]: {error}", file=sys.stderr)
+    if error.stderr:
+        reason = _stderr_reason(error.stderr)
+        if reason:
+            print(f"Reason: {reason}", file=sys.stderr)
+    print("Try: flowmpeg explain-error FMG500", file=sys.stderr)
+    return 5
 
 
 def _execution_error_id(stderr: str) -> str:

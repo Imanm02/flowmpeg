@@ -69,6 +69,26 @@ def test_invalid_stream_collection_is_rejected() -> None:
         parse_probe_data({"streams": {"index": 0}})
 
 
+def test_probe_failure_keeps_bounded_stderr(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    completed = subprocess.CompletedProcess(
+        args=("ffprobe",),
+        returncode=1,
+        stdout="",
+        stderr="first failure\n" + "x" * 9_000,
+    )
+    monkeypatch.setattr(subprocess, "run", lambda *args, **kwargs: completed)
+
+    with pytest.raises(ProbeError) as captured:
+        probe_raw("input.mp4")
+
+    assert str(captured.value) == "FFprobe exited with code 1"
+    assert len(captured.value.stderr) <= 8_000
+    assert captured.value.returncode == 1
+    assert captured.value.command.startswith("ffprobe")
+
+
 def test_missing_probe_binary_has_specific_error() -> None:
     with pytest.raises(BinaryNotFoundError, match="was not found"):
         probe("sample.mp4", ffprobe="missing-flowmpeg-ffprobe")

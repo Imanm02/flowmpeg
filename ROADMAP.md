@@ -34,7 +34,7 @@ only a discussion or test placeholder.
   FFmpeg paths containing the word `probe` are classified correctly.
 - [x] Keep `ExecutionError` messages short while retaining bounded stderr in
   the structured field.
-- [ ] Bound probe failure text shown by the CLI.
+- [x] Bound probe failure text shown by the CLI.
 - [ ] Prefer the causal FFmpeg line when choosing a short failure reason.
 - [ ] Distinguish missing capabilities from capability checks that failed or
   timed out.
