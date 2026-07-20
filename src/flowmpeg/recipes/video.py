@@ -74,7 +74,12 @@ def overlay_video(
     """Place one video stream over another."""
 
     _range("opacity", opacity, 0, 1)
-    if eof_action not in {"repeat", "endall", "pass"}:
+    _boolean("shortest", shortest)
+    if not isinstance(eof_action, str) or eof_action not in {
+        "repeat",
+        "endall",
+        "pass",
+    }:
         raise GraphError("Invalid overlay end behavior")
 
     if opacity < 1:
@@ -108,8 +113,9 @@ def stack_video(
     if len(streams) < 2:
         raise GraphError("Video stacking requires at least two streams")
     _positive_integer("columns", columns)
-    if not fill:
+    if not isinstance(fill, str) or not fill:
         raise GraphError("Video stack fill cannot be empty")
+    _boolean("shortest", shortest)
 
     layout: list[str] = []
     for index in range(len(streams)):
@@ -190,6 +196,8 @@ def named_overlay_position(
     """Convert a named overlay position into FFmpeg coordinates."""
 
     _nonnegative_integer("padding", padding)
+    if not isinstance(position, str):
+        raise GraphError("Overlay position must be text")
     positions: dict[str, tuple[OverlayPosition, OverlayPosition]] = {
         "top-left": (padding, padding),
         "top-right": (expr(f"W-w-{padding}"), padding),
@@ -243,6 +251,11 @@ def _positive_integer(name: str, value: int) -> None:
 def _nonnegative_integer(name: str, value: int) -> None:
     if isinstance(value, bool) or not isinstance(value, int) or value < 0:
         raise GraphError(f"{name} must be a nonnegative integer")
+
+
+def _boolean(name: str, value: bool) -> None:
+    if not isinstance(value, bool):
+        raise GraphError(f"{name} must be a Boolean")
 
 
 def _nonnegative_position(name: str, value: int | Expression | None) -> None:

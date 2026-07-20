@@ -15,6 +15,7 @@ from flowmpeg import (
     stack_video,
 )
 from flowmpeg.recipes.video import (
+    OverlayEofAction,
     change_video_speed,
     named_overlay_position,
     overlay_video,
@@ -145,6 +146,49 @@ def test_overlay_rejects_nonfinite_opacity(value: object) -> None:
 
     with pytest.raises(GraphError, match="must be finite"):
         overlay_video(background, foreground, opacity=cast(float, value))
+
+
+def test_overlay_requires_boolean_shortest() -> None:
+    background = input("background.mp4").video()
+    foreground = input("foreground.mp4").video()
+
+    with pytest.raises(GraphError, match="shortest must be a Boolean"):
+        overlay_video(background, foreground, shortest=cast(bool, 1))
+
+
+def test_stack_requires_boolean_shortest() -> None:
+    first = input("first.mp4").video()
+    second = input("second.mp4").video()
+
+    with pytest.raises(GraphError, match="shortest must be a Boolean"):
+        stack_video(first, second, shortest=cast(bool, 0))
+
+
+@pytest.mark.parametrize("value", [None, 1, ""])
+def test_stack_requires_text_fill(value: object) -> None:
+    first = input("first.mp4").video()
+    second = input("second.mp4").video()
+
+    with pytest.raises(GraphError, match="fill cannot be empty"):
+        stack_video(first, second, fill=cast(str, value))
+
+
+@pytest.mark.parametrize("value", [1, []])
+def test_overlay_rejects_invalid_end_behavior(value: object) -> None:
+    background = input("background.mp4").video()
+    foreground = input("foreground.mp4").video()
+
+    with pytest.raises(GraphError, match="Invalid overlay end behavior"):
+        overlay_video(
+            background,
+            foreground,
+            eof_action=cast(OverlayEofAction, value),
+        )
+
+
+def test_named_overlay_position_requires_text() -> None:
+    with pytest.raises(GraphError, match="position must be text"):
+        named_overlay_position(cast(str, []))
 
 
 @pytest.mark.integration
