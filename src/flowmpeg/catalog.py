@@ -448,6 +448,13 @@ _BASE_COMMAND_CATALOG = (
         output_kind="media",
     ),
     CommandSpec(
+        "tag-media",
+        "metadata",
+        "Copy media and set container tags",
+        ("label-media",),
+        output_kind="media",
+    ),
+    CommandSpec(
         "probe",
         "inspect",
         "Inspect streams and container data",
@@ -583,6 +590,7 @@ _COMMAND_TAGS = {
     "remove-subtitles": ("copy", "privacy"),
     "strip-metadata": ("copy", "privacy"),
     "probe": ("archive",),
+    "tag-media": ("archive", "copy"),
 }
 
 _MP4 = ("encoder:aac", "encoder:libx264", "muxer:mp4")
@@ -784,6 +792,7 @@ _COMMAND_REQUIREMENTS = {
     "burn-subtitles": _requirements(*_MP4, "filter:subtitles"),
     "remove-subtitles": _MP4,
     "strip-metadata": ("muxer:matroska",),
+    "tag-media": ("muxer:mp4",),
 }
 
 COMMAND_CATALOG = tuple(

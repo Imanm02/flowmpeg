@@ -161,6 +161,7 @@ __all__ = [
     "trim",
     "strip_metadata",
     "tag_audio",
+    "tag_media",
     "watermark",
     "waveform_image",
     "crossfade_audio",
@@ -2072,6 +2073,56 @@ def tag_audio(
         _metadata_value(name, value)
         args.extend(("-metadata", f"{name}={value}"))
     plan = output(_audio_track(source, track), to=to, args=args)
+    return _set_overwrite(plan, overwrite)
+
+
+def tag_media(
+    source: Pathish,
+    to: Pathish,
+    *,
+    video_track: int = 0,
+    audio_track: int = 0,
+    subtitle_track: int = 0,
+    include_audio: bool = True,
+    include_subtitles: bool = False,
+    title: str | None = None,
+    artist: str | None = None,
+    comment: str | None = None,
+    date: str | None = None,
+    copyright: str | None = None,
+    overwrite: bool = False,
+) -> Plan:
+    """Copy selected media streams and set container metadata."""
+
+    _nonnegative_integer("video_track", video_track)
+    _nonnegative_integer("audio_track", audio_track)
+    _nonnegative_integer("subtitle_track", subtitle_track)
+    include_audio = _require_boolean("include_audio", include_audio)
+    include_subtitles = _require_boolean("include_subtitles", include_subtitles)
+    _matching_suffix(source, to, "Tagged media copy")
+    _validate_paths((source,), to)
+    fields = {
+        "title": title,
+        "artist": artist,
+        "comment": comment,
+        "date": date,
+        "copyright": copyright,
+    }
+    selected = [(name, value) for name, value in fields.items() if value is not None]
+    if not selected:
+        raise GraphError("Set at least one media metadata field")
+    source_input = input(source)
+    streams: list[Stream] = [source_input.video(video_track)]
+    if include_audio:
+        streams.append(source_input.audio(audio_track, optional=True))
+    if include_subtitles:
+        streams.append(source_input.subtitle(subtitle_track))
+    args: list[str] = ["-c", "copy"]
+    for name, value in selected:
+        assert value is not None
+        _metadata_value(name, value)
+        args.extend(("-metadata", f"{name}={value}"))
+    plan = output(*streams, to=to, args=args)
     return _set_overwrite(plan, overwrite)
 
 

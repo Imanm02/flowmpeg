@@ -90,11 +90,12 @@ Exact needs are checked by `flowmpeg doctor --command NAME`.
 | `burn-subtitles` | `burn-captions`, `hardcode-subtitles` | video and subtitle | video | `accessibility`, `delivery`, `silent-input` | `subtitles` | `encoder:aac`, `encoder:libx264`, `filter:subtitles`, `muxer:mp4` |
 | `remove-subtitles` | `strip-subtitles` | media | video | `accessibility`, `copy`, `privacy` | `web-video` | `encoder:aac`, `encoder:libx264`, `muxer:mp4` |
 
-## Metadata (1)
+## Metadata (2)
 
 | Command | Aliases | Input | Output | Tags | Doctor group | Exact needs |
 |---|---|---|---|---|---|---|
 | `strip-metadata` | `clean-metadata` | media | media | `archive`, `copy`, `privacy` | none | `muxer:matroska` |
+| `tag-media` | `label-media` | media | media | `archive`, `copy` | none | `muxer:mp4` |
 
 ## Inspect (5)
 

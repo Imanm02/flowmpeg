@@ -152,6 +152,10 @@ _BASE_EXAMPLES = (
     _Example("subtitles", "flowmpeg subtitles film.mkv -o captions.srt"),
     _Example("subtitles", "flowmpeg strip-subtitles film.mkv -o clean.mp4"),
     _Example("metadata", "flowmpeg clean-metadata camera.mkv -o share.mkv"),
+    _Example(
+        "metadata",
+        'flowmpeg tag-media camera.mp4 --title "Camera master" -o tagged.mp4',
+    ),
     _Example("images", "flowmpeg timelapse frames/frame-%04d.png -o timelapse.mp4"),
     _Example("composition", "flowmpeg audiogram episode.wav cover.jpg -o episode.mp4"),
     _Example("inspect", "flowmpeg probe input.mp4"),
@@ -500,6 +504,7 @@ def build_parser() -> argparse.ArgumentParser:
     _add_image_sequence(commands)
     _add_podcast_audiogram(commands)
     _add_strip_metadata(commands)
+    _add_tag_media(commands)
     _add_tag_audio(commands)
     _add_probe(commands)
     _add_audit(commands)
@@ -1812,6 +1817,37 @@ def _add_tag_audio(
     parser.add_argument("--album")
     parser.add_argument("--date")
     parser.add_argument("--genre")
+    _output(parser)
+
+
+def _add_tag_media(
+    commands: argparse._SubParsersAction[argparse.ArgumentParser],
+) -> None:
+    parser = _command(
+        commands,
+        "tag-media",
+        "Copy selected streams and set container metadata.",
+        shortcuts.tag_media,
+        ("source",),
+        aliases=("label-media",),
+    )
+    _source(parser)
+    parser.add_argument("--video-track", type=_nonnegative_int, default=0)
+    parser.add_argument("--audio-track", type=_nonnegative_int, default=0)
+    parser.add_argument("--subtitle-track", type=_nonnegative_int, default=0)
+    _audio_toggle(parser)
+    parser.add_argument(
+        "--subtitles",
+        dest="include_subtitles",
+        action=argparse.BooleanOptionalAction,
+        default=False,
+        help="Copy one subtitle track",
+    )
+    parser.add_argument("--title")
+    parser.add_argument("--artist")
+    parser.add_argument("--comment")
+    parser.add_argument("--date")
+    parser.add_argument("--copyright")
     _output(parser)
 
 

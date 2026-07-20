@@ -76,6 +76,7 @@ def test_shortcuts_namespace_is_public() -> None:
         "still_image_video",
         "strip_metadata",
         "tag_audio",
+        "tag_media",
         "thumbnail",
         "transcode",
         "trim",
@@ -948,6 +949,28 @@ def test_metadata_shortcuts_copy_selected_streams() -> None:
     assert "0:v:0" not in tagged.raw_argv()
 
 
+def test_tag_media_copies_tracks_and_sets_container_fields() -> None:
+    plan = shortcuts.tag_media(
+        "source.mp4",
+        "tagged.mp4",
+        title="Camera master",
+        comment="Approved copy",
+        include_subtitles=True,
+    )
+    argv = plan.raw_argv()
+
+    assert "0:v:0" in argv
+    assert "0:a:0?" in argv
+    assert "0:s:0" in argv
+    assert ("-c", "copy") in tuple(zip(argv, argv[1:], strict=False))
+    assert ("-metadata", "title=Camera master") in tuple(
+        zip(argv, argv[1:], strict=False)
+    )
+    assert ("-metadata", "comment=Approved copy") in tuple(
+        zip(argv, argv[1:], strict=False)
+    )
+
+
 def test_shortcuts_accept_path_objects_and_overwrite() -> None:
     plan = shortcuts.resize(
         Path("folder/input.mp4"),
@@ -1161,6 +1184,19 @@ def test_shortcuts_accept_path_objects_and_overwrite() -> None:
         lambda: shortcuts.tag_audio(
             "in.m4a",
             "out.m4a",
+            title="\x00",
+        ),
+        lambda: shortcuts.tag_media("in.mp4", "out.mp4"),
+        lambda: shortcuts.tag_media("in.mp4", "out.mkv", title="Copy"),
+        lambda: shortcuts.tag_media(
+            "in.mp4",
+            "out.mp4",
+            title="Copy",
+            video_track=True,
+        ),
+        lambda: shortcuts.tag_media(
+            "in.mp4",
+            "out.mp4",
             title="\x00",
         ),
     ],
@@ -1693,6 +1729,7 @@ def test_subtitle_and_metadata_shortcuts_run(
     extracted = source.parent / "extracted.srt"
     stripped = source.parent / "stripped.mp4"
     burned = source.parent / "burned.mp4"
+    tagged = source.parent / "tagged.mp4"
     captions.write_text(
         "1\n00:00:00,000 --> 00:00:00,500\nExample caption\n",
         encoding="utf-8",
@@ -1714,12 +1751,26 @@ def test_subtitle_and_metadata_shortcuts_run(
         ffmpeg=ffmpeg,
         timeout=10,
     )
+    shortcuts.tag_media(
+        source,
+        tagged,
+        title="Camera master",
+        comment="Approved copy",
+    ).run(
+        ffmpeg=ffmpeg,
+        timeout=10,
+    )
 
     assert probe(captioned).subtitle_streams
     assert "Example caption" in extracted.read_text(encoding="utf-8")
     assert not probe(stripped).subtitle_streams
     assert probe(burned).video_streams
     assert not probe(burned).subtitle_streams
+    tagged_info = probe(tagged)
+    assert tagged_info.format is not None
+    assert dict(tagged_info.format.tags)["title"] == "Camera master"
+    assert tagged_info.video_streams
+    assert tagged_info.audio_streams
 
 
 @pytest.mark.integration

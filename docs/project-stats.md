@@ -9,18 +9,18 @@ source change.
 
 | Measure | Count | Source |
 |---|---:|---|
-| Canonical terminal commands | 64 | `COMMAND_CATALOG` |
-| Command aliases | 61 | `COMMAND_CATALOG` |
-| Python shortcut functions | 55 | `shortcuts.__all__` |
-| One-line terminal examples | 65 | CLI example catalog |
+| Canonical terminal commands | 65 | `COMMAND_CATALOG` |
+| Command aliases | 62 | `COMMAND_CATALOG` |
+| Python shortcut functions | 56 | `shortcuts.__all__` |
+| One-line terminal examples | 66 | CLI example catalog |
 | Stable error identifiers | 16 | CLI error guide |
 | Stable audit findings | 12 | Media audit |
 | Doctor feature groups | 13 | Doctor requirements |
-| Test function definitions | 322 | `tests/test_*.py` |
+| Test function definitions | 323 | `tests/test_*.py` |
 | FFmpeg integration tests | 28 | Pytest markers |
 | Documentation pages | 15 | `docs/*.md` |
-| Documented command lines | 329 | Markdown code lines |
-| Completed roadmap items | 91 | `ROADMAP.md` |
+| Documented command lines | 331 | Markdown code lines |
+| Completed roadmap items | 92 | `ROADMAP.md` |
 | Open roadmap items | 0 | `ROADMAP.md` |
 
 ## Category matrix
@@ -36,7 +36,7 @@ counts distinct canonical commands with at least one built-in example.
 | effects | 5 | 4 | 5 | 5/5 (100%) | 5 | `#####` |
 | images | 6 | 7 | 6 | 6/6 (100%) | 6 | `######` |
 | subtitles | 4 | 5 | 4 | 4/4 (100%) | 4 | `####` |
-| metadata | 1 | 1 | 1 | 1/1 (100%) | 1 | `#` |
+| metadata | 2 | 2 | 2 | 2/2 (100%) | 2 | `##` |
 | inspect | 5 | 3 | 5 | 5/5 (100%) | 0 | `#####` |
 | help | 4 | 0 | 4 | 4/4 (100%) | 0 | `####` |
 
@@ -47,8 +47,8 @@ The bar uses one `#` per canonical command carrying the tag.
 | Tag | Commands | Examples | Bar |
 |---|---:|---:|---|
 | accessibility | 4 | 4 | `####` |
-| archive | 9 | 9 | `#########` |
-| copy | 5 | 5 | `#####` |
+| archive | 10 | 10 | `##########` |
+| copy | 6 | 6 | `######` |
 | creator | 39 | 40 | `#######################################` |
 | delivery | 17 | 18 | `#################` |
 | discover | 4 | 4 | `####` |

@@ -144,6 +144,7 @@ The table below is a compact editing index for scanning this longer guide.
 | Encode numbered images | `image-sequence-video` | `timelapse`, `image-sequence` |
 | Make a podcast audiogram | `podcast-audiogram` | `audiogram` |
 | Remove metadata | `strip-metadata` | `clean-metadata` |
+| Tag a media file | `tag-media` | `label-media` |
 | Tag an audio file | `tag-audio` | `tag` |
 
 Run help for the full option list and current defaults:
@@ -892,12 +893,17 @@ selectable `mov_text` track in MP4. `burn-captions` renders text into the video
 frames through FFmpeg's `subtitles` filter and needs an FFmpeg build with
 libass support. `--font-name` and `--font-size` set two ASS style fields.
 
-### Remove metadata or tag audio
+### Remove metadata or tag media
 
 ```console
 flowmpeg clean-metadata camera.mkv -o share.mkv
+flowmpeg label-media camera.mp4 --title "Camera master" --comment "Approved copy" -o tagged.mp4
 flowmpeg tag episode.m4a --title "Episode 12" --artist "Example Host" -o tagged.m4a
 ```
+
+`label-media` copies the selected video, optional audio, and optional subtitle
+packets. It changes container tags without re-encoding. Keep the input and
+output extension the same so the copied streams stay in the same container.
 
 Both commands copy selected streams, so input and output extensions must match.
 Metadata removal selects the first video, optional first audio, and optional

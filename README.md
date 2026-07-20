@@ -183,6 +183,7 @@ plans, see the [shortcut guide](docs/shortcuts.md).
 - Voice cleanup, audio crossfades, silence trimming, and mono output
 - Selectable subtitle extraction, addition, and removal
 - Image sequences, podcast audiograms, metadata removal, and audio tags
+- Stream-copy tags for video and mixed media files
 - Waveform, spectrum, thumbnail, GIF, and contact sheet output
 - Paired `Clip` operations that keep audio with video
 - A web MP4 preset and ordered raw argument escape hatches

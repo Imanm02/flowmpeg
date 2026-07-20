@@ -129,6 +129,7 @@ only a discussion or test placeholder.
 - [x] Add a podcast workflow from voice cleanup through tags and audiogram.
 - [x] Add a tape review workflow with deinterlacing and review images.
 - [x] Add a creator workflow for product demos and derived previews.
+- [x] Add stream-copy metadata tagging for mixed media files.
 
 ## Current limits
 
