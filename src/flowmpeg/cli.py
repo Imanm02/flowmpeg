@@ -1874,6 +1874,12 @@ def _run_media(args: argparse.Namespace) -> int:
         known_duration = values.get("duration")
         if isinstance(known_duration, float):
             expected_duration = known_duration
+        elif factory is shortcuts.trim:
+            start = values.get("start")
+            end = values.get("end")
+            start_value = start if isinstance(start, float) else 0.0
+            if isinstance(end, float):
+                expected_duration = end - start_value
     for name in _CONTROL_NAMES:
         values.pop(name, None)
 
