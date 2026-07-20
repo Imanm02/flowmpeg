@@ -51,6 +51,7 @@ from flowmpeg.recipes.audio import (
     fade_audio,
     mix_audio,
     normalize_loudness,
+    normalize_loudness_measured,
     trim_audio,
     volume,
 )
@@ -73,6 +74,11 @@ from flowmpeg.streams import (
     VideoStream,
     apply_filter,
     input,
+)
+from flowmpeg.workflows import (
+    LoudnessWorkflow,
+    LoudnessWorkflowResult,
+    normalize_loudness_two_pass,
 )
 
 __version__ = "0.1.0"
@@ -99,6 +105,8 @@ __all__ = [
     "GraphError",
     "JobTimeoutError",
     "LoudnessMeasurement",
+    "LoudnessWorkflow",
+    "LoudnessWorkflowResult",
     "MediaGraph",
     "MediaInput",
     "MediaInfo",
@@ -144,6 +152,8 @@ __all__ = [
     "measure_loudness",
     "mix_audio",
     "normalize_loudness",
+    "normalize_loudness_measured",
+    "normalize_loudness_two_pass",
     "overlay_video",
     "output",
     "probe",

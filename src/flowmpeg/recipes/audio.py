@@ -7,6 +7,7 @@ from collections.abc import Sequence
 from typing import Literal
 
 from flowmpeg.errors import GraphError
+from flowmpeg.loudness import LoudnessMeasurement
 from flowmpeg.model import FilterValue, StreamKind, expr
 from flowmpeg.streams import AudioStream, apply_filter
 
@@ -203,6 +204,56 @@ def normalize_loudness(
         I=integrated,
         LRA=loudness_range,
         TP=true_peak,
+    )
+    return normalized.filter("aresample", sample_rate)
+
+
+def normalize_loudness_measured(
+    stream: AudioStream,
+    measurement: LoudnessMeasurement,
+    *,
+    sample_rate: int = 48_000,
+) -> AudioStream:
+    """Apply an EBU R128 second pass from measured first-pass values."""
+
+    measured = (
+        measurement.integrated_lufs,
+        measurement.true_peak_dbfs,
+        measurement.loudness_range_lu,
+        measurement.threshold_lufs,
+        measurement.target_offset_lu,
+    )
+    if any(value is None or not math.isfinite(value) for value in measured):
+        raise GraphError("Two-pass loudness requires finite first-pass measurements")
+    integrated = measurement.integrated_lufs
+    peak = measurement.true_peak_dbfs
+    loudness_range = measurement.loudness_range_lu
+    threshold = measurement.threshold_lufs
+    offset = measurement.target_offset_lu
+    assert integrated is not None
+    assert peak is not None
+    assert loudness_range is not None
+    assert threshold is not None
+    assert offset is not None
+    if (
+        isinstance(sample_rate, bool)
+        or not isinstance(sample_rate, int)
+        or sample_rate <= 0
+    ):
+        raise GraphError("Sample rate must be a positive integer")
+
+    normalized = stream.filter(
+        "loudnorm",
+        I=measurement.target_integrated_lufs,
+        LRA=measurement.target_loudness_range_lu,
+        TP=measurement.target_true_peak_dbfs,
+        measured_I=integrated,
+        measured_LRA=loudness_range,
+        measured_TP=peak,
+        measured_thresh=threshold,
+        offset=offset,
+        linear=True,
+        print_format="summary",
     )
     return normalized.filter("aresample", sample_rate)
 

@@ -7,6 +7,7 @@ from typing import cast
 import pytest
 
 from flowmpeg import GraphError, probe, shortcuts
+from flowmpeg.loudness import LoudnessMeasurement
 from flowmpeg.plan import Plan
 from flowmpeg.recipes.video import Rotation
 
@@ -65,6 +66,7 @@ def test_shortcuts_namespace_is_public() -> None:
         "mono_audio",
         "mute_section",
         "normalize_loudness",
+        "normalize_loudness_measured",
         "picture_in_picture",
         "podcast_audiogram",
         "podcast_voice",
@@ -591,6 +593,28 @@ def test_normalize_loudness_is_explicitly_one_pass() -> None:
         "[0:a:0]loudnorm=I=-16:LRA=11:TP=-1.5[a0];[a0]aresample=48000[a1]"
     )
     assert plan.raw_argv()[-3:] == ("-c:a", "pcm_s16le", "normal.wav")
+
+
+def test_measured_normalization_rejects_missing_values() -> None:
+    measurement = LoudnessMeasurement(
+        source="voice.wav",
+        track=0,
+        integrated_lufs=None,
+        true_peak_dbfs=None,
+        loudness_range_lu=None,
+        threshold_lufs=None,
+        target_offset_lu=None,
+        target_integrated_lufs=-16,
+        target_true_peak_dbfs=-1.5,
+        target_loudness_range_lu=11,
+    )
+
+    with pytest.raises(GraphError, match="finite first-pass"):
+        shortcuts.normalize_loudness_measured(
+            "voice.wav",
+            "exact.wav",
+            measurement,
+        )
 
 
 def test_fit_canvas_builds_scale_pad_and_square_pixels() -> None:

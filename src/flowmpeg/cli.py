@@ -53,7 +53,9 @@ from flowmpeg.probe import (
 from flowmpeg.processes import popen_group_options, stop_process_tree
 from flowmpeg.progress import Progress
 from flowmpeg.scenes import SceneReport, detect_scenes
+from flowmpeg.shortcuts import AudioCodec
 from flowmpeg.silence import SilenceReport, detect_silence
+from flowmpeg.workflows import normalize_loudness_two_pass
 
 _Factory = Callable[..., Plan]
 _Handler = Callable[[argparse.Namespace], int]
@@ -112,6 +114,10 @@ _BASE_EXAMPLES = (
     _Example("audio", "flowmpeg swap-audio video.mp4 narration.wav -o narrated.mp4"),
     _Example("audio", "flowmpeg mix host.wav guest.wav -o conversation.wav"),
     _Example("audio", "flowmpeg normalize voice.wav --integrated -23 -o broadcast.wav"),
+    _Example(
+        "audio",
+        "flowmpeg normalize-exact voice.wav --target-integrated -16 -o exact.wav",
+    ),
     _Example("audio", "flowmpeg denoise room.wav --reduction 10 -o clean.wav"),
     _Example("audio", "flowmpeg dynamics uneven.wav --ratio 4 -o controlled.wav"),
     _Example(
@@ -518,6 +524,7 @@ def build_parser() -> argparse.ArgumentParser:
     _add_crop(commands)
     _add_speed(commands)
     _add_normalize(commands)
+    _add_two_pass_normalize(commands)
     _add_fit_canvas(commands)
     _add_picture_in_picture(commands)
     _add_waveform(commands)
@@ -1181,6 +1188,43 @@ def _add_normalize(
     )
     parser.add_argument("--bitrate")
     _output(parser)
+
+
+def _add_two_pass_normalize(
+    commands: argparse._SubParsersAction[argparse.ArgumentParser],
+) -> None:
+    parser = commands.add_parser(
+        "normalize-loudness-two-pass",
+        aliases=["normalize-exact", "loudnorm-two-pass"],
+        help="Measure then normalize one audio track.",
+        description="Run EBU R128 measurement before the encoding pass.",
+        allow_abbrev=False,
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+    _source(parser)
+    parser.add_argument("--track", type=_nonnegative_int, default=0)
+    parser.add_argument("--target-integrated", type=_finite_float, default=-16.0)
+    parser.add_argument("--target-peak", type=_finite_float, default=-1.5)
+    parser.add_argument("--target-range", type=_positive_float, default=11.0)
+    parser.add_argument("--sample-rate", type=_positive_int, default=48_000)
+    parser.add_argument(
+        "--codec",
+        choices=_AUDIO_CODEC_CHOICES,
+        default="wav",
+    )
+    parser.add_argument("--bitrate")
+    parser.add_argument(
+        "--measurement-timeout",
+        type=_positive_float,
+        help="Maximum seconds for the first pass",
+    )
+    parser.add_argument(
+        "--analyze-only",
+        action="store_true",
+        help="Measure and print the second-pass plan without encoding",
+    )
+    _output(parser)
+    parser.set_defaults(handler=_run_two_pass_loudness)
 
 
 def _add_fit_canvas(
@@ -2553,6 +2597,65 @@ def _run_media(args: argparse.Namespace) -> int:
             progress_printer.close()
     destinations = ", ".join(redact_text(destination) for destination in result.outputs)
     print(f"Finished in {result.elapsed:.2f}s: {destinations}")
+    return 0
+
+
+def _run_two_pass_loudness(args: argparse.Namespace) -> int:
+    workflow = normalize_loudness_two_pass(
+        cast(str, args.source),
+        cast(str, args.output),
+        track=cast(int, args.track),
+        target_integrated=cast(float, args.target_integrated),
+        target_peak=cast(float, args.target_peak),
+        target_range=cast(float, args.target_range),
+        sample_rate=cast(int, args.sample_rate),
+        codec=cast(AudioCodec, args.codec),
+        bitrate=cast(str | None, args.bitrate),
+        overwrite=cast(bool, args.overwrite),
+    )
+    ffmpeg = cast(str, args.ffmpeg)
+    if cast(bool, args.dry_run):
+        if cast(bool, args.analyze_only):
+            raise GraphError("Choose either --dry-run or --analyze-only")
+        print(workflow.explain(ffmpeg))
+        print("Pass 2 command: available after the measurement pass")
+        return 0
+
+    measurement_timeout = cast(float | None, args.measurement_timeout)
+    if cast(bool, args.analyze_only):
+        measurement = workflow.measure(ffmpeg=ffmpeg, timeout=measurement_timeout)
+        plan = workflow.plan(measurement)
+        print(_format_loudness(measurement))
+        if cast(bool, args.explain):
+            print("")
+            print(plan.explain())
+        print("")
+        print(f"Pass 2: {plan.command(ffmpeg)}")
+        return 0
+
+    if cast(bool, args.explain):
+        print(workflow.explain(ffmpeg))
+    progress_printer = (
+        _ProgressPrinter(sys.stderr) if cast(bool, args.progress) else None
+    )
+    try:
+        result = workflow.run(
+            ffmpeg=ffmpeg,
+            measurement_timeout=measurement_timeout,
+            timeout=cast(float | None, args.timeout),
+            on_progress=progress_printer,
+            expected_duration=cast(float | None, args.expected_duration),
+        )
+    finally:
+        if progress_printer is not None:
+            progress_printer.close()
+    destination = redact_text(result.encoding.outputs[0])
+    integrated = result.measurement.integrated_lufs
+    assert integrated is not None
+    print(
+        f"Measured {integrated:g} LUFS; "
+        f"finished in {result.encoding.elapsed:.2f}s: {destination}"
+    )
     return 0
 
 

@@ -64,27 +64,13 @@ def measure_loudness(
             tool="ffmpeg",
         )
 
-    loudnorm = (
-        f"loudnorm=I={target_integrated:g}:LRA={target_range:g}:"
-        f"TP={target_peak:g}:print_format=json"
-    )
-    argv = (
-        ffmpeg,
-        "-hide_banner",
-        "-nostdin",
-        "-nostats",
-        "-i",
+    argv = _measurement_argv(
         source_text,
-        "-map",
-        f"0:a:{track}",
-        "-vn",
-        "-sn",
-        "-dn",
-        "-af",
-        loudnorm,
-        "-f",
-        "null",
-        "-",
+        track=track,
+        target_integrated=target_integrated,
+        target_peak=target_peak,
+        target_range=target_range,
+        ffmpeg=ffmpeg,
     )
     stderr, returncode = run_ffmpeg_analysis(
         argv,
@@ -117,6 +103,39 @@ def measure_loudness(
         target_integrated_lufs=float(target_integrated),
         target_true_peak_dbfs=float(target_peak),
         target_loudness_range_lu=float(target_range),
+    )
+
+
+def _measurement_argv(
+    source: str,
+    *,
+    track: int,
+    target_integrated: float,
+    target_peak: float,
+    target_range: float,
+    ffmpeg: str,
+) -> tuple[str, ...]:
+    loudnorm = (
+        f"loudnorm=I={target_integrated:g}:LRA={target_range:g}:"
+        f"TP={target_peak:g}:print_format=json"
+    )
+    return (
+        ffmpeg,
+        "-hide_banner",
+        "-nostdin",
+        "-nostats",
+        "-i",
+        source,
+        "-map",
+        f"0:a:{track}",
+        "-vn",
+        "-sn",
+        "-dn",
+        "-af",
+        loudnorm,
+        "-f",
+        "null",
+        "-",
     )
 
 

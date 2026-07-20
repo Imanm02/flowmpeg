@@ -39,6 +39,7 @@ from flowmpeg.progress import Progress
 from flowmpeg.runner import RunResult
 from flowmpeg.scenes import SceneChange, SceneReport
 from flowmpeg.silence import SilenceInterval, SilenceReport
+from flowmpeg.workflows import LoudnessWorkflow, LoudnessWorkflowResult
 
 
 @pytest.mark.parametrize(
@@ -881,6 +882,86 @@ def test_loudness_json_has_schema_version(
     assert report["schema_version"] == 1
     assert report["integrated_lufs"] == -18.4
     assert report["target_true_peak_dbfs"] == -1.5
+
+
+def test_two_pass_loudness_dry_run_starts_no_process(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    def fail(*args: object, **kwargs: object) -> None:
+        raise AssertionError("measurement started")
+
+    monkeypatch.setattr("flowmpeg.workflows.measure_loudness", fail)
+
+    assert (
+        cli.main(
+            [
+                "normalize-exact",
+                "episode.wav",
+                "-o",
+                "exact.wav",
+                "--dry-run",
+            ]
+        )
+        == 0
+    )
+    output = capsys.readouterr().out
+    assert "Pass 1: measure EBU R128 values" in output
+    assert "Pass 2 command: available after" in output
+
+
+def test_two_pass_loudness_analyze_prints_exact_plan(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    monkeypatch.setattr(
+        "flowmpeg.workflows.measure_loudness",
+        lambda *args, **kwargs: _loudness(),
+    )
+
+    assert (
+        cli.main(
+            [
+                "loudnorm-two-pass",
+                "episode.wav",
+                "-o",
+                "exact.wav",
+                "--analyze-only",
+            ]
+        )
+        == 0
+    )
+    output = capsys.readouterr().out
+    assert "Integrated: -18.4 LUFS" in output
+    assert "Pass 2: ffmpeg" in output
+    assert "measured_I=-18.4" in output
+
+
+def test_two_pass_loudness_runs_both_passes(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    result = LoudnessWorkflowResult(
+        _loudness(),
+        RunResult(0, 1.25, "", None, ("exact.wav",)),
+    )
+    monkeypatch.setattr(LoudnessWorkflow, "run", lambda *args, **kwargs: result)
+
+    assert (
+        cli.main(
+            [
+                "normalize-loudness-two-pass",
+                "episode.wav",
+                "-o",
+                "exact.wav",
+                "--no-progress",
+            ]
+        )
+        == 0
+    )
+    output = capsys.readouterr().out
+    assert "Measured -18.4 LUFS" in output
+    assert "finished in 1.25s: exact.wav" in output
 
 
 def test_silence_report_prints_intervals(

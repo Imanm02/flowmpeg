@@ -9,15 +9,15 @@ source change.
 
 | Measure | Count | Source |
 |---|---:|---|
-| Canonical terminal commands | 81 | `COMMAND_CATALOG` |
-| Command aliases | 94 | `COMMAND_CATALOG` |
-| Python shortcut functions | 67 | `shortcuts.__all__` |
-| One-line terminal examples | 82 | CLI example catalog |
+| Canonical terminal commands | 82 | `COMMAND_CATALOG` |
+| Command aliases | 96 | `COMMAND_CATALOG` |
+| Python shortcut functions | 68 | `shortcuts.__all__` |
+| One-line terminal examples | 83 | CLI example catalog |
 | Stable error identifiers | 16 | CLI error guide |
 | Stable audit findings | 20 | Media audit |
 | Doctor feature groups | 15 | Doctor requirements |
-| Test function definitions | 375 | `tests/test_*.py` |
-| FFmpeg integration tests | 36 | Pytest markers |
+| Test function definitions | 386 | `tests/test_*.py` |
+| FFmpeg integration tests | 37 | Pytest markers |
 | Documentation pages | 16 | `docs/*.md` |
 | Documented command lines | 395 | Markdown code lines |
 | Completed roadmap items | 109 | `ROADMAP.md` |
@@ -31,7 +31,7 @@ counts distinct canonical commands with at least one built-in example.
 | Category | Commands | Aliases | Examples | Coverage | Python | Bar |
 |---|---:|---:|---:|---:|---:|---|
 | video | 20 | 24 | 21 | 20/20 (100%) | 20 | `####################` |
-| audio | 20 | 27 | 20 | 20/20 (100%) | 14 | `####################` |
+| audio | 21 | 29 | 21 | 21/21 (100%) | 14 | `#####################` |
 | composition | 9 | 9 | 9 | 9/9 (100%) | 9 | `#########` |
 | effects | 5 | 4 | 5 | 5/5 (100%) | 5 | `#####` |
 | images | 6 | 7 | 6 | 6/6 (100%) | 6 | `######` |
@@ -47,13 +47,13 @@ The bar uses one `#` per canonical command carrying the tag.
 | Tag | Commands | Examples | Bar |
 |---|---:|---:|---|
 | accessibility | 4 | 4 | `####` |
-| archive | 18 | 18 | `##################` |
+| archive | 19 | 19 | `###################` |
 | copy | 7 | 7 | `#######` |
 | creator | 45 | 46 | `#############################################` |
-| delivery | 21 | 22 | `#####################` |
+| delivery | 22 | 23 | `######################` |
 | discover | 4 | 4 | `####` |
 | inspect | 10 | 10 | `##########` |
-| podcast | 20 | 20 | `####################` |
+| podcast | 21 | 21 | `#####################` |
 | privacy | 4 | 4 | `####` |
 | silent-input | 33 | 34 | `#################################` |
 

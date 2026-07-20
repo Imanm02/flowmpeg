@@ -10,6 +10,7 @@ from typing import Literal, TypeAlias
 
 from flowmpeg.clip import Clip, concat_clips, media
 from flowmpeg.errors import GraphError
+from flowmpeg.loudness import LoudnessMeasurement
 from flowmpeg.model import Expression, FilterValue, StreamKind, expr
 from flowmpeg.pathing import same_destination
 from flowmpeg.plan import Plan, output
@@ -25,6 +26,9 @@ from flowmpeg.recipes.audio import (
 )
 from flowmpeg.recipes.audio import (
     normalize_loudness as normalize_audio_stream,
+)
+from flowmpeg.recipes.audio import (
+    normalize_loudness_measured as normalize_audio_stream_measured,
 )
 from flowmpeg.recipes.audio import (
     trim_audio as trim_audio_stream,
@@ -152,6 +156,7 @@ __all__ = [
     "mono_audio",
     "mute_section",
     "normalize_loudness",
+    "normalize_loudness_measured",
     "picture_in_picture",
     "podcast_audiogram",
     "podcast_voice",
@@ -1340,6 +1345,37 @@ def normalize_loudness(
         integrated=integrated,
         loudness_range=loudness_range,
         true_peak=true_peak,
+        sample_rate=sample_rate,
+    )
+    plan = output(audio, to=to, args=_audio_args(to, codec, bitrate))
+    return _set_overwrite(plan, overwrite)
+
+
+def normalize_loudness_measured(
+    source: Pathish,
+    to: Pathish,
+    measurement: LoudnessMeasurement,
+    *,
+    track: int = 0,
+    sample_rate: int = 48_000,
+    codec: AudioCodec = "wav",
+    bitrate: str | None = None,
+    overwrite: bool = False,
+) -> Plan:
+    """Build the encoding pass from a loudness measurement."""
+
+    if codec == "copy":
+        raise GraphError("Normalized audio must be encoded")
+    if not isinstance(measurement, LoudnessMeasurement):
+        raise GraphError("Measured normalization requires a loudness measurement")
+    if measurement.source != os.fspath(source):
+        raise GraphError("Loudness measurement source must match the plan input")
+    if measurement.track != track:
+        raise GraphError("Loudness measurement track must match the plan track")
+    _validate_paths((source,), to)
+    audio = normalize_audio_stream_measured(
+        _audio_track(source, track),
+        measurement,
         sample_rate=sample_rate,
     )
     plan = output(audio, to=to, args=_audio_args(to, codec, bitrate))

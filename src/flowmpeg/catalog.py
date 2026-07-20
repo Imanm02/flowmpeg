@@ -187,6 +187,15 @@ _BASE_COMMAND_CATALOG = (
         capability_group="audio-processing",
     ),
     CommandSpec(
+        "normalize-loudness-two-pass",
+        "audio",
+        "Measure then normalize one audio track",
+        ("normalize-exact", "loudnorm-two-pass"),
+        input_kind="audio",
+        output_kind="audio",
+        capability_group="audio-processing",
+    ),
+    CommandSpec(
         "denoise-audio",
         "audio",
         "Reduce steady audio noise",
@@ -705,6 +714,7 @@ _COMMAND_TAGS = {
     "extract-audio": ("copy",),
     "mix-audio": ("creator",),
     "normalize-loudness": ("delivery",),
+    "normalize-loudness-two-pass": ("delivery", "archive"),
     "podcast-voice": ("delivery",),
     "trim-silence": ("delivery",),
     "crossfade-audio": ("creator",),
@@ -816,6 +826,9 @@ _COMMAND_REQUIREMENTS = {
     "extract-audio": ("encoder:libmp3lame", "muxer:mp3"),
     "mix-audio": _requirements(*_WAV, "filter:amix"),
     "normalize-loudness": _requirements(*_WAV, "filter:aresample", "filter:loudnorm"),
+    "normalize-loudness-two-pass": _requirements(
+        *_WAV, "filter:aresample", "filter:loudnorm"
+    ),
     "denoise-audio": _requirements(*_WAV, "filter:afftdn"),
     "compress-audio": _requirements(*_WAV, "filter:acompressor"),
     "podcast-voice": _requirements(

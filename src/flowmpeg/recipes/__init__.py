@@ -7,6 +7,7 @@ from flowmpeg.recipes.audio import (
     fade_audio,
     mix_audio,
     normalize_loudness,
+    normalize_loudness_measured,
     trim_audio,
     volume,
 )
@@ -31,6 +32,7 @@ __all__ = [
     "mix_audio",
     "named_overlay_position",
     "normalize_loudness",
+    "normalize_loudness_measured",
     "overlay_video",
     "rotate_video",
     "scale",
