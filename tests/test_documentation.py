@@ -163,6 +163,14 @@ def test_python_documentation_examples_build(
             strongest_change=SimpleNamespace(time=1.0, score=0.8),
         ),
     )
+    monkeypatch.setattr(
+        flowmpeg,
+        "detect_crop",
+        lambda *args, **kwargs: SimpleNamespace(
+            recommended=SimpleNamespace(filter_value="crop=100:80:10:10"),
+            agreement=1.0,
+        ),
+    )
     text = path.read_text(encoding="utf-8")
     namespace: dict[str, object] = {"ff": shortcuts}
     for match in _PYTHON_BLOCK.finditer(text):

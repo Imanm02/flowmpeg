@@ -47,6 +47,7 @@ flowmpeg loudness episode.wav
 flowmpeg find-silence interview.wav
 flowmpeg find-black tape.mp4
 flowmpeg scenes interview.mp4
+flowmpeg crop-report letterboxed.mp4 --duration 30
 ```
 
 The second check accepts the `cut` shortcut and verifies the default encoders,
@@ -62,9 +63,10 @@ stable finding codes for scripts and returns a separate policy-failure code.
 The loudness command measures integrated LUFS, true peak, loudness range, and
 the offset from a chosen normalization target without writing an output file.
 
-The analysis commands turn FFmpeg filter output into typed time intervals and
-scene-change scores. The [analysis guide](docs/analysis.md) shows text reports,
-JSON fields, visual timelines, and threshold choices for different recordings.
+The analysis commands turn FFmpeg filter output into typed intervals,
+scene-change scores, and ranked crop rectangles. The
+[analysis guide](docs/analysis.md) shows text reports, JSON fields, visual
+timelines, and threshold choices for different recordings.
 
 ## One-line terminal jobs
 

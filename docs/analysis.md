@@ -15,6 +15,7 @@ choose settings from measured input instead of guessing.
 | Where are the quiet gaps? | `find-silence` | Start, end, and duration intervals |
 | Where is the picture black? | `find-black` | Black picture intervals |
 | Where does the picture change sharply? | `scenes` | Timecodes and scene scores |
+| What border crop is stable? | `crop-report` | Ranked crop rectangles |
 | Can this machine run a command? | `doctor --command NAME` | Exact capability checks |
 
 Add `--json` when another program will read the result. Human reports favor
@@ -407,3 +408,102 @@ flowmpeg doctor --command scenes
 ```
 
 The exact check requires FFmpeg's `select` and `metadata` video filters.
+
+## Suggest a border crop
+
+```console
+flowmpeg crop-report letterboxed.mp4
+```
+
+Crop detection samples the first 60 seconds by default. It groups equal
+rectangles and recommends the one reported most often:
+
+```text
+Crop report: 578 samples, 2 candidates
+Source: letterboxed.mp4
+Video track: 0
+Scan: from 0s for 60s
+Limit: 24
+Round to: 2
+Recommended: crop=1920:800:0:140
+Agreement: 96.9%
+
+Candidates:
+  1. crop=1920:800:0:140 (560 samples)
+  2. crop=1920:802:0:138 (18 samples)
+```
+
+```text
+input frame  1920 x 1080
++--------------------------------------------------+
+|                140 px top border                 |
+|--------------------------------------------------|
+|                                                  |
+|              kept picture, 1920 x 800            |
+|                                                  |
+|--------------------------------------------------|
+|               140 px bottom border               |
++--------------------------------------------------+
+recommendation: crop=1920:800:0:140
+agreement:     560 / 578 samples
+```
+
+Agreement is the fraction of valid samples matching the first candidate. A
+high value means the measured border was stable during the scan. It does not
+prove that the removed pixels are editorially unimportant.
+
+## Scan another crop range
+
+Opening titles and end cards can have different borders from the main program.
+Choose a representative range with `--start` and `--duration`:
+
+```console
+flowmpeg crop-report film.mp4 --start 300 --duration 45
+flowmpeg detect-crop tape.mp4 --limit 32 --round 4 --skip-frames 5
+flowmpeg suggest-crop multi-angle.mkv --track 1 --duration 20 --json
+```
+
+| Option | Purpose |
+|---|---|
+| `--limit` | Pixel level at or below which a border pixel counts as black |
+| `--round` | Required divisibility for suggested width and height |
+| `--skip-frames` | Initial filter samples ignored while detection settles |
+| `--start` | Timeline position where the scan begins |
+| `--duration` | Scan length, bounded to 60 seconds by default |
+
+The human report shows at most ten candidates. JSON includes every distinct
+rectangle found in the bounded scan.
+
+## Apply a crop recommendation
+
+The reported order is width, height, x, then y. Pass those values to the
+existing crop command:
+
+```console
+flowmpeg crop letterboxed.mp4 --width 1920 --height 800 --x 0 --y 140 -o cropped.mp4
+```
+
+Inspect the plan first when the destination matters:
+
+```console
+flowmpeg crop letterboxed.mp4 --width 1920 --height 800 --x 0 --y 140 -o cropped.mp4 --dry-run --explain
+```
+
+Python exposes the ranked samples before an edit is built:
+
+```python
+from flowmpeg import detect_crop
+
+report = detect_crop("letterboxed.mp4", start=300, duration=45, timeout=60)
+candidate = report.recommended
+
+if candidate is not None:
+    print(candidate.filter_value)
+    print(report.agreement)
+```
+
+Check filter availability with the same shortcut name:
+
+```console
+flowmpeg doctor --command crop-report
+```
