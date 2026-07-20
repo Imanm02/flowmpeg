@@ -5,17 +5,18 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import os
 import platform
 import re
 import shutil
 import subprocess
 import sys
 from collections.abc import Callable, Sequence
-from dataclasses import asdict
+from dataclasses import asdict, dataclass
 from typing import TextIO, cast
 
 from flowmpeg import __version__, shortcuts
-from flowmpeg.diagnostics import redact_text
+from flowmpeg.diagnostics import display_argv, redact_text
 from flowmpeg.errors import (
     BinaryNotFoundError,
     CompilationError,
@@ -64,8 +65,15 @@ _EXAMPLES = (
     "flowmpeg spectrum song.mp3 -o spectrum.png",
     "flowmpeg sheet input.mp4 --interval 8 -o sheet.jpg",
     "flowmpeg reverse input.mp4 --duration 6 -o reversed.mp4",
+    "flowmpeg compress input.mov -o smaller.mp4",
+    "flowmpeg social input.mp4 --target vertical -o vertical.mp4",
+    "flowmpeg voice recording.wav -o finished.wav",
+    "flowmpeg captions movie.mp4 subtitles.srt -o captioned.mp4",
+    "flowmpeg timelapse frames/frame-%04d.png -o timelapse.mp4",
+    "flowmpeg audiogram episode.wav cover.jpg -o episode.mp4",
     "flowmpeg probe input.mp4",
     "flowmpeg doctor",
+    "flowmpeg setup",
 )
 
 _DURATION_FACTORIES = (
@@ -142,7 +150,122 @@ _FEATURE_REQUIREMENTS = {
         "filter:reverse",
         "filter:setpts",
     ),
+    "creator-video": (
+        "filter:boxblur",
+        "filter:bwdif",
+        "filter:eq",
+        "filter:fps",
+        "filter:tpad",
+        "filter:unsharp",
+    ),
+    "voice-cleanup": (
+        "filter:acompressor",
+        "filter:afftdn",
+        "filter:areverse",
+        "filter:highpass",
+        "filter:lowpass",
+        "filter:silenceremove",
+    ),
+    "subtitles": (
+        "encoder:mov_text",
+        "encoder:srt",
+        "encoder:webvtt",
+    ),
+    "audiogram": (
+        "filter:colorkey",
+        "filter:showwaves",
+    ),
 }
+
+_ERROR_GUIDE = {
+    "FMG200": (
+        "Invalid media plan",
+        "A path, option, stream selection, or graph connection is invalid.",
+        "Read the message, correct the command arguments, then use --dry-run.",
+    ),
+    "FMG300": (
+        "FFmpeg missing",
+        "Flowmpeg could not start the FFmpeg executable.",
+        "Run flowmpeg setup, install FFmpeg, then open a new terminal.",
+    ),
+    "FMG301": (
+        "FFprobe missing",
+        "Flowmpeg could not start the FFprobe executable.",
+        "Run flowmpeg setup and confirm FFprobe is on PATH.",
+    ),
+    "FMG302": (
+        "Media tool unusable",
+        "A media executable exists but could not be run.",
+        "Check execute permission, antivirus rules, and the configured path.",
+    ),
+    "FMG303": (
+        "Installer unavailable",
+        "No supported package manager was found.",
+        "Install FFmpeg from ffmpeg.org, then run flowmpeg doctor.",
+    ),
+    "FMG304": (
+        "Install failed",
+        "The selected package manager returned a failure.",
+        "Read its output, fix permissions or network access, then try again.",
+    ),
+    "FMG400": (
+        "Output exists",
+        "The destination exists and replacement was not enabled.",
+        "Choose another output or add --overwrite.",
+    ),
+    "FMG500": (
+        "Probe failed",
+        "FFprobe could not read the requested input.",
+        "Check the path, file permissions, URL access, and file integrity.",
+    ),
+    "FMG600": (
+        "FFmpeg failed",
+        "FFmpeg stopped while processing the command.",
+        "Read the reported reason and rerun with --dry-run to inspect the command.",
+    ),
+    "FMG610": (
+        "Encoder missing",
+        "This FFmpeg build does not contain the requested encoder.",
+        "Run flowmpeg doctor and install a build with the listed encoder.",
+    ),
+    "FMG611": (
+        "Decoder missing",
+        "FFmpeg cannot decode one of the input streams.",
+        "Install a build with the required decoder or convert the input elsewhere.",
+    ),
+    "FMG612": (
+        "Filter missing",
+        "This FFmpeg build does not contain the requested filter.",
+        "Run flowmpeg doctor and install a build with the listed filter.",
+    ),
+    "FMG620": (
+        "Permission denied",
+        "FFmpeg could not read an input or write the output.",
+        "Check file permissions and write access to the output folder.",
+    ),
+    "FMG621": (
+        "Storage full",
+        "The output device ran out of free space.",
+        "Free space, remove the partial output, then run the command again.",
+    ),
+    "FMG630": (
+        "Network input failed",
+        "A remote input could not be opened or authorized.",
+        "Check the URL, credentials, connection, and protocol support.",
+    ),
+    "FMG700": (
+        "Job timed out",
+        "The configured timeout ended FFmpeg before it finished.",
+        "Increase --timeout or omit it for long media jobs.",
+    ),
+}
+
+
+@dataclass(frozen=True, slots=True)
+class _Installer:
+    manager: str
+    commands: tuple[tuple[str, ...], ...]
+    note: str
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -193,8 +316,36 @@ def build_parser() -> argparse.ArgumentParser:
     _add_fade_edges(commands)
     _add_blurred_background(commands)
     _add_reverse(commands)
+    _add_compress_video(commands)
+    _add_reframe(commands)
+    _add_social_video(commands)
+    _add_frame_rate(commands)
+    _add_deinterlace(commands)
+    _add_flip(commands)
+    _add_adjust_colors(commands)
+    _add_sharpen(commands)
+    _add_freeze_end(commands)
+    _add_mute_section(commands)
+    _add_blur_region(commands)
+    _add_boomerang(commands)
+    _add_denoise_audio(commands)
+    _add_compress_audio(commands)
+    _add_podcast_voice(commands)
+    _add_trim_silence(commands)
+    _add_mono_audio(commands)
+    _add_crossfade_audio(commands)
+    _add_extract_subtitles(commands)
+    _add_add_subtitles(commands)
+    _add_remove_subtitles(commands)
+    _add_image_sequence(commands)
+    _add_podcast_audiogram(commands)
+    _add_strip_metadata(commands)
+    _add_tag_audio(commands)
     _add_probe(commands)
     _add_doctor(commands)
+    _add_setup(commands)
+    _add_errors(commands)
+    _add_explain_error(commands)
     _add_examples(commands)
     return parser
 
@@ -218,24 +369,25 @@ def main(argv: Sequence[str] | None = None) -> int:
     try:
         return handler(args)
     except (GraphError, CompilationError) as error:
-        return _error(error, 2)
+        return _error(error, 2, "FMG200")
     except BinaryNotFoundError as error:
-        return _error(error, 3)
+        error_id = "FMG301" if "probe" in str(error).lower() else "FMG300"
+        return _error(error, 3, error_id)
     except OutputExistsError as error:
-        _error(error, 4)
+        _error(error, 4, "FMG400")
         print("flowmpeg: add --overwrite to replace it", file=sys.stderr)
         return 4
     except ProbeError as error:
-        return _error(error, 5)
+        return _error(error, 5, "FMG500")
     except ExecutionError as error:
-        return _error(error, 6)
+        return _execution_error(error)
     except JobTimeoutError as error:
-        return _error(error, 7)
+        return _error(error, 7, "FMG700")
     except KeyboardInterrupt:
         print("flowmpeg: interrupted", file=sys.stderr)
         return 130
     except FlowmpegError as error:
-        return _error(error, 1)
+        return _error(error, 1, "FMG600")
 
 
 def _command(
@@ -923,6 +1075,508 @@ def _add_reverse(commands: argparse._SubParsersAction[argparse.ArgumentParser]) 
     _output(parser)
 
 
+def _add_compress_video(
+    commands: argparse._SubParsersAction[argparse.ArgumentParser],
+) -> None:
+    parser = _command(
+        commands,
+        "compress-video",
+        "Reduce an MP4 file size with H.264 quality controls.",
+        shortcuts.compress_video,
+        ("source",),
+        aliases=("compress", "smaller"),
+    )
+    _source(parser)
+    parser.add_argument("--crf", type=_nonnegative_int, default=28)
+    parser.add_argument(
+        "--encoder-preset",
+        choices=(
+            "ultrafast",
+            "superfast",
+            "veryfast",
+            "faster",
+            "fast",
+            "medium",
+            "slow",
+            "slower",
+            "veryslow",
+        ),
+        default="medium",
+    )
+    parser.add_argument("--max-width", type=_positive_int)
+    parser.add_argument("--audio-bitrate", default="128k")
+    _audio_toggle(parser)
+    _output(parser)
+
+
+def _add_reframe(commands: argparse._SubParsersAction[argparse.ArgumentParser]) -> None:
+    parser = _command(
+        commands,
+        "reframe",
+        "Fill a fixed frame with a centered crop.",
+        shortcuts.reframe,
+        ("source",),
+        aliases=("fill-frame",),
+    )
+    _source(parser)
+    parser.add_argument("--width", type=_positive_int, default=1080)
+    parser.add_argument("--height", type=_positive_int, default=1920)
+    _audio_toggle(parser)
+    _output(parser)
+
+
+def _add_social_video(
+    commands: argparse._SubParsersAction[argparse.ArgumentParser],
+) -> None:
+    parser = _command(
+        commands,
+        "social-video",
+        "Prepare a video for a common social frame size.",
+        shortcuts.social_video,
+        ("source",),
+        aliases=("social",),
+    )
+    _source(parser)
+    parser.add_argument(
+        "--target",
+        choices=("vertical", "portrait", "square", "landscape"),
+        default="vertical",
+    )
+    parser.add_argument("--fill", choices=("blur", "crop", "fit"), default="blur")
+    parser.add_argument("--color", default="black")
+    parser.add_argument("--blur", type=_positive_float, default=20.0)
+    _audio_toggle(parser)
+    _output(parser)
+
+
+def _add_frame_rate(
+    commands: argparse._SubParsersAction[argparse.ArgumentParser],
+) -> None:
+    parser = _command(
+        commands,
+        "set-frame-rate",
+        "Convert video to a constant frame rate.",
+        shortcuts.set_frame_rate,
+        ("source",),
+        aliases=("fps",),
+    )
+    _source(parser)
+    parser.add_argument("--fps", type=_positive_int, default=30)
+    _audio_toggle(parser)
+    _output(parser)
+
+
+def _add_deinterlace(
+    commands: argparse._SubParsersAction[argparse.ArgumentParser],
+) -> None:
+    parser = _command(
+        commands,
+        "deinterlace",
+        "Remove interlacing from video.",
+        shortcuts.deinterlace,
+        ("source",),
+    )
+    _source(parser)
+    parser.add_argument("--mode", choices=("bwdif", "yadif"), default="bwdif")
+    _audio_toggle(parser)
+    _output(parser)
+
+
+def _add_flip(commands: argparse._SubParsersAction[argparse.ArgumentParser]) -> None:
+    parser = _command(
+        commands,
+        "flip-video",
+        "Mirror video on one axis or both axes.",
+        shortcuts.flip_video,
+        ("source",),
+        aliases=("flip", "mirror"),
+    )
+    _source(parser)
+    parser.add_argument(
+        "--direction",
+        choices=("horizontal", "vertical", "both"),
+        default="horizontal",
+    )
+    _audio_toggle(parser)
+    _output(parser)
+
+
+def _add_adjust_colors(
+    commands: argparse._SubParsersAction[argparse.ArgumentParser],
+) -> None:
+    parser = _command(
+        commands,
+        "adjust-colors",
+        "Adjust video brightness and color levels.",
+        shortcuts.adjust_colors,
+        ("source",),
+        aliases=("color",),
+    )
+    _source(parser)
+    parser.add_argument("--brightness", type=_finite_float, default=0.0)
+    parser.add_argument("--contrast", type=_nonnegative_float, default=1.0)
+    parser.add_argument("--saturation", type=_nonnegative_float, default=1.0)
+    parser.add_argument("--gamma", type=_positive_float, default=1.0)
+    _audio_toggle(parser)
+    _output(parser)
+
+
+def _add_sharpen(commands: argparse._SubParsersAction[argparse.ArgumentParser]) -> None:
+    parser = _command(
+        commands,
+        "sharpen",
+        "Apply bounded luma sharpening.",
+        shortcuts.sharpen,
+        ("source",),
+    )
+    _source(parser)
+    parser.add_argument("--amount", type=_nonnegative_float, default=1.0)
+    parser.add_argument("--matrix-size", type=_positive_int, default=5)
+    _audio_toggle(parser)
+    _output(parser)
+
+
+def _add_freeze_end(
+    commands: argparse._SubParsersAction[argparse.ArgumentParser],
+) -> None:
+    parser = _command(
+        commands,
+        "freeze-end",
+        "Hold the final frame and pad audio with silence.",
+        shortcuts.freeze_end,
+        ("source",),
+        aliases=("freeze",),
+    )
+    _source(parser)
+    parser.add_argument("--seconds", type=_positive_float, default=2.0)
+    _audio_toggle(parser)
+    _output(parser)
+
+
+def _add_mute_section(
+    commands: argparse._SubParsersAction[argparse.ArgumentParser],
+) -> None:
+    parser = _command(
+        commands,
+        "mute-section",
+        "Mute one time range in a video.",
+        shortcuts.mute_section,
+        ("source",),
+        aliases=("silence-section",),
+    )
+    _source(parser)
+    parser.add_argument("--start", type=_nonnegative_float, required=True)
+    parser.add_argument("--end", type=_positive_float, required=True)
+    _output(parser)
+
+
+def _add_blur_region(
+    commands: argparse._SubParsersAction[argparse.ArgumentParser],
+) -> None:
+    parser = _command(
+        commands,
+        "blur-region",
+        "Blur one fixed rectangle in a video.",
+        shortcuts.blur_region,
+        ("source",),
+        aliases=("privacy-blur",),
+    )
+    _source(parser)
+    parser.add_argument("--x", type=_nonnegative_int, required=True)
+    parser.add_argument("--y", type=_nonnegative_int, required=True)
+    parser.add_argument("--width", type=_positive_int, required=True)
+    parser.add_argument("--height", type=_positive_int, required=True)
+    parser.add_argument("--radius", type=_positive_int, default=12)
+    parser.add_argument("--power", type=_nonnegative_int, default=2)
+    _audio_toggle(parser)
+    _output(parser)
+
+
+def _add_boomerang(
+    commands: argparse._SubParsersAction[argparse.ArgumentParser],
+) -> None:
+    parser = _command(
+        commands,
+        "boomerang",
+        "Play a short clip forward and backward.",
+        shortcuts.boomerang,
+        ("source",),
+        aliases=("bounce",),
+    )
+    _source(parser)
+    parser.add_argument("--duration", type=_positive_float, required=True)
+    parser.add_argument("--start", type=_nonnegative_float, default=0.0)
+    _audio_toggle(parser)
+    _output(parser)
+
+
+def _audio_file_options(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("--track", type=_nonnegative_int, default=0)
+    parser.add_argument(
+        "--codec",
+        choices=("mp3", "aac", "wav", "flac"),
+        default="wav",
+    )
+    parser.add_argument("--bitrate")
+
+
+def _add_denoise_audio(
+    commands: argparse._SubParsersAction[argparse.ArgumentParser],
+) -> None:
+    parser = _command(
+        commands,
+        "denoise-audio",
+        "Reduce steady background noise.",
+        shortcuts.denoise_audio,
+        ("source",),
+        aliases=("denoise",),
+    )
+    _source(parser)
+    parser.add_argument("--reduction", type=_positive_float, default=12.0)
+    parser.add_argument("--noise-floor", type=_finite_float, default=-50.0)
+    _audio_file_options(parser)
+    _output(parser)
+
+
+def _add_compress_audio(
+    commands: argparse._SubParsersAction[argparse.ArgumentParser],
+) -> None:
+    parser = _command(
+        commands,
+        "compress-audio",
+        "Even out audio level changes.",
+        shortcuts.compress_audio,
+        ("source",),
+        aliases=("dynamics",),
+    )
+    _source(parser)
+    parser.add_argument("--threshold", type=_positive_float, default=0.125)
+    parser.add_argument("--ratio", type=_positive_float, default=3.0)
+    parser.add_argument("--attack", type=_positive_float, default=20.0)
+    parser.add_argument("--release", type=_positive_float, default=250.0)
+    parser.add_argument("--makeup", type=_positive_float, default=1.0)
+    _audio_file_options(parser)
+    _output(parser)
+
+
+def _add_podcast_voice(
+    commands: argparse._SubParsersAction[argparse.ArgumentParser],
+) -> None:
+    parser = _command(
+        commands,
+        "podcast-voice",
+        "Clean and level a spoken-word recording.",
+        shortcuts.podcast_voice,
+        ("source",),
+        aliases=("voice",),
+    )
+    _source(parser)
+    parser.add_argument("--highpass", type=_positive_int, default=80)
+    parser.add_argument("--lowpass", type=_positive_int, default=12_000)
+    parser.add_argument(
+        "--denoise",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+    )
+    parser.add_argument(
+        "--compress",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+    )
+    parser.add_argument("--integrated", type=_finite_float, default=-16.0)
+    _audio_file_options(parser)
+    _output(parser)
+
+
+def _add_trim_silence(
+    commands: argparse._SubParsersAction[argparse.ArgumentParser],
+) -> None:
+    parser = _command(
+        commands,
+        "trim-silence",
+        "Remove silence from the start and end of audio.",
+        shortcuts.trim_silence,
+        ("source",),
+        aliases=("desilence",),
+    )
+    _source(parser)
+    parser.add_argument("--threshold-db", type=_finite_float, default=-45.0)
+    parser.add_argument("--minimum", type=_positive_float, default=0.25)
+    _audio_file_options(parser)
+    _output(parser)
+
+
+def _add_mono_audio(
+    commands: argparse._SubParsersAction[argparse.ArgumentParser],
+) -> None:
+    parser = _command(
+        commands,
+        "mono-audio",
+        "Downmix one audio track to mono.",
+        shortcuts.mono_audio,
+        ("source",),
+        aliases=("mono",),
+    )
+    _source(parser)
+    _audio_file_options(parser)
+    _output(parser)
+
+
+def _add_crossfade_audio(
+    commands: argparse._SubParsersAction[argparse.ArgumentParser],
+) -> None:
+    parser = _command(
+        commands,
+        "crossfade-audio",
+        "Join two audio files with a crossfade.",
+        shortcuts.crossfade_audio,
+        ("first", "second"),
+        aliases=("crossfade",),
+    )
+    _source(parser, "first")
+    _source(parser, "second")
+    parser.add_argument("--duration", type=_positive_float, default=1.0)
+    parser.add_argument("--curve", choices=("tri", "qsin", "exp"), default="tri")
+    parser.add_argument(
+        "--codec",
+        choices=("mp3", "aac", "wav", "flac"),
+        default="wav",
+    )
+    parser.add_argument("--bitrate")
+    _output(parser)
+
+
+def _add_extract_subtitles(
+    commands: argparse._SubParsersAction[argparse.ArgumentParser],
+) -> None:
+    parser = _command(
+        commands,
+        "extract-subtitles",
+        "Extract one text subtitle track.",
+        shortcuts.extract_subtitles,
+        ("source",),
+        aliases=("subtitles",),
+    )
+    _source(parser)
+    parser.add_argument("--track", type=_nonnegative_int, default=0)
+    _output(parser)
+
+
+def _add_add_subtitles(
+    commands: argparse._SubParsersAction[argparse.ArgumentParser],
+) -> None:
+    parser = _command(
+        commands,
+        "add-subtitles",
+        "Add a selectable text subtitle track to an MP4.",
+        shortcuts.add_subtitles,
+        ("source", "subtitle_source"),
+        aliases=("captions",),
+    )
+    _source(parser)
+    _source(parser, "subtitle_source")
+    parser.add_argument("--language", default="eng")
+    _audio_toggle(parser)
+    _output(parser)
+
+
+def _add_remove_subtitles(
+    commands: argparse._SubParsersAction[argparse.ArgumentParser],
+) -> None:
+    parser = _command(
+        commands,
+        "remove-subtitles",
+        "Create an MP4 without subtitle tracks.",
+        shortcuts.remove_subtitles,
+        ("source",),
+        aliases=("strip-subtitles",),
+    )
+    _source(parser)
+    _audio_toggle(parser)
+    _output(parser)
+
+
+def _add_image_sequence(
+    commands: argparse._SubParsersAction[argparse.ArgumentParser],
+) -> None:
+    parser = _command(
+        commands,
+        "image-sequence-video",
+        "Turn numbered images into an MP4.",
+        shortcuts.image_sequence_video,
+        ("pattern",),
+        aliases=("timelapse", "image-sequence"),
+    )
+    _source(parser, "pattern")
+    parser.add_argument("--fps", type=_positive_int, default=30)
+    parser.add_argument("--start-number", type=_nonnegative_int, default=1)
+    parser.add_argument("--width", type=_positive_int, default=1920)
+    parser.add_argument("--height", type=_positive_int, default=1080)
+    parser.add_argument("--color", default="black")
+    _output(parser)
+
+
+def _add_podcast_audiogram(
+    commands: argparse._SubParsersAction[argparse.ArgumentParser],
+) -> None:
+    parser = _command(
+        commands,
+        "podcast-audiogram",
+        "Create a cover video with an animated waveform.",
+        shortcuts.podcast_audiogram,
+        ("audio_source", "cover_image"),
+        aliases=("audiogram",),
+    )
+    _source(parser, "audio_source")
+    _source(parser, "cover_image")
+    parser.add_argument("--track", type=_nonnegative_int, default=0)
+    parser.add_argument("--width", type=_positive_int, default=1920)
+    parser.add_argument("--height", type=_positive_int, default=1080)
+    parser.add_argument("--wave-width", type=_positive_int, default=1600)
+    parser.add_argument("--wave-height", type=_positive_int, default=240)
+    parser.add_argument("--wave-color", default="white")
+    parser.add_argument("--frame-rate", type=_positive_int, default=25)
+    _output(parser)
+
+
+def _add_strip_metadata(
+    commands: argparse._SubParsersAction[argparse.ArgumentParser],
+) -> None:
+    parser = _command(
+        commands,
+        "strip-metadata",
+        "Copy selected streams without metadata or chapters.",
+        shortcuts.strip_metadata,
+        ("source",),
+        aliases=("clean-metadata",),
+    )
+    _source(parser)
+    _audio_toggle(parser)
+    parser.add_argument("--subtitles", dest="include_subtitles", action="store_true")
+    _output(parser)
+
+
+def _add_tag_audio(
+    commands: argparse._SubParsersAction[argparse.ArgumentParser],
+) -> None:
+    parser = _command(
+        commands,
+        "tag-audio",
+        "Copy one audio track and set metadata fields.",
+        shortcuts.tag_audio,
+        ("source",),
+        aliases=("tag",),
+    )
+    _source(parser)
+    parser.add_argument("--track", type=_nonnegative_int, default=0)
+    parser.add_argument("--title")
+    parser.add_argument("--artist")
+    parser.add_argument("--album")
+    parser.add_argument("--date")
+    parser.add_argument("--genre")
+    _output(parser)
+
+
 def _add_probe(commands: argparse._SubParsersAction[argparse.ArgumentParser]) -> None:
     parser = commands.add_parser(
         "probe",
@@ -953,6 +1607,56 @@ def _add_doctor(commands: argparse._SubParsersAction[argparse.ArgumentParser]) -
     parser.add_argument("--timeout", type=_positive_float, default=10.0)
     parser.add_argument("--json", action="store_true")
     parser.set_defaults(handler=_run_doctor)
+
+
+def _add_setup(commands: argparse._SubParsersAction[argparse.ArgumentParser]) -> None:
+    parser = commands.add_parser(
+        "setup",
+        aliases=["install-tools"],
+        help="Check or install FFmpeg and FFprobe.",
+        description=(
+            "Check FFmpeg and FFprobe. Installation only runs with --install "
+            "and confirmation."
+        ),
+        allow_abbrev=False,
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+    parser.add_argument(
+        "--install",
+        action="store_true",
+        help="Run the detected package manager after confirmation",
+    )
+    parser.add_argument(
+        "--yes",
+        action="store_true",
+        help="Confirm installation without an interactive prompt",
+    )
+    parser.add_argument("--timeout", type=_positive_float, default=10.0)
+    parser.add_argument("--json", action="store_true")
+    parser.set_defaults(handler=_run_setup)
+
+
+def _add_errors(commands: argparse._SubParsersAction[argparse.ArgumentParser]) -> None:
+    parser = commands.add_parser(
+        "errors",
+        help="List Flowmpeg error identifiers.",
+        description="List Flowmpeg error identifiers.",
+        allow_abbrev=False,
+    )
+    parser.set_defaults(handler=_run_errors)
+
+
+def _add_explain_error(
+    commands: argparse._SubParsersAction[argparse.ArgumentParser],
+) -> None:
+    parser = commands.add_parser(
+        "explain-error",
+        help="Explain one Flowmpeg error identifier.",
+        description="Explain one Flowmpeg error identifier.",
+        allow_abbrev=False,
+    )
+    parser.add_argument("error_id", help="Identifier such as FMG610")
+    parser.set_defaults(handler=_run_explain_error)
 
 
 def _add_examples(
@@ -1054,6 +1758,114 @@ def _run_doctor(args: argparse.Namespace) -> int:
     return 0 if okay else 3
 
 
+def _run_setup(args: argparse.Namespace) -> int:
+    install = cast(bool, args.install)
+    assume_yes = cast(bool, args.yes)
+    as_json = cast(bool, args.json)
+    timeout = cast(float, args.timeout)
+    if assume_yes and not install:
+        return _error(
+            GraphError("--yes requires --install"),
+            2,
+            "FMG200",
+        )
+    if as_json and install:
+        return _error(
+            GraphError("--json cannot be combined with --install"),
+            2,
+            "FMG200",
+        )
+
+    ffmpeg = _tool_report("ffmpeg", timeout)
+    ffprobe = _tool_report("ffprobe", timeout)
+    ready = ffmpeg.get("ok") is True and ffprobe.get("ok") is True
+    installer = _detect_installer()
+    report: dict[str, object] = {
+        "ok": ready,
+        "platform": platform.platform(),
+        "ffmpeg": ffmpeg,
+        "ffprobe": ffprobe,
+        "installer": _installer_data(installer),
+        "changed": False,
+    }
+    if as_json:
+        print(json.dumps(report, indent=2, sort_keys=True))
+        return 0 if ready else 3
+
+    print(_format_setup(report))
+    if ready:
+        print("FFmpeg and FFprobe are ready. No changes were made.")
+        return 0
+    if not install:
+        print("No changes were made. Add --install to run the suggested command.")
+        return 3
+    if installer is None:
+        return _error(
+            FlowmpegError("no supported package manager was found"),
+            3,
+            "FMG303",
+        )
+    if not assume_yes:
+        if not sys.stdin.isatty():
+            return _error(
+                GraphError("non-interactive setup requires --yes"),
+                2,
+                "FMG200",
+            )
+        answer = input("Run these package manager commands? [y/N] ").strip().lower()
+        if answer not in {"y", "yes"}:
+            print("Installation cancelled. No changes were made.")
+            return 3
+
+    for command in installer.commands:
+        try:
+            completed = subprocess.run(command, check=False, shell=False)
+        except OSError as error:
+            return _error(error, 8, "FMG304")
+        if completed.returncode != 0:
+            return _error(
+                FlowmpegError(
+                    f"{installer.manager} exited with code {completed.returncode}"
+                ),
+                8,
+                "FMG304",
+            )
+
+    ffmpeg = _tool_report("ffmpeg", timeout)
+    ffprobe = _tool_report("ffprobe", timeout)
+    if ffmpeg.get("ok") is True and ffprobe.get("ok") is True:
+        print("FFmpeg and FFprobe are ready.")
+        return 0
+    print(
+        "The installer finished, but this process cannot find both tools. "
+        "Open a new terminal and run flowmpeg doctor."
+    )
+    return 3
+
+
+def _run_errors(args: argparse.Namespace) -> int:
+    del args
+    for error_id, (title, _, _) in _ERROR_GUIDE.items():
+        print(f"{error_id}  {title}")
+    return 0
+
+
+def _run_explain_error(args: argparse.Namespace) -> int:
+    error_id = cast(str, args.error_id).upper()
+    guide = _ERROR_GUIDE.get(error_id)
+    if guide is None:
+        return _error(
+            GraphError(f"unknown error identifier: {error_id}"),
+            2,
+            "FMG200",
+        )
+    title, cause, action = guide
+    print(f"{error_id}: {title}")
+    print(f"Cause: {cause}")
+    print(f"Try: {action}")
+    return 0
+
+
 def _run_examples(args: argparse.Namespace) -> int:
     del args
     print("\n".join(_EXAMPLES))
@@ -1129,10 +1941,135 @@ def _format_media_info(info: MediaInfo) -> str:
     return "\n".join(lines)
 
 
+def _detect_installer() -> _Installer | None:
+    system = platform.system()
+    if system == "Windows":
+        if shutil.which("winget"):
+            return _Installer(
+                "winget",
+                (
+                    (
+                        "winget",
+                        "install",
+                        "--id",
+                        "Gyan.FFmpeg",
+                        "-e",
+                        "--source",
+                        "winget",
+                        "--accept-source-agreements",
+                        "--accept-package-agreements",
+                    ),
+                ),
+                "Installs the exact Gyan.FFmpeg package from the winget source.",
+            )
+        if shutil.which("choco"):
+            return _Installer(
+                "Chocolatey",
+                (("choco", "install", "ffmpeg", "-y"),),
+                "Installs the ffmpeg Chocolatey package.",
+            )
+        if shutil.which("scoop"):
+            return _Installer(
+                "Scoop",
+                (("scoop", "install", "ffmpeg"),),
+                "Installs the ffmpeg Scoop package.",
+            )
+        return None
+    if system == "Darwin" and shutil.which("brew"):
+        return _Installer(
+            "Homebrew",
+            (("brew", "install", "ffmpeg"),),
+            "Installs the Homebrew ffmpeg formula.",
+        )
+    if system != "Linux":
+        return None
+    if shutil.which("apt-get"):
+        return _Installer(
+            "APT",
+            (
+                _admin_command(("apt-get", "update")),
+                _admin_command(("apt-get", "install", "-y", "ffmpeg")),
+            ),
+            "Uses the configured Debian or Ubuntu package sources.",
+        )
+    if shutil.which("pacman"):
+        return _Installer(
+            "pacman",
+            (_admin_command(("pacman", "-S", "--needed", "--noconfirm", "ffmpeg")),),
+            "Uses the configured Arch package sources.",
+        )
+    if shutil.which("apk"):
+        return _Installer(
+            "apk",
+            (_admin_command(("apk", "add", "ffmpeg")),),
+            "Uses the configured Alpine package sources.",
+        )
+    if shutil.which("brew"):
+        return _Installer(
+            "Linuxbrew",
+            (("brew", "install", "ffmpeg"),),
+            "Installs the Homebrew ffmpeg formula.",
+        )
+    return None
+
+
+def _admin_command(command: tuple[str, ...]) -> tuple[str, ...]:
+    get_effective_user = getattr(os, "geteuid", None)
+    if callable(get_effective_user) and get_effective_user() == 0:
+        return command
+    return ("sudo", *command) if shutil.which("sudo") else command
+
+
+def _installer_data(installer: _Installer | None) -> dict[str, object] | None:
+    if installer is None:
+        return None
+    return {
+        "manager": installer.manager,
+        "commands": [list(command) for command in installer.commands],
+        "note": installer.note,
+    }
+
+
+def _format_setup(report: dict[str, object]) -> str:
+    lines = [f"Platform: {report['platform']}"]
+    for name in ("ffmpeg", "ffprobe"):
+        item = cast(dict[str, object], report[name])
+        status = item.get("status", "ready" if item.get("ok") else "missing")
+        lines.append(f"{name}: {status}")
+        if item.get("path"):
+            lines.append(f"  path: {item['path']}")
+        if item.get("version"):
+            lines.append(f"  version: {item['version']}")
+    installer = report.get("installer")
+    if isinstance(installer, dict):
+        lines.append(f"Package manager: {installer['manager']}")
+        commands = cast(list[list[str]], installer["commands"])
+        for command in commands:
+            lines.append(f"  suggested: {display_argv(command, redact=False)}")
+        lines.append(f"  note: {installer['note']}")
+    else:
+        lines.append("Package manager: no supported manager found")
+        if platform.system() == "Linux" and (
+            shutil.which("dnf") or shutil.which("zypper")
+        ):
+            lines.append(
+                "  Flowmpeg will not add third-party codec repositories. "
+                "Follow your distribution's FFmpeg instructions."
+            )
+        else:
+            lines.append("  Install from https://ffmpeg.org/download.html")
+    return "\n".join(lines)
+
+
 def _tool_report(executable: str, timeout: float) -> dict[str, object]:
     path = shutil.which(executable)
     if path is None:
-        return {"ok": False, "path": None, "version": None}
+        return {
+            "ok": False,
+            "status": "missing",
+            "path": None,
+            "version": None,
+        }
     try:
         completed = subprocess.run(
             (path, "-version"),
@@ -1144,11 +2081,31 @@ def _tool_report(executable: str, timeout: float) -> dict[str, object]:
             check=False,
             shell=False,
         )
-    except (OSError, subprocess.TimeoutExpired):
-        return {"ok": False, "path": path, "version": None}
+    except PermissionError:
+        return {
+            "ok": False,
+            "status": "permission-denied",
+            "path": path,
+            "version": None,
+        }
+    except subprocess.TimeoutExpired:
+        return {
+            "ok": False,
+            "status": "timeout",
+            "path": path,
+            "version": None,
+        }
+    except OSError:
+        return {
+            "ok": False,
+            "status": "unusable",
+            "path": path,
+            "version": None,
+        }
     first_line = completed.stdout.splitlines()[0] if completed.stdout else None
     return {
         "ok": completed.returncode == 0,
+        "status": "ready" if completed.returncode == 0 else "failed",
         "path": path,
         "version": first_line,
     }
@@ -1159,7 +2116,9 @@ def _capability_report(ffmpeg: str, timeout: float) -> dict[str, bool]:
     encoders = _listing(ffmpeg, "-encoders", timeout)
     muxers = _listing(ffmpeg, "-muxers", timeout)
     names = (
+        "acompressor",
         "afade",
+        "afftdn",
         "amix",
         "apad",
         "areverse",
@@ -1168,14 +2127,20 @@ def _capability_report(ffmpeg: str, timeout: float) -> dict[str, bool]:
         "asplit",
         "atempo",
         "atrim",
+        "boxblur",
+        "bwdif",
+        "colorkey",
         "colorchannelmixer",
         "concat",
         "crop",
+        "eq",
         "fade",
         "format",
         "fps",
         "gblur",
         "hflip",
+        "highpass",
+        "lowpass",
         "loudnorm",
         "overlay",
         "pad",
@@ -1185,13 +2150,17 @@ def _capability_report(ffmpeg: str, timeout: float) -> dict[str, bool]:
         "scale",
         "setpts",
         "showwavespic",
+        "showwaves",
         "showspectrumpic",
         "sidechaincompress",
+        "silenceremove",
         "split",
         "setsar",
         "tile",
+        "tpad",
         "transpose",
         "trim",
+        "unsharp",
         "vflip",
         "volume",
         "xstack",
@@ -1205,8 +2174,11 @@ def _capability_report(ffmpeg: str, timeout: float) -> dict[str, bool]:
         "libwebp",
         "libx264",
         "mjpeg",
+        "mov_text",
         "pcm_s16le",
         "png",
+        "srt",
+        "webvtt",
     ):
         report[f"encoder:{name}"] = _listing_has(encoders, name)
     for name in ("flac", "gif", "image2", "mp3", "mp4", "wav"):
@@ -1252,7 +2224,11 @@ def _format_doctor(report: dict[str, object]) -> str:
     ]
     for name in ("ffmpeg", "ffprobe"):
         item = cast(dict[str, object], report[name])
-        status = "ok" if item.get("ok") else "missing or unusable"
+        raw_status = item.get("status")
+        if isinstance(raw_status, str):
+            status = raw_status
+        else:
+            status = "ready" if item.get("ok") else "missing or unusable"
         lines.append(f"{name}: {status}")
         if item.get("path"):
             lines.append(f"  path: {item['path']}")
@@ -1336,8 +2312,69 @@ def _finite_float(value: str) -> float:
     return number
 
 
-def _error(error: BaseException, code: int) -> int:
-    print(f"flowmpeg: {error}", file=sys.stderr)
+def _execution_error(error: ExecutionError) -> int:
+    error_id = _execution_error_id(error.stderr)
+    reason = _stderr_reason(error.stderr)
+    print(
+        f"flowmpeg [{error_id}]: FFmpeg exited with code {error.returncode}",
+        file=sys.stderr,
+    )
+    if reason:
+        print(f"Reason: {reason}", file=sys.stderr)
+    print(
+        f"Try: flowmpeg explain-error {error_id}",
+        file=sys.stderr,
+    )
+    print(
+        "A partial output may remain. Inspect it before running with --overwrite.",
+        file=sys.stderr,
+    )
+    return 6
+
+
+def _execution_error_id(stderr: str) -> str:
+    lowered = stderr.lower()
+    if re.search(r"unknown encoder|encoder .* not found|error selecting an encoder", lowered):
+        return "FMG610"
+    if re.search(r"unknown decoder|decoder .* not found", lowered):
+        return "FMG611"
+    if "no such filter" in lowered or "filter not found" in lowered:
+        return "FMG612"
+    if "permission denied" in lowered or "access is denied" in lowered:
+        return "FMG620"
+    if "no space left on device" in lowered or "disk full" in lowered:
+        return "FMG621"
+    if re.search(
+        r"http error|server returned|401 unauthorized|403 forbidden|connection refused",
+        lowered,
+    ):
+        return "FMG630"
+    return "FMG600"
+
+
+def _stderr_reason(stderr: str, limit: int = 400) -> str | None:
+    ignored = (
+        "conversion failed",
+        "terminating thread with return code",
+        "task finished with error code",
+    )
+    for line in reversed(stderr.splitlines()):
+        reason = line.strip()
+        lowered = reason.lower()
+        if not reason or lowered.startswith("frame="):
+            continue
+        if any(text in lowered for text in ignored):
+            continue
+        if len(reason) > limit:
+            return reason[: limit - 3] + "..."
+        return reason
+    return None
+
+
+def _error(error: BaseException, code: int, error_id: str) -> int:
+    print(f"flowmpeg [{error_id}]: {error}", file=sys.stderr)
+    if error_id in _ERROR_GUIDE:
+        print(f"Try: flowmpeg explain-error {error_id}", file=sys.stderr)
     return code
 
 

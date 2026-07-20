@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import platform
 import shutil
 import subprocess
 import sys
@@ -61,6 +62,53 @@ from flowmpeg.runner import RunResult
         ["fade-edges", "in.mp4", "--duration", "8", "-o", "out.mp4"],
         ["blurred-background", "in.mp4", "-o", "out.mp4"],
         ["reverse-clip", "in.mp4", "--duration", "5", "-o", "out.mp4"],
+        ["compress-video", "in.mov", "-o", "out.mp4"],
+        ["reframe", "in.mp4", "-o", "out.mp4"],
+        ["social-video", "in.mp4", "-o", "out.mp4"],
+        ["set-frame-rate", "in.mp4", "-o", "out.mp4"],
+        ["deinterlace", "in.mp4", "-o", "out.mp4"],
+        ["flip-video", "in.mp4", "-o", "out.mp4"],
+        ["adjust-colors", "in.mp4", "-o", "out.mp4"],
+        ["sharpen", "in.mp4", "-o", "out.mp4"],
+        ["freeze-end", "in.mp4", "-o", "out.mp4"],
+        [
+            "mute-section",
+            "in.mp4",
+            "--start",
+            "1",
+            "--end",
+            "2",
+            "-o",
+            "out.mp4",
+        ],
+        [
+            "blur-region",
+            "in.mp4",
+            "--x",
+            "0",
+            "--y",
+            "0",
+            "--width",
+            "100",
+            "--height",
+            "100",
+            "-o",
+            "out.mp4",
+        ],
+        ["boomerang", "in.mp4", "--duration", "2", "-o", "out.mp4"],
+        ["denoise-audio", "in.wav", "-o", "out.wav"],
+        ["compress-audio", "in.wav", "-o", "out.wav"],
+        ["podcast-voice", "in.wav", "-o", "out.wav"],
+        ["trim-silence", "in.wav", "-o", "out.wav"],
+        ["mono-audio", "in.wav", "-o", "out.wav"],
+        ["crossfade-audio", "one.wav", "two.wav", "-o", "out.wav"],
+        ["extract-subtitles", "in.mkv", "-o", "out.srt"],
+        ["add-subtitles", "in.mp4", "captions.srt", "-o", "out.mp4"],
+        ["remove-subtitles", "in.mkv", "-o", "out.mp4"],
+        ["image-sequence-video", "frame-%04d.png", "-o", "out.mp4"],
+        ["podcast-audiogram", "in.wav", "cover.jpg", "-o", "out.mp4"],
+        ["strip-metadata", "in.mkv", "-o", "out.mkv"],
+        ["tag-audio", "in.m4a", "--title", "Episode 1", "-o", "out.m4a"],
     ],
 )
 def test_every_media_command_builds_a_dry_run(
@@ -90,6 +138,36 @@ def test_every_media_command_builds_a_dry_run(
         ["sheet", "in.mp4", "-o", "out.jpg"],
         ["reverse", "in.mp4", "--duration", "2", "-o", "out.mp4"],
         ["mix-audio-files", "one.wav", "two.wav", "-o", "out.wav"],
+        ["compress", "in.mov", "-o", "out.mp4"],
+        ["social", "in.mp4", "-o", "out.mp4"],
+        ["fps", "in.mp4", "-o", "out.mp4"],
+        ["mirror", "in.mp4", "-o", "out.mp4"],
+        ["color", "in.mp4", "-o", "out.mp4"],
+        ["freeze", "in.mp4", "-o", "out.mp4"],
+        [
+            "privacy-blur",
+            "in.mp4",
+            "--x",
+            "0",
+            "--y",
+            "0",
+            "--width",
+            "100",
+            "--height",
+            "100",
+            "-o",
+            "out.mp4",
+        ],
+        ["bounce", "in.mp4", "--duration", "2", "-o", "out.mp4"],
+        ["denoise", "in.wav", "-o", "out.wav"],
+        ["voice", "in.wav", "-o", "out.wav"],
+        ["mono", "in.wav", "-o", "out.wav"],
+        ["crossfade", "one.wav", "two.wav", "-o", "out.wav"],
+        ["captions", "in.mp4", "captions.srt", "-o", "out.mp4"],
+        ["timelapse", "frame-%04d.png", "-o", "out.mp4"],
+        ["audiogram", "in.wav", "cover.jpg", "-o", "out.mp4"],
+        ["clean-metadata", "in.mkv", "-o", "out.mkv"],
+        ["tag", "in.m4a", "--title", "Episode 1", "-o", "out.m4a"],
     ],
 )
 def test_short_aliases_build_the_same_kind_of_plan(
@@ -349,7 +427,12 @@ def test_media_errors_have_stable_exit_codes(
 
     assert code == expected_code
     captured = capsys.readouterr()
-    assert str(error) in captured.err
+    if isinstance(error, ExecutionError):
+        assert "FFmpeg exited with code 1" in captured.err
+        assert "Reason: failure" in captured.err
+    else:
+        assert str(error) in captured.err
+    assert "FMG" in captured.err
     if isinstance(error, OutputExistsError):
         assert "--overwrite" in captured.err
 
@@ -510,6 +593,295 @@ def test_doctor_marks_missing_feature_without_failing_core(
     output = capsys.readouterr().out
     assert "web-video: limited" in output
     assert "Core ready: yes" in output
+
+
+def test_setup_ready_is_read_only(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    monkeypatch.setattr(
+        cli,
+        "_tool_report",
+        lambda *args: {
+            "ok": True,
+            "status": "ready",
+            "path": "tool",
+            "version": "tool 1.0",
+        },
+    )
+    monkeypatch.setattr(cli, "_detect_installer", lambda: None)
+
+    assert cli.main(["setup"]) == 0
+    output = capsys.readouterr().out
+    assert "FFmpeg and FFprobe are ready" in output
+    assert "No changes were made" in output
+
+
+def test_setup_missing_prints_exact_suggestion(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    monkeypatch.setattr(
+        cli,
+        "_tool_report",
+        lambda *args: {
+            "ok": False,
+            "status": "missing",
+            "path": None,
+            "version": None,
+        },
+    )
+    monkeypatch.setattr(
+        cli,
+        "_detect_installer",
+        lambda: cli._Installer(
+            "winget",
+            (("winget", "install", "--id", "Gyan.FFmpeg", "-e"),),
+            "Install the exact package.",
+        ),
+    )
+
+    assert cli.main(["setup"]) == 3
+    output = capsys.readouterr().out
+    assert "suggested: winget install --id Gyan.FFmpeg -e" in output
+    assert "Add --install" in output
+
+
+def test_setup_install_yes_runs_fixed_argv(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    checks = iter((False, False, True, True))
+    calls: list[tuple[tuple[str, ...], dict[str, object]]] = []
+
+    def tool_report(*args: object) -> dict[str, object]:
+        ready = next(checks)
+        return {
+            "ok": ready,
+            "status": "ready" if ready else "missing",
+            "path": "tool" if ready else None,
+            "version": "tool 1.0" if ready else None,
+        }
+
+    def run(
+        command: tuple[str, ...],
+        **kwargs: object,
+    ) -> subprocess.CompletedProcess[str]:
+        calls.append((command, kwargs))
+        return subprocess.CompletedProcess(command, 0)
+
+    monkeypatch.setattr(cli, "_tool_report", tool_report)
+    monkeypatch.setattr(
+        cli,
+        "_detect_installer",
+        lambda: cli._Installer(
+            "test-manager",
+            (("manager", "install", "ffmpeg"),),
+            "Test package source.",
+        ),
+    )
+    monkeypatch.setattr(subprocess, "run", run)
+
+    assert cli.main(["setup", "--install", "--yes"]) == 0
+    assert calls == [
+        (
+            ("manager", "install", "ffmpeg"),
+            {"check": False, "shell": False},
+        )
+    ]
+    assert "FFmpeg and FFprobe are ready" in capsys.readouterr().out
+
+
+def test_setup_install_needs_yes_outside_a_tty(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    monkeypatch.setattr(
+        cli,
+        "_tool_report",
+        lambda *args: {
+            "ok": False,
+            "status": "missing",
+            "path": None,
+            "version": None,
+        },
+    )
+    monkeypatch.setattr(
+        cli,
+        "_detect_installer",
+        lambda: cli._Installer(
+            "manager",
+            (("manager", "install", "ffmpeg"),),
+            "Test package source.",
+        ),
+    )
+    monkeypatch.setattr(sys, "stdin", StringIO())
+
+    assert cli.main(["setup", "--install"]) == 2
+    assert "requires --yes" in capsys.readouterr().err
+
+
+def test_setup_install_failure_returns_eight(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    monkeypatch.setattr(
+        cli,
+        "_tool_report",
+        lambda *args: {
+            "ok": False,
+            "status": "missing",
+            "path": None,
+            "version": None,
+        },
+    )
+    monkeypatch.setattr(
+        cli,
+        "_detect_installer",
+        lambda: cli._Installer(
+            "manager",
+            (("manager", "install", "ffmpeg"),),
+            "Test package source.",
+        ),
+    )
+    monkeypatch.setattr(
+        subprocess,
+        "run",
+        lambda *args, **kwargs: subprocess.CompletedProcess(args[0], 5),
+    )
+
+    assert cli.main(["setup", "--install", "--yes"]) == 8
+    assert "FMG304" in capsys.readouterr().err
+
+
+def test_setup_json_describes_state_without_changes(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    monkeypatch.setattr(
+        cli,
+        "_tool_report",
+        lambda *args: {
+            "ok": False,
+            "status": "missing",
+            "path": None,
+            "version": None,
+        },
+    )
+    monkeypatch.setattr(cli, "_detect_installer", lambda: None)
+
+    assert cli.main(["setup", "--json"]) == 3
+    report = json.loads(capsys.readouterr().out)
+    assert report["changed"] is False
+    assert report["installer"] is None
+
+
+def test_setup_rejects_install_only_flags(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    assert cli.main(["setup", "--yes"]) == 2
+    assert "--yes requires --install" in capsys.readouterr().err
+
+    assert cli.main(["setup", "--install", "--json"]) == 2
+    assert "--json cannot be combined" in capsys.readouterr().err
+
+
+def test_windows_installer_uses_exact_winget_package(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(platform, "system", lambda: "Windows")
+    monkeypatch.setattr(
+        shutil,
+        "which",
+        lambda name: f"C:/tools/{name}.exe" if name == "winget" else None,
+    )
+
+    installer = cli._detect_installer()
+
+    assert installer is not None
+    assert installer.manager == "winget"
+    assert installer.commands[0][:7] == (
+        "winget",
+        "install",
+        "--id",
+        "Gyan.FFmpeg",
+        "-e",
+        "--source",
+        "winget",
+    )
+
+
+@pytest.mark.parametrize(
+    ("failure", "status"),
+    [
+        (PermissionError(), "permission-denied"),
+        (subprocess.TimeoutExpired("ffmpeg", 1), "timeout"),
+        (OSError(), "unusable"),
+    ],
+)
+def test_tool_report_describes_start_failures(
+    failure: OSError | subprocess.TimeoutExpired,
+    status: str,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(shutil, "which", lambda executable: "tool")
+
+    def fail(*args: object, **kwargs: object) -> None:
+        raise failure
+
+    monkeypatch.setattr(subprocess, "run", fail)
+
+    assert cli._tool_report("ffmpeg", 1)["status"] == status
+
+
+def test_error_catalog_lists_and_explains_identifiers(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    assert cli.main(["errors"]) == 0
+    listed = capsys.readouterr().out
+    assert "FMG300  FFmpeg missing" in listed
+    assert "FMG700  Job timed out" in listed
+
+    assert cli.main(["explain-error", "fmg610"]) == 0
+    explained = capsys.readouterr().out
+    assert "FMG610: Encoder missing" in explained
+    assert "Cause:" in explained
+    assert "Try:" in explained
+
+
+@pytest.mark.parametrize(
+    ("stderr", "error_id"),
+    [
+        ("Unknown encoder 'madeup'", "FMG610"),
+        ("Unknown decoder 'madeup'", "FMG611"),
+        ("No such filter: madeup", "FMG612"),
+        ("Permission denied", "FMG620"),
+        ("No space left on device", "FMG621"),
+        ("HTTP error 403 Forbidden", "FMG630"),
+        ("Invalid argument", "FMG600"),
+    ],
+)
+def test_execution_errors_get_specific_identifiers(
+    stderr: str,
+    error_id: str,
+) -> None:
+    assert cli._execution_error_id(stderr) == error_id
+
+
+def test_execution_error_output_is_bounded(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    error = ExecutionError(
+        "failed",
+        returncode=1,
+        stderr="x" * 2_000,
+        command="ffmpeg",
+    )
+
+    assert cli._execution_error(error) == 6
+    output = capsys.readouterr().err
+    assert len(output) < 700
+    assert "A partial output may remain" in output
 
 
 def test_progress_completion_is_printed(
