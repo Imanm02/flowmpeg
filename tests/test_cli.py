@@ -793,6 +793,34 @@ def test_setup_install_needs_yes_outside_a_tty(
     assert "requires --yes" in capsys.readouterr().err
 
 
+def test_setup_prompt_eof_cancels_installation(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    class EmptyTty(StringIO):
+        def isatty(self) -> bool:
+            return True
+
+    monkeypatch.setattr(
+        cli,
+        "_tool_report",
+        lambda *args: {"ok": False, "status": "missing", "path": None},
+    )
+    monkeypatch.setattr(
+        cli,
+        "_detect_installer",
+        lambda: cli._Installer(
+            "manager",
+            (("manager", "install", "ffmpeg"),),
+            "Test package source.",
+        ),
+    )
+    monkeypatch.setattr(sys, "stdin", EmptyTty())
+
+    assert cli.main(["setup", "--install"]) == 3
+    assert "Installation cancelled" in capsys.readouterr().out
+
+
 def test_setup_install_failure_returns_eight(
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],

@@ -1822,7 +1822,11 @@ def _run_setup(args: argparse.Namespace) -> int:
                 2,
                 "FMG200",
             )
-        answer = input("Run these package manager commands? [y/N] ").strip().lower()
+        try:
+            answer = input("Run these package manager commands? [y/N] ").strip().lower()
+        except EOFError:
+            print("Installation cancelled. No changes were made.")
+            return 3
         if answer not in {"y", "yes"}:
             print("Installation cancelled. No changes were made.")
             return 3
