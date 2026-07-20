@@ -5,20 +5,17 @@ from __future__ import annotations
 import json
 import math
 import os
-import subprocess
 from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import cast
 
+from flowmpeg.analysis import run_ffmpeg_analysis
 from flowmpeg.diagnostics import display_argv, redact_text
 from flowmpeg.errors import (
     BinaryNotFoundError,
-    BinaryUnusableError,
     ExecutionError,
     GraphError,
-    JobTimeoutError,
 )
-from flowmpeg.processes import popen_group_options, stop_process_tree
 
 
 @dataclass(frozen=True, slots=True)
@@ -89,7 +86,11 @@ def measure_loudness(
         "null",
         "-",
     )
-    stderr, returncode = _run_measurement(argv, timeout)
+    stderr, returncode = run_ffmpeg_analysis(
+        argv,
+        timeout=timeout,
+        activity="loudness measurement",
+    )
     if returncode != 0:
         raise ExecutionError(
             f"FFmpeg exited with code {returncode} while measuring loudness",
@@ -117,44 +118,6 @@ def measure_loudness(
         target_true_peak_dbfs=float(target_peak),
         target_loudness_range_lu=float(target_range),
     )
-
-
-def _run_measurement(
-    argv: tuple[str, ...],
-    timeout: float | None,
-) -> tuple[str, int]:
-    try:
-        process = subprocess.Popen(
-            argv,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.PIPE,
-            text=True,
-            encoding="utf-8",
-            errors="replace",
-            shell=False,
-            **popen_group_options(),
-        )
-    except FileNotFoundError as error:
-        raise BinaryNotFoundError(
-            f"FFmpeg was not found: {argv[0]}",
-            tool="ffmpeg",
-        ) from error
-    except OSError as error:
-        raise BinaryUnusableError(
-            f"FFmpeg could not be started: {argv[0]}",
-            tool="ffmpeg",
-        ) from error
-    try:
-        _, stderr = process.communicate(timeout=timeout)
-    except subprocess.TimeoutExpired as error:
-        stop_process_tree(process, 2.0)
-        raise JobTimeoutError("FFmpeg loudness measurement timed out") from error
-    if process.returncode is None:
-        raise BinaryUnusableError(
-            "FFmpeg ended without a return code",
-            tool="ffmpeg",
-        )
-    return stderr, process.returncode
 
 
 def _loudnorm_values(stderr: str) -> Mapping[str, object] | None:
