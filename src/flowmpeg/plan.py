@@ -71,6 +71,8 @@ class Plan:
     outputs: tuple[OutputSpec, ...]
     global_args: tuple[str, ...] = ()
     overwrite_enabled: bool = False
+    audio_probe_sources: tuple[str, ...] = ()
+    missing_audio_fallback: Plan | None = None
 
     def __post_init__(self) -> None:
         self.validate()
@@ -78,12 +80,42 @@ class Plan:
     def overwrite(self, enabled: bool = True) -> Plan:
         """Return a plan with explicit output replacement behavior."""
 
-        return replace(self, overwrite_enabled=enabled)
+        fallback = self.missing_audio_fallback
+        if fallback is not None:
+            fallback = fallback.overwrite(enabled)
+        return replace(
+            self,
+            overwrite_enabled=enabled,
+            missing_audio_fallback=fallback,
+        )
 
     def with_global_args(self, *args: str) -> Plan:
         """Append ordered raw global arguments."""
 
-        return replace(self, global_args=(*self.global_args, *_ordered_args(args)))
+        fallback = self.missing_audio_fallback
+        if fallback is not None:
+            fallback = fallback.with_global_args(*args)
+        return replace(
+            self,
+            global_args=(*self.global_args, *_ordered_args(args)),
+            missing_audio_fallback=fallback,
+        )
+
+    def with_missing_audio_fallback(
+        self,
+        fallback: Plan,
+        *sources: str | os.PathLike[str],
+    ) -> Plan:
+        """Select a video-only plan at run time when source audio is absent."""
+
+        if not sources:
+            raise GraphError("Audio fallback plans require probe sources")
+        values = tuple(os.fspath(source) for source in sources)
+        return replace(
+            self,
+            audio_probe_sources=values,
+            missing_audio_fallback=fallback,
+        )
 
     def add_output(
         self,
@@ -93,6 +125,8 @@ class Plan:
     ) -> Plan:
         """Return a plan with another output destination."""
 
+        if self.missing_audio_fallback is not None:
+            raise GraphError("Add outputs before attaching an audio fallback")
         if not streams:
             raise GraphError("Outputs require at least one stream")
         graph = MediaGraph.merge((self.graph, *(stream.graph for stream in streams)))
@@ -106,6 +140,8 @@ class Plan:
             (*self.outputs, spec),
             self.global_args,
             self.overwrite_enabled,
+            self.audio_probe_sources,
+            self.missing_audio_fallback,
         )
 
     def validate(self) -> None:
@@ -123,6 +159,24 @@ class Plan:
             raise GraphError("Global arguments must be strings")
         if not isinstance(self.overwrite_enabled, bool):
             raise GraphError("Overwrite state must be Boolean")
+        if not isinstance(self.audio_probe_sources, tuple) or not all(
+            isinstance(value, str) and value for value in self.audio_probe_sources
+        ):
+            raise GraphError("Audio probe sources must be nonempty strings")
+        if (self.missing_audio_fallback is None) != (not self.audio_probe_sources):
+            raise GraphError(
+                "Audio fallbacks require probe sources and a fallback plan"
+            )
+        if self.missing_audio_fallback is not None:
+            fallback = self.missing_audio_fallback
+            if fallback.missing_audio_fallback is not None:
+                raise GraphError("Audio fallback plans cannot be nested")
+            if fallback.overwrite_enabled != self.overwrite_enabled:
+                raise GraphError("Audio fallback overwrite state must match")
+            if tuple(item.destination for item in fallback.outputs) != tuple(
+                item.destination for item in self.outputs
+            ):
+                raise GraphError("Audio fallback destinations must match")
         self.graph.validate()
         _reject_structural_args(self.global_args, "Global")
         for node in self.graph.inputs:
@@ -202,12 +256,17 @@ class Plan:
             for output in self.outputs
         )
         lines.append(f"Overwrite: {'yes' if self.overwrite_enabled else 'no'}")
+        if self.missing_audio_fallback is not None:
+            lines.append("Audio selection: probe sources when the plan runs")
+            lines.append("Missing audio: use the video-only fallback")
         return "\n".join(lines)
 
     def run(
         self,
         *,
         ffmpeg: str = "ffmpeg",
+        ffprobe: str = "ffprobe",
+        probe_timeout: float | None = 10.0,
         on_progress: Callable[[Progress], None] | None = None,
         expected_duration: float | None = None,
         timeout: float | None = None,
@@ -219,8 +278,25 @@ class Plan:
 
         from flowmpeg.runner import run
 
+        selected = self
+        if self.missing_audio_fallback is not None:
+            from flowmpeg.probe import probe
+
+            has_audio = all(
+                probe(source, ffprobe=ffprobe, timeout=probe_timeout).audio_streams
+                for source in self.audio_probe_sources
+            )
+            selected = (
+                replace(
+                    self,
+                    audio_probe_sources=(),
+                    missing_audio_fallback=None,
+                )
+                if has_audio
+                else self.missing_audio_fallback
+            )
         return run(
-            self,
+            selected,
             ffmpeg=ffmpeg,
             on_progress=on_progress,
             expected_duration=expected_duration,

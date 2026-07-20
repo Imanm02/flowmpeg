@@ -220,6 +220,10 @@ def test_media_command_runs_and_reports_output(
             "out.mp4",
             "--ffmpeg",
             "custom-ffmpeg",
+            "--ffprobe",
+            "custom-ffprobe",
+            "--probe-timeout",
+            "4",
             "--timeout",
             "12",
             "--expected-duration",
@@ -233,6 +237,8 @@ def test_media_command_runs_and_reports_output(
     assert captured.out == "Finished in 1.25s: out.mp4\n"
     assert received == {
         "ffmpeg": "custom-ffmpeg",
+        "ffprobe": "custom-ffprobe",
+        "probe_timeout": 4.0,
         "on_progress": None,
         "expected_duration": 2.0,
         "timeout": 12.0,

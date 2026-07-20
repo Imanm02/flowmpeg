@@ -52,10 +52,12 @@ _CONTROL_NAMES = {
     "expected_duration",
     "explain",
     "ffmpeg",
+    "ffprobe",
     "handler",
     "media_factory",
     "positionals",
     "progress",
+    "probe_timeout",
     "timeout",
 }
 
@@ -566,6 +568,13 @@ def _output(parser: argparse.ArgumentParser) -> None:
         help="Print the FFmpeg command without running it",
     )
     parser.add_argument("--ffmpeg", default="ffmpeg", help="FFmpeg executable")
+    parser.add_argument("--ffprobe", default="ffprobe", help="FFprobe executable")
+    parser.add_argument(
+        "--probe-timeout",
+        type=_positive_float,
+        default=10.0,
+        help="Maximum seconds for automatic stream inspection",
+    )
     parser.add_argument(
         "--timeout",
         type=_positive_float,
@@ -1878,6 +1887,8 @@ def _run_media(args: argparse.Namespace) -> int:
     dry_run = cast(bool, values["dry_run"])
     explain = cast(bool, values["explain"])
     ffmpeg = cast(str, values["ffmpeg"])
+    ffprobe = cast(str, values["ffprobe"])
+    probe_timeout = cast(float, values["probe_timeout"])
     timeout = cast(float | None, values["timeout"])
     expected_duration = cast(float | None, values["expected_duration"])
     show_progress = cast(bool, values["progress"])
@@ -1907,6 +1918,8 @@ def _run_media(args: argparse.Namespace) -> int:
     try:
         result = plan.run(
             ffmpeg=ffmpeg,
+            ffprobe=ffprobe,
+            probe_timeout=probe_timeout,
             on_progress=progress_printer,
             expected_duration=expected_duration,
             timeout=timeout,
