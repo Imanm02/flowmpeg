@@ -22,6 +22,7 @@ _ROOT = Path(__file__).parents[1]
 _MARKDOWN_FILES = (_ROOT / "README.md", *sorted((_ROOT / "docs").glob("*.md")))
 _PYTHON_BLOCK = re.compile(r"^```python\s*\n(.*?)^```", re.MULTILINE | re.DOTALL)
 _MARKDOWN_LINK = re.compile(r"\[[^]]+\]\(([^)]+)\)")
+_MARKDOWN_HEADING = re.compile(r"^#{1,6}\s+(.+?)\s*#*$", re.MULTILINE)
 
 
 def _code_cases() -> list[tuple[str, str]]:
@@ -57,10 +58,24 @@ def test_markdown_code_fences_are_closed(path: Path) -> None:
 def test_local_markdown_links_resolve(path: Path) -> None:
     text = path.read_text(encoding="utf-8")
     for match in _MARKDOWN_LINK.finditer(text):
-        target = match.group(1).split("#", 1)[0]
-        if not target or "://" in target:
+        target, separator, fragment = match.group(1).partition("#")
+        if "://" in target:
             continue
-        assert (path.parent / target).exists(), target
+        target_path = path if not target else path.parent / target
+        assert target_path.exists(), target
+        if separator:
+            assert fragment in _markdown_anchors(target_path), match.group(1)
+
+
+def _markdown_anchors(path: Path) -> set[str]:
+    text = path.read_text(encoding="utf-8")
+    return {_github_anchor(match.group(1)) for match in _MARKDOWN_HEADING.finditer(text)}
+
+
+def _github_anchor(heading: str) -> str:
+    heading = re.sub(r"[`*_~]", "", heading).strip().lower()
+    heading = re.sub(r"[^\w\- ]", "", heading)
+    return re.sub(r"\s+", "-", heading)
 
 
 @pytest.mark.parametrize(
