@@ -953,6 +953,22 @@ def test_execution_error_output_is_bounded(
     assert cli._execution_error(error) == 6
     output = capsys.readouterr().err
     assert len(output) < 700
+
+
+def test_execution_error_prefers_the_causal_line(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    error = ExecutionError(
+        "failed",
+        returncode=1,
+        stderr="Unknown encoder 'madeup'\nNothing was written into output file",
+        command="ffmpeg",
+    )
+
+    assert cli._execution_error(error) == 6
+    output = capsys.readouterr().err
+    assert "Reason: Unknown encoder 'madeup'" in output
+    assert "Reason: Nothing was written" not in output
     assert "A partial output may remain" in output
 
 

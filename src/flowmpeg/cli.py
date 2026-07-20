@@ -2317,7 +2317,7 @@ def _finite_float(value: str) -> float:
 
 def _execution_error(error: ExecutionError) -> int:
     error_id = _execution_error_id(error.stderr)
-    reason = _stderr_reason(error.stderr)
+    reason = _stderr_reason(error.stderr, error_id=error_id)
     print(
         f"flowmpeg [{error_id}]: FFmpeg exited with code {error.returncode}",
         file=sys.stderr,
@@ -2365,13 +2365,32 @@ def _execution_error_id(stderr: str) -> str:
     return "FMG600"
 
 
-def _stderr_reason(stderr: str, limit: int = 400) -> str | None:
+def _stderr_reason(
+    stderr: str,
+    limit: int = 400,
+    *,
+    error_id: str | None = None,
+) -> str | None:
     ignored = (
         "conversion failed",
         "terminating thread with return code",
         "task finished with error code",
     )
-    for line in reversed(stderr.splitlines()):
+    preferred = {
+        "FMG610": (r"unknown encoder", r"encoder .* not found"),
+        "FMG611": (r"unknown decoder", r"decoder .* not found"),
+        "FMG612": (r"no such filter", r"filter not found"),
+        "FMG620": (r"permission denied", r"access is denied"),
+        "FMG621": (r"no space left", r"disk full"),
+        "FMG630": (r"http error", r"server returned", r"connection refused"),
+    }.get(error_id or "", ())
+    lines = stderr.splitlines()
+    if preferred:
+        causal = [
+            line for line in lines if any(re.search(pattern, line, re.I) for pattern in preferred)
+        ]
+        lines = causal or lines
+    for line in reversed(lines):
         reason = line.strip()
         lowered = reason.lower()
         if not reason or lowered.startswith("frame="):
