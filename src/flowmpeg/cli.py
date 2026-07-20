@@ -1752,7 +1752,7 @@ def _run_doctor(args: argparse.Namespace) -> int:
     timeout = cast(float, args.timeout)
     ffmpeg = _tool_report(cast(str, args.ffmpeg), timeout)
     ffprobe = _tool_report(cast(str, args.ffprobe), timeout)
-    capabilities: dict[str, bool] = {}
+    capabilities: dict[str, bool | None] = {}
     ffmpeg_path = ffmpeg.get("path")
     if ffmpeg.get("ok") is True and isinstance(ffmpeg_path, str):
         capabilities = _capability_report(ffmpeg_path, timeout)
@@ -2161,7 +2161,7 @@ def _tool_report(executable: str, timeout: float) -> dict[str, object]:
     }
 
 
-def _capability_report(ffmpeg: str, timeout: float) -> dict[str, bool]:
+def _capability_report(ffmpeg: str, timeout: float) -> dict[str, bool | None]:
     filters = _listing(ffmpeg, "-filters", timeout)
     encoders = _listing(ffmpeg, "-encoders", timeout)
     muxers = _listing(ffmpeg, "-muxers", timeout)
@@ -2241,14 +2241,22 @@ def _capability_report(ffmpeg: str, timeout: float) -> dict[str, bool]:
     return report
 
 
-def _feature_report(capabilities: dict[str, bool]) -> dict[str, bool]:
-    return {
-        feature: all(capabilities.get(name, False) for name in requirements)
-        for feature, requirements in _FEATURE_REQUIREMENTS.items()
-    }
+def _feature_report(
+    capabilities: dict[str, bool | None],
+) -> dict[str, bool | None]:
+    report: dict[str, bool | None] = {}
+    for feature, requirements in _FEATURE_REQUIREMENTS.items():
+        states = [capabilities.get(name) for name in requirements]
+        if any(state is False for state in states):
+            report[feature] = False
+        elif states and all(state is True for state in states):
+            report[feature] = True
+        else:
+            report[feature] = None
+    return report
 
 
-def _listing(executable: str, option: str, timeout: float) -> str:
+def _listing(executable: str, option: str, timeout: float) -> str | None:
     try:
         completed = subprocess.run(
             (executable, "-hide_banner", option),
@@ -2261,13 +2269,15 @@ def _listing(executable: str, option: str, timeout: float) -> str:
             shell=False,
         )
     except (OSError, subprocess.TimeoutExpired):
-        return ""
+        return None
     if completed.returncode != 0:
-        return ""
+        return None
     return completed.stdout
 
 
-def _listing_has(listing: str, name: str) -> bool:
+def _listing_has(listing: str | None, name: str) -> bool | None:
+    if listing is None:
+        return None
     pattern = rf"(?m)^\s*\S+\s+{re.escape(name)}(?:\s|$)"
     return re.search(pattern, listing) is not None
 
@@ -2293,18 +2303,24 @@ def _format_doctor(report: dict[str, object]) -> str:
             lines.append(f"  return code: {item['returncode']}")
         if item.get("reason"):
             lines.append(f"  reason: {item['reason']}")
-    capabilities = cast(dict[str, bool], report["capabilities"])
+    capabilities = cast(dict[str, bool | None], report["capabilities"])
     if capabilities:
-        available = sum(capabilities.values())
+        available = sum(value is True for value in capabilities.values())
         lines.append(f"Capabilities: {available}/{len(capabilities)} available")
-        missing = [name for name, present in capabilities.items() if not present]
+        missing = [name for name, present in capabilities.items() if present is False]
         for name in missing:
             lines.append(f"  missing: {name}")
-    features = cast(dict[str, bool], report["features"])
+        unknown = [name for name, present in capabilities.items() if present is None]
+        for name in unknown:
+            lines.append(f"  unknown: {name}")
+    features = cast(dict[str, bool | None], report["features"])
     if features:
         lines.append("Feature groups:")
         for name, present in features.items():
-            lines.append(f"  {name}: {'ready' if present else 'limited'}")
+            state = "ready" if present is True else "limited"
+            if present is None:
+                state = "unknown"
+            lines.append(f"  {name}: {state}")
     lines.append(f"Core ready: {'yes' if report['ok'] else 'no'}")
     return "\n".join(lines)
 

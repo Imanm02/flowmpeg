@@ -36,7 +36,7 @@ only a discussion or test placeholder.
   the structured field.
 - [x] Bound probe failure text shown by the CLI.
 - [x] Prefer the causal FFmpeg line when choosing a short failure reason.
-- [ ] Distinguish missing capabilities from capability checks that failed or
+- [x] Distinguish missing capabilities from capability checks that failed or
   timed out.
 - [x] Validate audio bitrate syntax before building a command.
 - [x] Ignore audio bitrate controls when audio output is disabled.

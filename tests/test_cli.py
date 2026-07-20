@@ -687,6 +687,19 @@ def test_doctor_checks_filters_and_ass_subtitles(
     assert report["encoder:ass"] is True
 
 
+def test_failed_capability_listing_is_unknown(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(cli, "_listing", lambda *args: None)
+
+    report = cli._capability_report("ffmpeg", 1)
+    features = cli._feature_report(report)
+
+    assert report
+    assert set(report.values()) == {None}
+    assert set(features.values()) == {None}
+
+
 def test_setup_ready_is_read_only(
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
