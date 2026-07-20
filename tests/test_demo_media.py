@@ -49,6 +49,7 @@ def test_demo_media_script_generates_example_inputs(tmp_path: Path) -> None:
     joined = tmp_path / "joined.mp4"
     grid = tmp_path / "grid.mp4"
     branded = tmp_path / "branded.mp4"
+    square = tmp_path / "square.mp4"
     assert cli.main(["probe", str(video)]) == 0
     assert (
         cli.main(
@@ -151,8 +152,33 @@ def test_demo_media_script_generates_example_inputs(tmp_path: Path) -> None:
         )
         == 0
     )
+    assert (
+        cli.main(
+            [
+                "social",
+                str(video),
+                "--target",
+                "square",
+                "--fill",
+                "blur",
+                "--no-progress",
+                "-o",
+                str(square),
+            ]
+        )
+        == 0
+    )
 
-    for target in (clip, waveform, captioned, audiogram, joined, grid, branded):
+    for target in (
+        clip,
+        waveform,
+        captioned,
+        audiogram,
+        joined,
+        grid,
+        branded,
+        square,
+    ):
         assert target.stat().st_size > 0
     assert len(probe(captioned).subtitle_streams) == 1
     assert probe(audiogram).duration == pytest.approx(2.0, abs=0.2)
@@ -166,3 +192,7 @@ def test_demo_media_script_generates_example_inputs(tmp_path: Path) -> None:
     branded_video = branded_info.video_streams[0]
     assert (branded_video.width, branded_video.height) == (320, 180)
     assert len(branded_info.audio_streams) == 1
+    square_info = probe(square)
+    square_video = square_info.video_streams[0]
+    assert (square_video.width, square_video.height) == (1080, 1080)
+    assert len(square_info.audio_streams) == 1
