@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import os
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass, replace
 from typing import TYPE_CHECKING
 
@@ -13,6 +13,8 @@ from flowmpeg.streams import Stream
 
 if TYPE_CHECKING:
     from flowmpeg.compiler import CompiledCommand
+    from flowmpeg.progress import Progress
+    from flowmpeg.runner import RunResult
 
 
 @dataclass(frozen=True, slots=True)
@@ -145,6 +147,32 @@ class Plan:
         )
         lines.append(f"Overwrite: {'yes' if self.overwrite_enabled else 'no'}")
         return "\n".join(lines)
+
+    def run(
+        self,
+        *,
+        ffmpeg: str = "ffmpeg",
+        on_progress: Callable[[Progress], None] | None = None,
+        expected_duration: float | None = None,
+        timeout: float | None = None,
+        progress_interval: float = 0.5,
+        stderr_limit: int = 128_000,
+        termination_grace: float = 2.0,
+    ) -> RunResult:
+        """Run this plan with the synchronous process runner."""
+
+        from flowmpeg.runner import run
+
+        return run(
+            self,
+            ffmpeg=ffmpeg,
+            on_progress=on_progress,
+            expected_duration=expected_duration,
+            timeout=timeout,
+            progress_interval=progress_interval,
+            stderr_limit=stderr_limit,
+            termination_grace=termination_grace,
+        )
 
 
 def output(

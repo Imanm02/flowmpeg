@@ -6,6 +6,7 @@ from flowmpeg.errors import (
     ExecutionError,
     FlowmpegError,
     GraphError,
+    JobTimeoutError,
     OutputExistsError,
     ProbeError,
 )
@@ -22,6 +23,8 @@ from flowmpeg.probe import (
     probe,
     probe_raw,
 )
+from flowmpeg.progress import Progress
+from flowmpeg.runner import RunResult, run
 from flowmpeg.streams import (
     AudioStream,
     MediaInput,
@@ -43,6 +46,7 @@ __all__ = [
     "FlowmpegError",
     "FormatInfo",
     "GraphError",
+    "JobTimeoutError",
     "MediaGraph",
     "MediaInput",
     "MediaInfo",
@@ -50,7 +54,9 @@ __all__ = [
     "OutputSpec",
     "Plan",
     "ProbeError",
+    "Progress",
     "Rational",
+    "RunResult",
     "StreamKind",
     "StreamInfo",
     "SubtitleStream",
@@ -64,4 +70,5 @@ __all__ = [
     "output",
     "probe",
     "probe_raw",
+    "run",
 ]
