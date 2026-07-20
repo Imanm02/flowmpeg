@@ -23,8 +23,8 @@ def render() -> str:
         "This file is generated from `COMMAND_CATALOG`. Run",
         "`python scripts/command_reference.py --check` before a release.",
         "",
-        "Tags describe use cases. Capability groups describe the broad doctor",
-        "check associated with an editing command.",
+        "Tags describe use cases. Capability groups provide broad doctor checks.",
+        "Exact needs are checked by `flowmpeg doctor --command NAME`.",
         "",
     ]
     for category in CATEGORIES:
@@ -33,8 +33,8 @@ def render() -> str:
             (
                 f"## {category.title()} ({len(specs)})",
                 "",
-                "| Command | Aliases | Input | Output | Tags | Doctor group |",
-                "|---|---|---|---|---|---|",
+                "| Command | Aliases | Input | Output | Tags | Doctor group | Exact needs |",
+                "|---|---|---|---|---|---|---|",
             )
         )
         for spec in specs:
@@ -45,9 +45,12 @@ def render() -> str:
                 if spec.capability_group is not None
                 else "none"
             )
+            requirements = (
+                ", ".join(f"`{item}`" for item in spec.requirements) or "none"
+            )
             lines.append(
                 f"| `{spec.name}` | {aliases} | {spec.input_kind} | "
-                f"{spec.output_kind} | {tags} | {capability} |"
+                f"{spec.output_kind} | {tags} | {capability} | {requirements} |"
             )
         lines.append("")
     return "\n".join(lines)

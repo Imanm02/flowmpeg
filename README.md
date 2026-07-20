@@ -39,7 +39,11 @@ capability report:
 
 ```console
 flowmpeg doctor
+flowmpeg doctor --command trim
 ```
+
+The second check verifies the default encoders, muxer, and filters used by
+`trim`. It returns exit code 3 when that exact path is unavailable.
 
 ## One-line terminal jobs
 

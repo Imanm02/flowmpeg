@@ -3,110 +3,110 @@
 This file is generated from `COMMAND_CATALOG`. Run
 `python scripts/command_reference.py --check` before a release.
 
-Tags describe use cases. Capability groups describe the broad doctor
-check associated with an editing command.
+Tags describe use cases. Capability groups provide broad doctor checks.
+Exact needs are checked by `flowmpeg doctor --command NAME`.
 
 ## Video (16)
 
-| Command | Aliases | Input | Output | Tags | Doctor group |
-|---|---|---|---|---|---|
-| `transcode` | `convert` | media | media | `creator`, `delivery`, `silent-input` | `web-video` |
-| `trim` | `cut` | media | media | `creator`, `delivery`, `silent-input` | `web-video` |
-| `resize` | `scale` | media | media | `creator`, `delivery`, `silent-input` | `web-video` |
-| `remove-audio` | `mute`, `strip-audio` | media | video | `creator`, `copy`, `privacy`, `silent-input` | none |
-| `compress-video` | `compress`, `smaller` | media | media | `creator`, `delivery`, `silent-input` | `web-video` |
-| `reframe` | `fill-frame` | media | media | `creator`, `delivery`, `silent-input` | `composition` |
-| `social-video` | `social` | media | media | `creator`, `delivery`, `silent-input` | `composition` |
-| `set-frame-rate` | `fps` | media | media | `creator`, `archive`, `silent-input` | `creator-video` |
-| `deinterlace` | none | media | media | `creator`, `archive`, `silent-input` | `creator-video` |
-| `flip-video` | `flip`, `mirror` | media | media | `creator`, `silent-input` | `video-effects` |
-| `rotate` | none | media | media | `creator`, `silent-input` | `video-effects` |
-| `crop` | none | media | media | `creator`, `silent-input` | `composition` |
-| `change-speed` | `speed` | media | media | `creator`, `silent-input` | `audio-processing` |
-| `freeze-end` | `freeze` | media | media | `creator`, `silent-input` | `creator-video` |
-| `mute-section` | `silence-section` | media | media | `creator` | `audio-processing` |
-| `boomerang` | `bounce` | media | media | `creator`, `silent-input` | `reverse` |
+| Command | Aliases | Input | Output | Tags | Doctor group | Exact needs |
+|---|---|---|---|---|---|---|
+| `transcode` | `convert` | media | media | `creator`, `delivery`, `silent-input` | `web-video` | `encoder:aac`, `encoder:libx264`, `muxer:mp4` |
+| `trim` | `cut` | media | media | `creator`, `delivery`, `silent-input` | `web-video` | `encoder:aac`, `encoder:libx264`, `filter:asetpts`, `filter:atrim`, `filter:setpts`, `filter:trim`, `muxer:mp4` |
+| `resize` | `scale` | media | media | `creator`, `delivery`, `silent-input` | `web-video` | `encoder:aac`, `encoder:libx264`, `filter:scale`, `muxer:mp4` |
+| `remove-audio` | `mute`, `strip-audio` | media | video | `creator`, `copy`, `privacy`, `silent-input` | none | `muxer:mp4` |
+| `compress-video` | `compress`, `smaller` | media | media | `creator`, `delivery`, `silent-input` | `web-video` | `encoder:aac`, `encoder:libx264`, `filter:scale`, `muxer:mp4` |
+| `reframe` | `fill-frame` | media | media | `creator`, `delivery`, `silent-input` | `composition` | `encoder:aac`, `encoder:libx264`, `filter:crop`, `filter:scale`, `filter:setsar`, `muxer:mp4` |
+| `social-video` | `social` | media | media | `creator`, `delivery`, `silent-input` | `composition` | `encoder:aac`, `encoder:libx264`, `filter:crop`, `filter:gblur`, `filter:overlay`, `filter:scale`, `filter:split`, `muxer:mp4` |
+| `set-frame-rate` | `fps` | media | media | `creator`, `archive`, `silent-input` | `creator-video` | `encoder:aac`, `encoder:libx264`, `filter:fps`, `muxer:mp4` |
+| `deinterlace` | none | media | media | `creator`, `archive`, `silent-input` | `creator-video` | `encoder:aac`, `encoder:libx264`, `filter:bwdif`, `muxer:mp4` |
+| `flip-video` | `flip`, `mirror` | media | media | `creator`, `silent-input` | `video-effects` | `encoder:aac`, `encoder:libx264`, `filter:hflip`, `muxer:mp4` |
+| `rotate` | none | media | media | `creator`, `silent-input` | `video-effects` | `encoder:aac`, `encoder:libx264`, `filter:transpose`, `muxer:mp4` |
+| `crop` | none | media | media | `creator`, `silent-input` | `composition` | `encoder:aac`, `encoder:libx264`, `filter:crop`, `muxer:mp4` |
+| `change-speed` | `speed` | media | media | `creator`, `silent-input` | `audio-processing` | `encoder:aac`, `encoder:libx264`, `filter:asetpts`, `filter:atempo`, `filter:setpts`, `muxer:mp4` |
+| `freeze-end` | `freeze` | media | media | `creator`, `silent-input` | `creator-video` | `encoder:aac`, `encoder:libx264`, `filter:apad`, `filter:tpad`, `muxer:mp4` |
+| `mute-section` | `silence-section` | media | media | `creator` | `audio-processing` | `encoder:aac`, `encoder:libx264`, `filter:volume`, `muxer:mp4` |
+| `boomerang` | `bounce` | media | media | `creator`, `silent-input` | `reverse` | `encoder:aac`, `encoder:libx264`, `filter:areverse`, `filter:asetpts`, `filter:asplit`, `filter:atrim`, `filter:concat`, `filter:reverse`, `filter:setpts`, `filter:split`, `filter:trim`, `muxer:mp4` |
 
 ## Audio (13)
 
-| Command | Aliases | Input | Output | Tags | Doctor group |
-|---|---|---|---|---|---|
-| `replace-audio` | `swap-audio` | media | video | `podcast` | `web-video` |
-| `extract-audio` | `audio` | media | audio | `podcast`, `copy` | `audio-files` |
-| `mix-audio` | `mix`, `mix-audio-files` | audio | audio | `podcast`, `creator` | `audio-processing` |
-| `normalize-loudness` | `normalize` | audio | audio | `podcast`, `delivery` | `audio-processing` |
-| `denoise-audio` | `denoise` | audio | audio | `podcast` | `voice-cleanup` |
-| `compress-audio` | `dynamics` | audio | audio | `podcast` | `voice-cleanup` |
-| `podcast-voice` | `voice` | audio | audio | `podcast`, `delivery` | `voice-cleanup` |
-| `trim-silence` | `desilence` | audio | audio | `podcast`, `delivery` | `voice-cleanup` |
-| `mono-audio` | `mono` | audio | audio | `podcast` | `voice-cleanup` |
-| `crossfade-audio` | `crossfade` | audio | audio | `podcast`, `creator` | `audio-processing` |
-| `add-music` | `music` | media | video | `podcast` | `audio-processing` |
-| `duck-music` | `duck` | media | video | `podcast` | `audio-processing` |
-| `tag-audio` | `tag` | audio | audio | `podcast`, `archive` | `audio-files` |
+| Command | Aliases | Input | Output | Tags | Doctor group | Exact needs |
+|---|---|---|---|---|---|---|
+| `replace-audio` | `swap-audio` | media | video | `podcast` | `web-video` | `encoder:aac`, `filter:apad`, `muxer:mp4` |
+| `extract-audio` | `audio` | media | audio | `podcast`, `copy` | `audio-files` | `encoder:libmp3lame`, `muxer:mp3` |
+| `mix-audio` | `mix`, `mix-audio-files` | audio | audio | `podcast`, `creator` | `audio-processing` | `encoder:pcm_s16le`, `filter:amix`, `muxer:wav` |
+| `normalize-loudness` | `normalize` | audio | audio | `podcast`, `delivery` | `audio-processing` | `encoder:pcm_s16le`, `filter:aresample`, `filter:loudnorm`, `muxer:wav` |
+| `denoise-audio` | `denoise` | audio | audio | `podcast` | `voice-cleanup` | `encoder:pcm_s16le`, `filter:afftdn`, `muxer:wav` |
+| `compress-audio` | `dynamics` | audio | audio | `podcast` | `voice-cleanup` | `encoder:pcm_s16le`, `filter:acompressor`, `muxer:wav` |
+| `podcast-voice` | `voice` | audio | audio | `podcast`, `delivery` | `voice-cleanup` | `encoder:pcm_s16le`, `filter:acompressor`, `filter:afftdn`, `filter:aresample`, `filter:highpass`, `filter:loudnorm`, `filter:lowpass`, `muxer:wav` |
+| `trim-silence` | `desilence` | audio | audio | `podcast`, `delivery` | `voice-cleanup` | `encoder:pcm_s16le`, `filter:areverse`, `filter:asetpts`, `filter:atrim`, `filter:silenceremove`, `muxer:wav` |
+| `mono-audio` | `mono` | audio | audio | `podcast` | `voice-cleanup` | `encoder:pcm_s16le`, `filter:aformat`, `muxer:wav` |
+| `crossfade-audio` | `crossfade` | audio | audio | `podcast`, `creator` | `audio-processing` | `encoder:pcm_s16le`, `filter:acrossfade`, `muxer:wav` |
+| `add-music` | `music` | media | video | `podcast` | `audio-processing` | `encoder:aac`, `encoder:libx264`, `filter:amix`, `filter:volume`, `muxer:mp4` |
+| `duck-music` | `duck` | media | video | `podcast` | `audio-processing` | `encoder:aac`, `encoder:libx264`, `filter:amix`, `filter:asplit`, `filter:sidechaincompress`, `filter:volume`, `muxer:mp4` |
+| `tag-audio` | `tag` | audio | audio | `podcast`, `archive` | `audio-files` | `muxer:ipod` |
 
 ## Composition (8)
 
-| Command | Aliases | Input | Output | Tags | Doctor group |
-|---|---|---|---|---|---|
-| `watermark` | `mark` | media | video | `creator`, `delivery`, `silent-input` | `composition` |
-| `join-matching` | `join` | media | media | `creator`, `archive` | `composition` |
-| `grid` | none | media | video | `creator`, `silent-input` | `composition` |
-| `fit-canvas` | `fit` | media | video | `creator`, `delivery`, `silent-input` | `composition` |
-| `picture-in-picture` | `pip` | media | video | `creator`, `silent-input` | `composition` |
-| `blurred-background` | `blur-bg` | media | video | `creator`, `delivery`, `silent-input` | `composition` |
-| `still-image-video` | `still-video` | image and audio | video | `creator` | `web-video` |
-| `podcast-audiogram` | `audiogram` | image and audio | video | `creator` | `audiogram` |
+| Command | Aliases | Input | Output | Tags | Doctor group | Exact needs |
+|---|---|---|---|---|---|---|
+| `watermark` | `mark` | media | video | `creator`, `delivery`, `silent-input` | `composition` | `encoder:aac`, `encoder:libx264`, `filter:overlay`, `muxer:mp4` |
+| `join-matching` | `join` | media | media | `creator`, `archive` | `composition` | `encoder:aac`, `encoder:libx264`, `filter:asetpts`, `filter:concat`, `filter:setpts`, `muxer:mp4` |
+| `grid` | none | media | video | `creator`, `silent-input` | `composition` | `encoder:libx264`, `filter:scale`, `filter:xstack`, `muxer:mp4` |
+| `fit-canvas` | `fit` | media | video | `creator`, `delivery`, `silent-input` | `composition` | `encoder:aac`, `encoder:libx264`, `filter:pad`, `filter:scale`, `filter:setsar`, `muxer:mp4` |
+| `picture-in-picture` | `pip` | media | video | `creator`, `silent-input` | `composition` | `encoder:aac`, `encoder:libx264`, `filter:overlay`, `filter:scale`, `filter:setpts`, `muxer:mp4` |
+| `blurred-background` | `blur-bg` | media | video | `creator`, `delivery`, `silent-input` | `composition` | `encoder:aac`, `encoder:libx264`, `filter:crop`, `filter:gblur`, `filter:overlay`, `filter:scale`, `filter:split`, `muxer:mp4` |
+| `still-image-video` | `still-video` | image and audio | video | `creator` | `web-video` | `encoder:aac`, `encoder:libx264`, `filter:pad`, `filter:scale`, `filter:setsar`, `muxer:mp4` |
+| `podcast-audiogram` | `audiogram` | image and audio | video | `creator` | `audiogram` | `encoder:aac`, `encoder:libx264`, `filter:asplit`, `filter:colorkey`, `filter:overlay`, `filter:pad`, `filter:scale`, `filter:setsar`, `filter:showwaves`, `muxer:mp4` |
 
 ## Effects (5)
 
-| Command | Aliases | Input | Output | Tags | Doctor group |
-|---|---|---|---|---|---|
-| `fade-edges` | `fade` | media | video | `creator`, `silent-input` | `video-effects` |
-| `adjust-colors` | `color` | media | video | `creator` | `creator-video` |
-| `sharpen` | none | media | video | `creator` | `creator-video` |
-| `blur-region` | `privacy-blur` | media | video | `creator`, `privacy`, `silent-input` | `creator-video` |
-| `reverse-clip` | `reverse` | media | video | `creator`, `silent-input` | `reverse` |
+| Command | Aliases | Input | Output | Tags | Doctor group | Exact needs |
+|---|---|---|---|---|---|---|
+| `fade-edges` | `fade` | media | video | `creator`, `silent-input` | `video-effects` | `encoder:aac`, `encoder:libx264`, `filter:afade`, `filter:asetpts`, `filter:atrim`, `filter:fade`, `filter:setpts`, `filter:trim`, `muxer:mp4` |
+| `adjust-colors` | `color` | media | video | `creator` | `creator-video` | `encoder:aac`, `encoder:libx264`, `filter:eq`, `muxer:mp4` |
+| `sharpen` | none | media | video | `creator` | `creator-video` | `encoder:aac`, `encoder:libx264`, `filter:unsharp`, `muxer:mp4` |
+| `blur-region` | `privacy-blur` | media | video | `creator`, `privacy`, `silent-input` | `creator-video` | `encoder:aac`, `encoder:libx264`, `filter:boxblur`, `filter:crop`, `filter:overlay`, `filter:split`, `muxer:mp4` |
+| `reverse-clip` | `reverse` | media | video | `creator`, `silent-input` | `reverse` | `encoder:aac`, `encoder:libx264`, `filter:areverse`, `filter:asetpts`, `filter:atrim`, `filter:reverse`, `filter:setpts`, `filter:trim`, `muxer:mp4` |
 
 ## Images (6)
 
-| Command | Aliases | Input | Output | Tags | Doctor group |
-|---|---|---|---|---|---|
-| `thumbnail` | `thumb` | media | image | `creator`, `archive`, `silent-input` | `analysis-images` |
-| `make-gif` | `gif` | media | image | `creator`, `delivery`, `silent-input` | `animated-gif` |
-| `waveform-image` | `waveform` | audio | image | `creator` | `analysis-images` |
-| `spectrum-image` | `spectrum` | audio | image | `creator` | `analysis-images` |
-| `contact-sheet` | `sheet` | media | image | `creator`, `archive`, `silent-input` | `analysis-images` |
-| `image-sequence-video` | `timelapse`, `image-sequence` | image sequence | video | `creator`, `silent-input` | `web-video` |
+| Command | Aliases | Input | Output | Tags | Doctor group | Exact needs |
+|---|---|---|---|---|---|---|
+| `thumbnail` | `thumb` | media | image | `creator`, `archive`, `silent-input` | `analysis-images` | `encoder:mjpeg`, `muxer:image2` |
+| `make-gif` | `gif` | media | image | `creator`, `delivery`, `silent-input` | `animated-gif` | `encoder:gif`, `filter:fps`, `filter:palettegen`, `filter:paletteuse`, `filter:scale`, `filter:setpts`, `filter:split`, `filter:trim`, `muxer:gif` |
+| `waveform-image` | `waveform` | audio | image | `creator` | `analysis-images` | `encoder:png`, `filter:showwavespic`, `muxer:image2` |
+| `spectrum-image` | `spectrum` | audio | image | `creator` | `analysis-images` | `encoder:png`, `filter:scale`, `filter:showspectrumpic`, `muxer:image2` |
+| `contact-sheet` | `sheet` | media | image | `creator`, `archive`, `silent-input` | `analysis-images` | `encoder:mjpeg`, `filter:fps`, `filter:pad`, `filter:scale`, `filter:setsar`, `filter:tile`, `muxer:image2` |
+| `image-sequence-video` | `timelapse`, `image-sequence` | image sequence | video | `creator`, `silent-input` | `web-video` | `encoder:libx264`, `filter:pad`, `filter:scale`, `filter:setsar`, `muxer:mp4` |
 
 ## Subtitles (3)
 
-| Command | Aliases | Input | Output | Tags | Doctor group |
-|---|---|---|---|---|---|
-| `extract-subtitles` | `subtitles` | media | subtitle | `accessibility`, `archive`, `copy` | `subtitles` |
-| `add-subtitles` | `captions` | media | video | `accessibility`, `delivery` | `subtitles` |
-| `remove-subtitles` | `strip-subtitles` | media | video | `accessibility`, `copy`, `privacy` | `web-video` |
+| Command | Aliases | Input | Output | Tags | Doctor group | Exact needs |
+|---|---|---|---|---|---|---|
+| `extract-subtitles` | `subtitles` | media | subtitle | `accessibility`, `archive`, `copy` | `subtitles` | `encoder:srt`, `muxer:srt` |
+| `add-subtitles` | `captions` | media | video | `accessibility`, `delivery` | `subtitles` | `encoder:aac`, `encoder:libx264`, `encoder:mov_text`, `muxer:mp4` |
+| `remove-subtitles` | `strip-subtitles` | media | video | `accessibility`, `copy`, `privacy` | `web-video` | `encoder:aac`, `encoder:libx264`, `muxer:mp4` |
 
 ## Metadata (1)
 
-| Command | Aliases | Input | Output | Tags | Doctor group |
-|---|---|---|---|---|---|
-| `strip-metadata` | `clean-metadata` | media | media | `archive`, `copy`, `privacy` | none |
+| Command | Aliases | Input | Output | Tags | Doctor group | Exact needs |
+|---|---|---|---|---|---|---|
+| `strip-metadata` | `clean-metadata` | media | media | `archive`, `copy`, `privacy` | none | `muxer:matroska` |
 
 ## Inspect (4)
 
-| Command | Aliases | Input | Output | Tags | Doctor group |
-|---|---|---|---|---|---|
-| `probe` | none | media | report | `inspect`, `archive` | none |
-| `compare` | none | two media files | report | `inspect` | none |
-| `doctor` | none | none | report | `inspect` | none |
-| `setup` | `install-tools` | none | report | `inspect` | none |
+| Command | Aliases | Input | Output | Tags | Doctor group | Exact needs |
+|---|---|---|---|---|---|---|
+| `probe` | none | media | report | `inspect`, `archive` | none | none |
+| `compare` | none | two media files | report | `inspect` | none | none |
+| `doctor` | none | none | report | `inspect` | none | none |
+| `setup` | `install-tools` | none | report | `inspect` | none | none |
 
 ## Help (4)
 
-| Command | Aliases | Input | Output | Tags | Doctor group |
-|---|---|---|---|---|---|
-| `errors` | none | none | text | `discover` | none |
-| `explain-error` | none | error id | text | `discover` | none |
-| `examples` | none | none | text | `discover` | none |
-| `commands` | none | none | text | `discover` | none |
+| Command | Aliases | Input | Output | Tags | Doctor group | Exact needs |
+|---|---|---|---|---|---|---|
+| `errors` | none | none | text | `discover` | none | none |
+| `explain-error` | none | error id | text | `discover` | none | none |
+| `examples` | none | none | text | `discover` | none | none |
+| `commands` | none | none | text | `discover` | none | none |

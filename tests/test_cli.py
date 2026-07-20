@@ -775,6 +775,8 @@ def test_doctor_checks_filters_and_ass_subtitles(
         "setsar",
         "yadif",
         "ass",
+        "matroska",
+        "srt",
     ):
         assert name in checked
     assert report["encoder:ass"] is True
@@ -828,6 +830,55 @@ def test_doctor_without_requirement_reports_null_state(
     report = json.loads(capsys.readouterr().out)
     assert report["required_group"] is None
     assert report["required_ready"] is None
+    assert report["required_command"] is None
+    assert report["command_ready"] is None
+
+
+def test_doctor_required_command_checks_exact_capabilities(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    monkeypatch.setattr(
+        cli,
+        "_tool_report",
+        lambda *args: {"ok": True, "status": "ready", "path": "tool"},
+    )
+    monkeypatch.setattr(
+        cli,
+        "_capability_report",
+        lambda *args: {
+            "encoder:aac": True,
+            "encoder:libx264": True,
+            "filter:scale": False,
+            "muxer:mp4": True,
+        },
+    )
+
+    assert cli.main(["doctor", "--command", "resize", "--json"]) == 3
+    report = json.loads(capsys.readouterr().out)
+    assert report["required_command"] == "resize"
+    assert report["command_ready"] is False
+    assert report["command_requirements"] == [
+        "encoder:aac",
+        "encoder:libx264",
+        "filter:scale",
+        "muxer:mp4",
+    ]
+
+
+def test_doctor_rejects_two_requirement_modes() -> None:
+    with pytest.raises(SystemExit) as raised:
+        cli.main(
+            [
+                "doctor",
+                "--require",
+                "web-video",
+                "--command",
+                "transcode",
+            ]
+        )
+
+    assert raised.value.code == 2
 
 
 def test_setup_ready_is_read_only(

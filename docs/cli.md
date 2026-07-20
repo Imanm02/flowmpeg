@@ -32,15 +32,19 @@ missing, it prints the supported package manager command. Installation only
 runs with `flowmpeg setup --install` and confirmation. See the
 [installation guide](installation.md) for each supported system.
 
-`doctor` checks both executables and a selected set of filters and output
-capabilities, then groups the results by the kind of job they support.
+`doctor` checks both executables and every capability named by the command
+catalog, then groups the results by the kind of job they support.
 
 Use `--require` when a script depends on one group. A limited or unknown
 requested group returns exit code 3:
 
 ```console
 flowmpeg doctor --require web-video
+flowmpeg doctor --command make-gif
 ```
+
+`--command` checks the encoder, muxer, and filters used by that command's
+default recipe. It cannot be combined with `--require`.
 
 The module form runs the same program:
 
@@ -1018,6 +1022,7 @@ The JSON form is suitable for scripts:
 
 ```console
 flowmpeg doctor --json
+flowmpeg doctor --command podcast-voice --json
 ```
 
 Doctor and setup JSON include a top-level `schema_version`. Raw probe mode
@@ -1040,7 +1045,9 @@ parts of the command set are supported by the installed FFmpeg build:
 - `audiogram`
 
 A limited feature group does not make `doctor` fail when both core tools work.
-The detailed JSON report contains every tested capability.
+The detailed JSON report contains every tested capability. Command checks add
+`required_command`, `command_requirements`, and `command_ready` fields. An
+unavailable or unknown command requirement returns exit code 3.
 
 ## Paths in CMD
 

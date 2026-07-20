@@ -35,7 +35,7 @@ only a discussion or test placeholder.
 - [x] Normalize Windows extended path prefixes before checking new output
   aliases.
 - [x] Put a safe resource bound around two-pass edge-silence trimming.
-- [ ] Make doctor requirements cover every filter and output capability used by
+- [x] Make doctor requirements cover every filter and output capability used by
   each public command.
 - [x] Let audio-transforming timeline shortcuts detect a missing input audio
   stream without a separate probe or `--no-audio` choice.
@@ -86,7 +86,7 @@ only a discussion or test placeholder.
   group.
 - [ ] Add an optional doctor smoke test that encodes and probes a tiny generated
   input.
-- [ ] Split doctor requirements by the exact encoders and muxers each command
+- [x] Split doctor requirements by the exact encoders and muxers each command
   needs.
 - [x] Infer progress duration for start and end trims.
 - [x] Infer doubled progress duration for boomerang outputs.

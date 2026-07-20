@@ -17,6 +17,7 @@ class CommandSpec:
     input_kind: str = "media"
     output_kind: str = "media"
     capability_group: str | None = None
+    requirements: tuple[str, ...] = ()
 
 
 _BASE_COMMAND_CATALOG = (
@@ -549,6 +550,199 @@ _COMMAND_TAGS = {
     "probe": ("archive",),
 }
 
+_MP4 = ("encoder:aac", "encoder:libx264", "muxer:mp4")
+_WAV = ("encoder:pcm_s16le", "muxer:wav")
+
+
+def _requirements(*names: str) -> tuple[str, ...]:
+    return tuple(sorted(names))
+
+
+_COMMAND_REQUIREMENTS = {
+    "transcode": _MP4,
+    "trim": _requirements(
+        *_MP4,
+        "filter:asetpts",
+        "filter:atrim",
+        "filter:setpts",
+        "filter:trim",
+    ),
+    "resize": _requirements(*_MP4, "filter:scale"),
+    "remove-audio": ("muxer:mp4",),
+    "compress-video": _requirements(*_MP4, "filter:scale"),
+    "reframe": _requirements(
+        *_MP4, "filter:crop", "filter:scale", "filter:setsar"
+    ),
+    "social-video": _requirements(
+        *_MP4,
+        "filter:crop",
+        "filter:gblur",
+        "filter:overlay",
+        "filter:scale",
+        "filter:split",
+    ),
+    "set-frame-rate": _requirements(*_MP4, "filter:fps"),
+    "deinterlace": _requirements(*_MP4, "filter:bwdif"),
+    "flip-video": _requirements(*_MP4, "filter:hflip"),
+    "rotate": _requirements(*_MP4, "filter:transpose"),
+    "crop": _requirements(*_MP4, "filter:crop"),
+    "change-speed": _requirements(
+        *_MP4, "filter:asetpts", "filter:atempo", "filter:setpts"
+    ),
+    "freeze-end": _requirements(*_MP4, "filter:apad", "filter:tpad"),
+    "mute-section": _requirements(*_MP4, "filter:volume"),
+    "boomerang": _requirements(
+        *_MP4,
+        "filter:areverse",
+        "filter:asetpts",
+        "filter:asplit",
+        "filter:atrim",
+        "filter:concat",
+        "filter:reverse",
+        "filter:setpts",
+        "filter:split",
+        "filter:trim",
+    ),
+    "replace-audio": _requirements(
+        "encoder:aac", "filter:apad", "muxer:mp4"
+    ),
+    "extract-audio": ("encoder:libmp3lame", "muxer:mp3"),
+    "mix-audio": _requirements(*_WAV, "filter:amix"),
+    "normalize-loudness": _requirements(
+        *_WAV, "filter:aresample", "filter:loudnorm"
+    ),
+    "denoise-audio": _requirements(*_WAV, "filter:afftdn"),
+    "compress-audio": _requirements(*_WAV, "filter:acompressor"),
+    "podcast-voice": _requirements(
+        *_WAV,
+        "filter:acompressor",
+        "filter:afftdn",
+        "filter:aresample",
+        "filter:highpass",
+        "filter:loudnorm",
+        "filter:lowpass",
+    ),
+    "trim-silence": _requirements(
+        *_WAV,
+        "filter:areverse",
+        "filter:asetpts",
+        "filter:atrim",
+        "filter:silenceremove",
+    ),
+    "mono-audio": _requirements(*_WAV, "filter:aformat"),
+    "crossfade-audio": _requirements(*_WAV, "filter:acrossfade"),
+    "add-music": _requirements(*_MP4, "filter:amix", "filter:volume"),
+    "duck-music": _requirements(
+        *_MP4,
+        "filter:amix",
+        "filter:asplit",
+        "filter:sidechaincompress",
+        "filter:volume",
+    ),
+    "tag-audio": ("muxer:ipod",),
+    "watermark": _requirements(*_MP4, "filter:overlay"),
+    "join-matching": _requirements(
+        *_MP4, "filter:asetpts", "filter:concat", "filter:setpts"
+    ),
+    "grid": _requirements(
+        "encoder:libx264", "filter:scale", "filter:xstack", "muxer:mp4"
+    ),
+    "fit-canvas": _requirements(
+        *_MP4, "filter:pad", "filter:scale", "filter:setsar"
+    ),
+    "picture-in-picture": _requirements(
+        *_MP4, "filter:overlay", "filter:scale", "filter:setpts"
+    ),
+    "blurred-background": _requirements(
+        *_MP4,
+        "filter:crop",
+        "filter:gblur",
+        "filter:overlay",
+        "filter:scale",
+        "filter:split",
+    ),
+    "still-image-video": _requirements(
+        *_MP4, "filter:pad", "filter:scale", "filter:setsar"
+    ),
+    "podcast-audiogram": _requirements(
+        *_MP4,
+        "filter:asplit",
+        "filter:colorkey",
+        "filter:overlay",
+        "filter:pad",
+        "filter:scale",
+        "filter:setsar",
+        "filter:showwaves",
+    ),
+    "fade-edges": _requirements(
+        *_MP4,
+        "filter:afade",
+        "filter:asetpts",
+        "filter:atrim",
+        "filter:fade",
+        "filter:setpts",
+        "filter:trim",
+    ),
+    "adjust-colors": _requirements(*_MP4, "filter:eq"),
+    "sharpen": _requirements(*_MP4, "filter:unsharp"),
+    "blur-region": _requirements(
+        *_MP4,
+        "filter:boxblur",
+        "filter:crop",
+        "filter:overlay",
+        "filter:split",
+    ),
+    "reverse-clip": _requirements(
+        *_MP4,
+        "filter:areverse",
+        "filter:asetpts",
+        "filter:atrim",
+        "filter:reverse",
+        "filter:setpts",
+        "filter:trim",
+    ),
+    "thumbnail": ("encoder:mjpeg", "muxer:image2"),
+    "make-gif": _requirements(
+        "encoder:gif",
+        "filter:fps",
+        "filter:palettegen",
+        "filter:paletteuse",
+        "filter:scale",
+        "filter:setpts",
+        "filter:split",
+        "filter:trim",
+        "muxer:gif",
+    ),
+    "waveform-image": _requirements(
+        "encoder:png", "filter:showwavespic", "muxer:image2"
+    ),
+    "spectrum-image": _requirements(
+        "encoder:png", "filter:scale", "filter:showspectrumpic", "muxer:image2"
+    ),
+    "contact-sheet": _requirements(
+        "encoder:mjpeg",
+        "filter:fps",
+        "filter:pad",
+        "filter:scale",
+        "filter:setsar",
+        "filter:tile",
+        "muxer:image2",
+    ),
+    "image-sequence-video": _requirements(
+        "encoder:libx264",
+        "filter:pad",
+        "filter:scale",
+        "filter:setsar",
+        "muxer:mp4",
+    ),
+    "extract-subtitles": ("encoder:srt", "muxer:srt"),
+    "add-subtitles": _requirements(
+        *_MP4, "encoder:mov_text"
+    ),
+    "remove-subtitles": _MP4,
+    "strip-metadata": ("muxer:matroska",),
+}
+
 COMMAND_CATALOG = tuple(
     replace(
         spec,
@@ -557,6 +751,7 @@ COMMAND_CATALOG = tuple(
                 (*_CATEGORY_TAGS[spec.category], *_COMMAND_TAGS.get(spec.name, ()))
             )
         ),
+        requirements=_COMMAND_REQUIREMENTS.get(spec.name, ()),
     )
     for spec in _BASE_COMMAND_CATALOG
 )

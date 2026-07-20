@@ -40,3 +40,21 @@ def test_catalog_fields_support_task_discovery() -> None:
     assert all(spec.tags for spec in COMMAND_CATALOG)
     assert all(set(spec.tags) <= set(TAGS) for spec in COMMAND_CATALOG)
     assert command_spec("gif") == command_spec("make-gif")
+
+
+def test_editing_commands_list_exact_requirements() -> None:
+    editing = [
+        spec for spec in COMMAND_CATALOG if spec.category not in {"help", "inspect"}
+    ]
+
+    assert editing
+    assert all(spec.requirements for spec in editing)
+    assert command_spec("trim").requirements == (
+        "encoder:aac",
+        "encoder:libx264",
+        "filter:asetpts",
+        "filter:atrim",
+        "filter:setpts",
+        "filter:trim",
+        "muxer:mp4",
+    )

@@ -1770,10 +1770,17 @@ def _add_doctor(commands: argparse._SubParsersAction[argparse.ArgumentParser]) -
     parser.add_argument("--ffmpeg", default="ffmpeg", help="FFmpeg executable")
     parser.add_argument("--ffprobe", default="ffprobe", help="FFprobe executable")
     parser.add_argument("--timeout", type=_positive_float, default=10.0)
-    parser.add_argument(
+    required = parser.add_mutually_exclusive_group()
+    required.add_argument(
         "--require",
         choices=tuple(_FEATURE_REQUIREMENTS),
         help="Fail unless one feature group is ready",
+    )
+    required.add_argument(
+        "--command",
+        dest="required_command",
+        choices=tuple(spec.name for spec in COMMAND_CATALOG if spec.requirements),
+        help="Fail unless one command's default path is ready",
     )
     parser.add_argument("--json", action="store_true")
     parser.set_defaults(handler=_run_doctor)
@@ -1982,6 +1989,20 @@ def _run_doctor(args: argparse.Namespace) -> int:
         features.get(required_group) if required_group is not None else None
     )
     required_ready = required_state if required_group is not None else None
+    required_command = cast(str | None, args.required_command)
+    command_specification = (
+        command_spec(required_command) if required_command is not None else None
+    )
+    command_requirements = (
+        command_specification.requirements
+        if command_specification is not None
+        else ()
+    )
+    command_ready = (
+        _requirements_state(capabilities, command_requirements)
+        if required_command is not None
+        else None
+    )
     report: dict[str, object] = {
         "schema_version": _JSON_SCHEMA_VERSION,
         "ok": okay,
@@ -1993,12 +2014,19 @@ def _run_doctor(args: argparse.Namespace) -> int:
         "features": features,
         "required_group": required_group,
         "required_ready": required_ready,
+        "required_command": required_command,
+        "command_requirements": command_requirements,
+        "command_ready": command_ready,
     }
     if cast(bool, args.json):
         print(json.dumps(report, indent=2, sort_keys=True))
     else:
         print(_format_doctor(report))
-    return 0 if okay and (required_group is None or required_ready is True) else 3
+    requirement_ready = (
+        required_ready if required_group is not None else command_ready
+    )
+    has_requirement = required_group is not None or required_command is not None
+    return 0 if okay and (not has_requirement or requirement_ready is True) else 3
 
 
 def _run_setup(args: argparse.Namespace) -> int:
@@ -2524,95 +2552,45 @@ def _capability_report(ffmpeg: str, timeout: float) -> dict[str, bool | None]:
     filters = _listing(ffmpeg, "-filters", timeout)
     encoders = _listing(ffmpeg, "-encoders", timeout)
     muxers = _listing(ffmpeg, "-muxers", timeout)
-    names = (
-        "acompressor",
-        "acrossfade",
-        "adelay",
-        "afade",
-        "afftdn",
-        "aformat",
-        "amix",
-        "apad",
-        "areverse",
-        "aresample",
-        "asetpts",
-        "asplit",
-        "atempo",
-        "atrim",
-        "boxblur",
-        "bwdif",
-        "colorkey",
-        "colorchannelmixer",
-        "concat",
-        "crop",
-        "eq",
-        "fade",
-        "format",
-        "fps",
-        "gblur",
-        "hflip",
-        "highpass",
-        "lowpass",
-        "loudnorm",
-        "overlay",
-        "pad",
-        "palettegen",
-        "paletteuse",
-        "reverse",
-        "scale",
-        "setpts",
-        "showwavespic",
-        "showwaves",
-        "showspectrumpic",
-        "sidechaincompress",
-        "silenceremove",
-        "split",
-        "setsar",
-        "tile",
-        "tpad",
-        "transpose",
-        "trim",
-        "unsharp",
-        "vflip",
-        "volume",
-        "xstack",
-        "yadif",
+    all_requirements = {
+        requirement
+        for requirements in _FEATURE_REQUIREMENTS.values()
+        for requirement in requirements
+    }
+    all_requirements.update(
+        requirement
+        for spec in COMMAND_CATALOG
+        for requirement in spec.requirements
     )
-    report = {f"filter:{name}": _listing_has(filters, name) for name in names}
-    for name in (
-        "aac",
-        "ass",
-        "flac",
-        "gif",
-        "libmp3lame",
-        "libwebp",
-        "libx264",
-        "mjpeg",
-        "mov_text",
-        "pcm_s16le",
-        "png",
-        "srt",
-        "webvtt",
-    ):
-        report[f"encoder:{name}"] = _listing_has(encoders, name)
-    for name in ("flac", "gif", "image2", "ipod", "mp3", "mp4", "wav"):
-        report[f"muxer:{name}"] = _listing_has(muxers, name)
-    return report
+    listings = {"filter": filters, "encoder": encoders, "muxer": muxers}
+    return {
+        requirement: _listing_has(
+            listings[requirement.partition(":")[0]],
+            requirement.partition(":")[2],
+        )
+        for requirement in sorted(all_requirements)
+    }
 
 
 def _feature_report(
     capabilities: dict[str, bool | None],
 ) -> dict[str, bool | None]:
-    report: dict[str, bool | None] = {}
-    for feature, requirements in _FEATURE_REQUIREMENTS.items():
-        states = [capabilities.get(name) for name in requirements]
-        if any(state is False for state in states):
-            report[feature] = False
-        elif states and all(state is True for state in states):
-            report[feature] = True
-        else:
-            report[feature] = None
-    return report
+    return {
+        feature: _requirements_state(capabilities, requirements)
+        for feature, requirements in _FEATURE_REQUIREMENTS.items()
+    }
+
+
+def _requirements_state(
+    capabilities: dict[str, bool | None],
+    requirements: Sequence[str],
+) -> bool | None:
+    states = [capabilities.get(name) for name in requirements]
+    if any(state is False for state in states):
+        return False
+    if states and all(state is True for state in states):
+        return True
+    return None
 
 
 def _listing(executable: str, option: str, timeout: float) -> str | None:
@@ -2687,6 +2665,20 @@ def _format_doctor(report: dict[str, object]) -> str:
         if ready is None:
             state = "unknown"
         lines.append(f"Required group: {required_group} ({state})")
+    required_command = report.get("required_command")
+    if isinstance(required_command, str):
+        ready = report.get("command_ready")
+        state = "ready" if ready is True else "limited"
+        if ready is None:
+            state = "unknown"
+        lines.append(f"Required command: {required_command} ({state})")
+        requirements = cast(Sequence[str], report["command_requirements"])
+        for requirement in requirements:
+            present = capabilities.get(requirement)
+            requirement_state = "ready" if present is True else "missing"
+            if present is None:
+                requirement_state = "unknown"
+            lines.append(f"  {requirement}: {requirement_state}")
     lines.append(f"Core ready: {'yes' if report['ok'] else 'no'}")
     return "\n".join(lines)
 

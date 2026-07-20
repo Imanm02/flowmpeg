@@ -32,8 +32,8 @@ Run the full capability check after both tools are found:
 flowmpeg doctor
 ```
 
-`doctor` checks a selected set of filters, encoders, and muxers used by common
-Flowmpeg jobs. Use JSON in scripts:
+`doctor` checks every filter, encoder, and muxer named by the command catalog.
+Use JSON in scripts:
 
 ```console
 flowmpeg doctor --json
@@ -48,10 +48,14 @@ Require one group in CI when a job depends on it:
 ```console
 flowmpeg doctor --require web-video
 flowmpeg doctor --require audiogram --json
+flowmpeg doctor --command resize
 ```
 
 Without `--require`, limited optional groups do not change the exit code. A
-requested group that is limited or unknown returns exit code 3.
+requested group that is limited or unknown returns exit code 3. `--command`
+checks the exact default path for one command and follows the same exit rule.
+It reports each required capability separately. Use either `--require` or
+`--command`, not both.
 
 ## Let Flowmpeg run the package manager
 
@@ -195,7 +199,8 @@ flowmpeg doctor --json
 
 `doctor` returns exit code 3 when FFmpeg or FFprobe is unavailable. Missing
 optional capabilities are reported as limited feature groups without changing
-the exit code.
+the exit code. Add `--command NAME` to require the default capability set of
+one editing command.
 
 ## Use a custom executable path
 
