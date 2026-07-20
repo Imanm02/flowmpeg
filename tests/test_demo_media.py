@@ -46,6 +46,7 @@ def test_demo_media_script_generates_example_inputs(tmp_path: Path) -> None:
     waveform = tmp_path / "waveform.png"
     captioned = tmp_path / "captioned.mp4"
     audiogram = tmp_path / "audiogram.mp4"
+    joined = tmp_path / "joined.mp4"
     assert cli.main(["probe", str(video)]) == 0
     assert (
         cli.main(
@@ -99,8 +100,25 @@ def test_demo_media_script_generates_example_inputs(tmp_path: Path) -> None:
         )
         == 0
     )
+    assert (
+        cli.main(
+            [
+                "join",
+                str(video),
+                str(tmp_path / "second.mp4"),
+                "--no-progress",
+                "-o",
+                str(joined),
+            ]
+        )
+        == 0
+    )
 
-    for target in (clip, waveform, captioned, audiogram):
+    for target in (clip, waveform, captioned, audiogram, joined):
         assert target.stat().st_size > 0
     assert len(probe(captioned).subtitle_streams) == 1
     assert probe(audiogram).duration == pytest.approx(2.0, abs=0.2)
+    joined_info = probe(joined)
+    assert joined_info.duration == pytest.approx(4.0, abs=0.2)
+    assert len(joined_info.video_streams) == 1
+    assert len(joined_info.audio_streams) == 1
