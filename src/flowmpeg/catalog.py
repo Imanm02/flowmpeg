@@ -277,6 +277,15 @@ _BASE_COMMAND_CATALOG = (
         capability_group="audio-processing",
     ),
     CommandSpec(
+        "speed-audio",
+        "audio",
+        "Change audio tempo",
+        ("audio-speed", "tempo"),
+        input_kind="audio",
+        output_kind="audio",
+        capability_group="audio-processing",
+    ),
+    CommandSpec(
         "crossfade-audio",
         "audio",
         "Crossfade two audio files",
@@ -791,6 +800,7 @@ _COMMAND_REQUIREMENTS = {
     "volume-audio": _requirements(*_WAV, "filter:volume"),
     "fade-audio": _requirements(*_WAV, "filter:afade"),
     "delay-audio": _requirements(*_WAV, "filter:adelay"),
+    "speed-audio": _requirements(*_WAV, "filter:atempo"),
     "crossfade-audio": _requirements(*_WAV, "filter:acrossfade"),
     "join-audio": _requirements(
         *_WAV,

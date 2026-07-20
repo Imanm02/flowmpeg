@@ -124,6 +124,7 @@ __all__ = [
     "blur_region",
     "boomerang",
     "burn_subtitles",
+    "change_audio_speed_file",
     "change_speed",
     "compress_audio",
     "compress_video",
@@ -2058,6 +2059,24 @@ def delay_audio_file(
     _bounded_number("seconds", seconds, 0, 3_600)
     _nonnegative_integer("track", track)
     audio = delay_audio_stream(_audio_track(source, track), seconds)
+    return _audio_plan(audio, to, (source,), codec, bitrate, overwrite)
+
+
+def change_audio_speed_file(
+    source: Pathish,
+    to: Pathish,
+    *,
+    factor: float,
+    track: int = 0,
+    codec: AudioCodec = "wav",
+    bitrate: str | None = None,
+    overwrite: bool = False,
+) -> Plan:
+    """Change one audio track's tempo without changing pitch."""
+
+    _positive_number("factor", factor)
+    _nonnegative_integer("track", track)
+    audio = change_audio_speed(_audio_track(source, track), factor)
     return _audio_plan(audio, to, (source,), codec, bitrate, overwrite)
 
 

@@ -37,6 +37,7 @@ def test_shortcuts_namespace_is_public() -> None:
         "blurred_background",
         "boomerang",
         "burn_subtitles",
+        "change_audio_speed_file",
         "change_speed",
         "compress_audio",
         "compress_video",
@@ -935,6 +936,18 @@ def test_delay_audio_file_converts_seconds_to_milliseconds() -> None:
     assert plan.filter_graph() == "[0:a:0]adelay=delays=350:all=1[a0]"
 
 
+def test_change_audio_speed_file_chains_tempo_stages() -> None:
+    plan = shortcuts.change_audio_speed_file(
+        "lesson.wav",
+        "lesson-fast.wav",
+        factor=4,
+    )
+
+    assert plan.filter_graph() == (
+        "[0:a:0]atempo=2[a0];[a0]atempo=2[a1];[a1]asetpts=PTS-STARTPTS[a2]"
+    )
+
+
 def test_crossfade_audio_maps_two_inputs() -> None:
     plan = shortcuts.crossfade_audio(
         "first.wav",
@@ -1395,6 +1408,11 @@ def test_shortcuts_accept_path_objects_and_overwrite() -> None:
             "in.wav",
             "out.wav",
             seconds=3_601,
+        ),
+        lambda: shortcuts.change_audio_speed_file(
+            "in.wav",
+            "out.wav",
+            factor=0,
         ),
         lambda: shortcuts.join_audio_files(("one.wav",), "out.wav"),
         lambda: shortcuts.join_audio_files(
@@ -1979,6 +1997,7 @@ def test_new_audio_shortcuts_run(
     faded_audio = source.parent / "faded-audio.wav"
     delayed = source.parent / "delayed.wav"
     joined_audio = source.parent / "joined-audio.wav"
+    faster_audio = source.parent / "faster-audio.wav"
     crossfaded = source.parent / "crossfaded.wav"
 
     shortcuts.denoise_audio(voice, denoised).run(ffmpeg=ffmpeg, timeout=10)
@@ -2021,6 +2040,10 @@ def test_new_audio_shortcuts_run(
         sample_rate=32_000,
         layout="mono",
     ).run(ffmpeg=ffmpeg, timeout=10)
+    shortcuts.change_audio_speed_file(voice, faster_audio, factor=2).run(
+        ffmpeg=ffmpeg,
+        timeout=10,
+    )
     shortcuts.crossfade_audio(
         voice,
         voice,
@@ -2048,6 +2071,10 @@ def test_new_audio_shortcuts_run(
     assert probe(joined_audio).duration == pytest.approx(
         (probe(voice).duration or 0) * 2,
         abs=0.05,
+    )
+    assert probe(faster_audio).duration == pytest.approx(
+        (probe(voice).duration or 0) / 2,
+        abs=0.03,
     )
     assert probe(crossfaded).duration == pytest.approx(0.35, abs=0.1)
 

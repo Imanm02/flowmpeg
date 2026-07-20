@@ -1284,6 +1284,19 @@ ff.delay_audio_file(
 The shortcut inserts silence before every channel. Delays from zero through
 3600 seconds are accepted.
 
+### Change audio tempo without shifting pitch
+
+```python
+ff.change_audio_speed_file(
+    "lesson.wav",
+    "lesson-fast.wav",
+    factor=1.5,
+).run()
+```
+
+Factors above 2 or below 0.5 are divided into several FFmpeg `atempo` stages.
+This keeps large tempo changes inside each stage's supported range.
+
 ### Crossfade two tracks
 
 ```python
@@ -1599,6 +1612,7 @@ ff.trim("input.mp4", "clip.mp4", start=5, duration=20).run(
 | `set_audio_volume` | Gain-adjusted audio file | Applies a fixed decibel change |
 | `fade_audio_edges` | Faded audio file | Places optional fades at both edges |
 | `delay_audio_file` | Delayed audio file | Inserts leading silence on every channel |
+| `change_audio_speed_file` | Faster or slower audio | Chains compatible tempo stages |
 | `crossfade_audio` | Joined audio file | Transitions between two inputs |
 | `join_audio_files` | End-to-end audio file | Aligns formats and concatenates inputs |
 | `extract_subtitles` | SRT, WebVTT, or ASS | Maps and encodes one text subtitle track |

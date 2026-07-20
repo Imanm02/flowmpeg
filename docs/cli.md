@@ -144,6 +144,7 @@ The table below is a compact editing index for scanning this longer guide.
 | Apply fixed audio gain | `volume-audio` | `gain`, `volume` |
 | Fade audio edges | `fade-audio` | `audio-fade` |
 | Delay one audio track | `delay-audio` | `audio-delay`, `sync-audio` |
+| Change audio tempo | `speed-audio` | `audio-speed`, `tempo` |
 | Crossfade two audio files | `crossfade-audio` | `crossfade` |
 | Join audio end to end | `join-audio` | `concat-audio`, `audio-join` |
 | Extract a subtitle track | `extract-subtitles` | `subtitles` |
@@ -911,6 +912,7 @@ flowmpeg resample field.wav --sample-rate 48000 --layout stereo -o standard.wav
 flowmpeg gain quiet.wav --gain-db 6 -o louder.wav
 flowmpeg audio-fade music.wav --duration 120 --fade-in 2 --fade-out 4 -o faded.wav
 flowmpeg sync-audio narration.wav --seconds 0.35 -o narration-synced.wav
+flowmpeg tempo lesson.wav --factor 1.5 -o lesson-fast.wav
 flowmpeg audio-join intro.wav body.wav outro.wav --layout stereo -o show.wav
 ```
 
@@ -927,6 +929,8 @@ negative values lower it. Check for clipping with `flowmpeg loudness`.
 either fade length to zero to disable that edge.
 `sync-audio` inserts silence before every channel. The delay can range from zero
 through one hour.
+`tempo` changes playback speed without shifting pitch. Factors outside one
+FFmpeg `atempo` stage are split into compatible stages automatically.
 `audio-join` accepts two or more inputs. It aligns their sample rates and
 channel layouts before joining them, so recordings from different sources can
 share one timeline.
