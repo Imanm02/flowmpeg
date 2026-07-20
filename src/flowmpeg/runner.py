@@ -9,7 +9,7 @@ import time
 from collections import deque
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TextIO
+from typing import IO, Any, TextIO
 
 from flowmpeg.diagnostics import display_argv, redact_text
 from flowmpeg.errors import (
@@ -110,11 +110,15 @@ def run(
         daemon=True,
     )
     started = time.monotonic()
-    progress_thread.start()
-    stderr_thread.start()
     last_progress: Progress | None = None
+    progress_started = False
+    stderr_started = False
 
     try:
+        progress_thread.start()
+        progress_started = True
+        stderr_thread.start()
+        stderr_started = True
         while process.poll() is None or progress_thread.is_alive():
             if timeout is not None and time.monotonic() - started >= timeout:
                 _stop_process(process, termination_grace)
@@ -130,8 +134,12 @@ def run(
         _stop_process(process, termination_grace)
         raise
     finally:
-        progress_thread.join(timeout=termination_grace)
-        stderr_thread.join(timeout=termination_grace)
+        if progress_started:
+            progress_thread.join(timeout=termination_grace)
+        if stderr_started:
+            stderr_thread.join(timeout=termination_grace)
+        _close_pipe(process.stdout)
+        _close_pipe(process.stderr)
 
     while not progress_events.empty():
         last_progress = progress_events.get_nowait()
@@ -201,6 +209,13 @@ def _kill_process(process: subprocess.Popen[str], grace: float) -> None:
     try:
         process.wait(timeout=grace)
     except (subprocess.TimeoutExpired, OSError):
+        return
+
+
+def _close_pipe(stream: IO[Any]) -> None:
+    try:
+        stream.close()
+    except OSError:
         return
 
 

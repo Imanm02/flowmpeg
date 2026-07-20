@@ -1,5 +1,7 @@
+import io
 import shutil
 import subprocess
+import threading
 from pathlib import Path
 from typing import cast
 
@@ -106,6 +108,57 @@ def test_process_cleanup_does_not_mask_a_job_error() -> None:
     process = cast(subprocess.Popen[str], BrokenProcess())
 
     _stop_process(process, 0.0)
+
+
+@pytest.mark.parametrize("failed_start", [1, 2])
+def test_thread_start_failure_stops_the_process(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    failed_start: int,
+) -> None:
+    class FakeProcess:
+        def __init__(self) -> None:
+            self.stdout = io.StringIO()
+            self.stderr = io.StringIO()
+            self.returncode: int | None = None
+            self.terminated = False
+
+        def poll(self) -> int | None:
+            return self.returncode
+
+        def terminate(self) -> None:
+            self.terminated = True
+            self.returncode = -15
+
+        def wait(self, timeout: float | None = None) -> int:
+            del timeout
+            assert self.returncode is not None
+            return self.returncode
+
+        def kill(self) -> None:
+            self.returncode = -9
+
+    process = FakeProcess()
+    monkeypatch.setattr(subprocess, "Popen", lambda *args, **kwargs: process)
+    original_start = threading.Thread.start
+    starts = 0
+
+    def fail_selected_start(thread: threading.Thread) -> None:
+        nonlocal starts
+        starts += 1
+        if starts == failed_start:
+            raise RuntimeError("thread start failed")
+        original_start(thread)
+
+    monkeypatch.setattr(threading.Thread, "start", fail_selected_start)
+    plan = output(input("movie.mp4").video(), to=tmp_path / "copy.mp4")
+
+    with pytest.raises(RuntimeError, match="thread start failed"):
+        plan.run()
+
+    assert process.terminated
+    assert process.stdout.closed
+    assert process.stderr.closed
 
 
 @pytest.mark.integration
