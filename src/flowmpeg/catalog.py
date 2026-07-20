@@ -236,6 +236,15 @@ _BASE_COMMAND_CATALOG = (
         capability_group="audio-processing",
     ),
     CommandSpec(
+        "volume-audio",
+        "audio",
+        "Apply fixed audio gain",
+        ("gain", "volume"),
+        input_kind="audio",
+        output_kind="audio",
+        capability_group="audio-processing",
+    ),
+    CommandSpec(
         "crossfade-audio",
         "audio",
         "Crossfade two audio files",
@@ -723,6 +732,7 @@ _COMMAND_REQUIREMENTS = {
     "trim-audio": _requirements(*_WAV, "filter:asetpts", "filter:atrim"),
     "mono-audio": _requirements(*_WAV, "filter:aformat"),
     "resample-audio": _requirements(*_WAV, "filter:aformat", "filter:aresample"),
+    "volume-audio": _requirements(*_WAV, "filter:volume"),
     "crossfade-audio": _requirements(*_WAV, "filter:acrossfade"),
     "add-music": _requirements(*_MP4, "filter:amix", "filter:volume"),
     "duck-music": _requirements(

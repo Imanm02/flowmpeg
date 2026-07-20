@@ -40,6 +40,7 @@ flowmpeg waveform demo-media/voice.wav -o demo-media/waveform.png
 flowmpeg audio demo-media/sample.mp4 --codec opus -o demo-media/audio.opus
 flowmpeg resample demo-media/voice.wav --sample-rate 48000 --layout mono -o demo-media/voice-standard.wav
 flowmpeg cut-audio demo-media/voice.wav --start 0.1 --duration 0.2 -o demo-media/voice-clip.wav
+flowmpeg gain demo-media/voice.wav --gain-db 4 -o demo-media/voice-louder.wav
 flowmpeg captions demo-media/sample.mp4 demo-media/captions.srt -o demo-media/captioned.mp4
 flowmpeg burn-captions demo-media/sample.mp4 demo-media/captions.srt -o demo-media/open-captioned.mp4
 flowmpeg label-media demo-media/sample.mp4 --title "Camera master" -o demo-media/tagged.mp4
@@ -97,6 +98,7 @@ Paths can also be `pathlib.Path` objects.
 | An MP3 from a video | `interview.mp4` | `voice.mp3` |
 | Standard-rate mono audio | `field.wav` | `field-standard.wav` |
 | One exact audio excerpt | `interview.wav` | `answer.wav` |
+| A fixed audio gain change | `quiet.wav` | `louder.wav` |
 | A loudness measurement report | `episode.wav` | Terminal text or JSON |
 | A video with a logo | `interview.mp4`, `logo.png` | `branded.mp4` |
 | A video with background music | `interview.mp4`, `music.mp3` | `with-music.mp4` |

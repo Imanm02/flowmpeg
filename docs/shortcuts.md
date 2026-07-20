@@ -1214,6 +1214,20 @@ ff.resample_audio(
 The sample rate can range from 8000 through 192000. The layout can be `mono`
 or `stereo`. Output codec choices match the other filtered audio shortcuts.
 
+### Raise or lower one audio track
+
+```python
+ff.set_audio_volume(
+    "quiet.wav",
+    "louder.wav",
+    gain_db=6,
+).run()
+```
+
+Gain accepts -60 through 30 dB. A positive value raises the level and a
+negative value lowers it. Use `measure_loudness` or the `loudness` command to
+check the result.
+
 ### Crossfade two tracks
 
 ```python
@@ -1510,6 +1524,7 @@ ff.trim("input.mp4", "clip.mp4", start=5, duration=20).run(
 | `trim_audio_file` | Accurate audio clip | Cuts one track and resets timestamps |
 | `mono_audio` | Mono audio file | Downmixes one selected track |
 | `resample_audio` | Standardized audio file | Sets sample rate and mono or stereo layout |
+| `set_audio_volume` | Gain-adjusted audio file | Applies a fixed decibel change |
 | `crossfade_audio` | Joined audio file | Transitions between two inputs |
 | `extract_subtitles` | SRT, WebVTT, or ASS | Maps and encodes one text subtitle track |
 | `add_subtitles` | MP4 with selectable text | Adds one `mov_text` subtitle stream |

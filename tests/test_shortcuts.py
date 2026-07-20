@@ -72,6 +72,7 @@ def test_shortcuts_namespace_is_public() -> None:
         "resize",
         "reverse_clip",
         "rotate",
+        "set_audio_volume",
         "set_frame_rate",
         "sharpen",
         "social_video",
@@ -862,6 +863,16 @@ def test_trim_audio_file_accepts_start_and_duration() -> None:
     )
 
 
+def test_set_audio_volume_uses_decibel_gain() -> None:
+    plan = shortcuts.set_audio_volume(
+        "quiet.wav",
+        "louder.wav",
+        gain_db=6.5,
+    )
+
+    assert plan.filter_graph() == "[0:a:0]volume=6.5dB[a0]"
+
+
 def test_crossfade_audio_maps_two_inputs() -> None:
     plan = shortcuts.crossfade_audio(
         "first.wav",
@@ -1287,6 +1298,11 @@ def test_shortcuts_accept_path_objects_and_overwrite() -> None:
             "out.wav",
             end=2,
             duration=1,
+        ),
+        lambda: shortcuts.set_audio_volume(
+            "in.wav",
+            "out.wav",
+            gain_db=31,
         ),
     ],
 )
@@ -1815,6 +1831,7 @@ def test_new_audio_shortcuts_run(
     mono_opus = source.parent / "mono.opus"
     resampled = source.parent / "resampled.wav"
     trimmed = source.parent / "trimmed-audio.wav"
+    louder = source.parent / "louder.wav"
     crossfaded = source.parent / "crossfaded.wav"
 
     shortcuts.denoise_audio(voice, denoised).run(ffmpeg=ffmpeg, timeout=10)
@@ -1836,6 +1853,10 @@ def test_new_audio_shortcuts_run(
         start=0.05,
         duration=0.1,
     ).run(ffmpeg=ffmpeg, timeout=10)
+    shortcuts.set_audio_volume(voice, louder, gain_db=3).run(
+        ffmpeg=ffmpeg,
+        timeout=10,
+    )
     shortcuts.crossfade_audio(
         voice,
         voice,
@@ -1851,6 +1872,7 @@ def test_new_audio_shortcuts_run(
     assert resampled_stream.sample_rate == 32_000
     assert resampled_stream.channels == 2
     assert probe(trimmed).duration == pytest.approx(0.1, abs=0.03)
+    assert probe(louder).audio_streams
     assert probe(crossfaded).duration == pytest.approx(0.35, abs=0.1)
 
 

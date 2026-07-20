@@ -115,6 +115,7 @@ _BASE_EXAMPLES = (
         "audio",
         "flowmpeg resample interview.wav --sample-rate 48000 --layout mono -o standard.wav",
     ),
+    _Example("audio", "flowmpeg gain quiet.wav --gain-db 6 -o louder.wav"),
     _Example(
         "audio", "flowmpeg crossfade intro.wav main.wav --duration 2 -o program.wav"
     ),
@@ -516,6 +517,7 @@ def build_parser() -> argparse.ArgumentParser:
     _add_trim_audio(commands)
     _add_mono_audio(commands)
     _add_resample_audio(commands)
+    _add_volume_audio(commands)
     _add_crossfade_audio(commands)
     _add_extract_subtitles(commands)
     _add_add_subtitles(commands)
@@ -1734,6 +1736,23 @@ def _add_resample_audio(
     _source(parser)
     parser.add_argument("--sample-rate", type=_positive_int, default=48_000)
     parser.add_argument("--layout", choices=("mono", "stereo"), default="stereo")
+    _audio_file_options(parser)
+    _output(parser)
+
+
+def _add_volume_audio(
+    commands: argparse._SubParsersAction[argparse.ArgumentParser],
+) -> None:
+    parser = _command(
+        commands,
+        "volume-audio",
+        "Apply a fixed decibel gain to one audio track.",
+        shortcuts.set_audio_volume,
+        ("source",),
+        aliases=("gain", "volume"),
+    )
+    _source(parser)
+    parser.add_argument("--gain-db", type=_finite_float, required=True)
     _audio_file_options(parser)
     _output(parser)
 

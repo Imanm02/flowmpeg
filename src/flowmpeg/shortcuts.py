@@ -157,6 +157,7 @@ __all__ = [
     "reverse_clip",
     "rotate",
     "set_frame_rate",
+    "set_audio_volume",
     "sharpen",
     "social_video",
     "spectrum_image",
@@ -1867,6 +1868,24 @@ def resample_audio(
         raise GraphError(f"Unknown audio layout: {layout}")
     audio = _audio_track(source, track).filter("aresample", sample_rate)
     audio = audio.filter("aformat", channel_layouts=layout)
+    return _audio_plan(audio, to, (source,), codec, bitrate, overwrite)
+
+
+def set_audio_volume(
+    source: Pathish,
+    to: Pathish,
+    *,
+    gain_db: float = 0,
+    track: int = 0,
+    codec: AudioCodec = "wav",
+    bitrate: str | None = None,
+    overwrite: bool = False,
+) -> Plan:
+    """Apply a fixed decibel gain to one audio track."""
+
+    _nonnegative_integer("track", track)
+    _bounded_number("gain_db", gain_db, -60, 30)
+    audio = _audio_track(source, track).filter("volume", f"{gain_db:g}dB")
     return _audio_plan(audio, to, (source,), codec, bitrate, overwrite)
 
 
