@@ -99,6 +99,7 @@ def mix_audio(
         raise GraphError("Audio mixing requires at least two streams")
     if duration not in {"first", "longest", "shortest"}:
         raise GraphError("Invalid audio mix duration")
+    _boolean("normalize", normalize)
     _nonnegative("dropout_transition", dropout_transition)
 
     options: dict[str, FilterValue] = {
@@ -136,6 +137,7 @@ def duck_audio(
 ) -> AudioStream:
     """Lower program audio under a sidechain, then mix both streams."""
 
+    _boolean("normalize", normalize)
     _range("threshold", threshold, 0.000_975_63, 1)
     _range("ratio", ratio, 1, 20)
     _range("attack", attack, 0.01, 2_000)
@@ -244,3 +246,8 @@ def _range(name: str, value: float, minimum: float, maximum: float) -> None:
     _finite(name, value)
     if not minimum <= value <= maximum:
         raise GraphError(f"{name} must be between {minimum:g} and {maximum:g}")
+
+
+def _boolean(name: str, value: bool) -> None:
+    if not isinstance(value, bool):
+        raise GraphError(f"{name} must be a Boolean")

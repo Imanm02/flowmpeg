@@ -1,4 +1,5 @@
 import shutil
+from collections.abc import Callable
 from pathlib import Path
 from typing import cast
 
@@ -93,6 +94,17 @@ def test_mix_rejects_mismatched_weights() -> None:
 
     with pytest.raises(GraphError, match="weights"):
         mix_audio(first, second, weights=(1,))
+
+
+@pytest.mark.parametrize("recipe", [mix_audio, duck_audio])
+def test_audio_composition_requires_boolean_normalize(
+    recipe: Callable[..., object],
+) -> None:
+    first = input("first.wav").audio()
+    second = input("second.wav").audio()
+
+    with pytest.raises(GraphError, match="normalize must be a Boolean"):
+        recipe(first, second, normalize=1)
 
 
 @pytest.mark.integration
