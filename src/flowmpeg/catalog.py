@@ -586,6 +586,15 @@ _BASE_COMMAND_CATALOG = (
         capability_group="audio-processing",
     ),
     CommandSpec(
+        "detect-black",
+        "inspect",
+        "Find black ranges in a video track",
+        ("black-report", "find-black"),
+        input_kind="video",
+        output_kind="report",
+        capability_group="video-processing",
+    ),
+    CommandSpec(
         "doctor",
         "inspect",
         "Check tools and media capabilities",
@@ -706,6 +715,7 @@ _COMMAND_TAGS = {
     "probe": ("archive",),
     "analyze-loudness": ("archive",),
     "detect-silence": ("archive",),
+    "detect-black": ("archive",),
     "tag-media": ("archive", "copy"),
 }
 
@@ -942,6 +952,7 @@ _COMMAND_REQUIREMENTS = {
     "tag-media": ("muxer:mp4",),
     "analyze-loudness": ("filter:loudnorm",),
     "detect-silence": ("filter:silencedetect",),
+    "detect-black": ("filter:blackdetect",),
 }
 
 COMMAND_CATALOG = tuple(

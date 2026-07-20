@@ -8,6 +8,7 @@ from flowmpeg.audit import (
     MediaAudit,
     audit_media,
 )
+from flowmpeg.black import BlackInterval, BlackReport, detect_black
 from flowmpeg.clip import Clip, concat_clips, media, replace_audio
 from flowmpeg.comparison import (
     MediaComparison,
@@ -81,6 +82,8 @@ __all__ = [
     "AuditSummary",
     "BinaryNotFoundError",
     "BinaryUnusableError",
+    "BlackInterval",
+    "BlackReport",
     "Clip",
     "CompilationError",
     "ExecutionError",
@@ -121,6 +124,7 @@ __all__ = [
     "concat_clips",
     "crop_video",
     "delay_audio",
+    "detect_black",
     "detect_silence",
     "duck_audio",
     "expr",

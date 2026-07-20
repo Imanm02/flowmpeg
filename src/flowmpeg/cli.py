@@ -18,6 +18,7 @@ from typing import TextIO, cast
 
 from flowmpeg import __version__, shortcuts
 from flowmpeg.audit import AuditExpectation, AuditThreshold, MediaAudit, audit_media
+from flowmpeg.black import BlackReport, detect_black
 from flowmpeg.catalog import CATEGORIES, COMMAND_CATALOG, TAGS, command_spec
 from flowmpeg.comparison import MediaComparison, MediaSummary, compare_media
 from flowmpeg.diagnostics import display_argv, redact_text
@@ -185,6 +186,7 @@ _BASE_EXAMPLES = (
     _Example("inspect", "flowmpeg compare original.mp4 smaller.mp4"),
     _Example("inspect", "flowmpeg loudness episode.wav"),
     _Example("inspect", "flowmpeg find-silence interview.wav"),
+    _Example("inspect", "flowmpeg find-black tape.mp4"),
     _Example("inspect", "flowmpeg doctor"),
     _Example("inspect", "flowmpeg setup"),
     _Example("help", "flowmpeg errors"),
@@ -556,6 +558,7 @@ def build_parser() -> argparse.ArgumentParser:
     _add_compare(commands)
     _add_loudness(commands)
     _add_silence_detection(commands)
+    _add_black_detection(commands)
     _add_doctor(commands)
     _add_setup(commands)
     _add_errors(commands)
@@ -2235,6 +2238,44 @@ def _add_silence_detection(
     parser.set_defaults(handler=_run_silence_detection)
 
 
+def _add_black_detection(
+    commands: argparse._SubParsersAction[argparse.ArgumentParser],
+) -> None:
+    parser = commands.add_parser(
+        "detect-black",
+        aliases=["black-report", "find-black"],
+        help="Find black ranges in a video track.",
+        description="Find black ranges without writing a media file.",
+        allow_abbrev=False,
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+    _source(parser)
+    parser.add_argument("--track", type=_nonnegative_int, default=0)
+    parser.add_argument(
+        "--picture-ratio",
+        type=_finite_float,
+        default=0.98,
+        help="Required fraction of black pixels",
+    )
+    parser.add_argument(
+        "--pixel-threshold",
+        type=_finite_float,
+        default=0.1,
+        help="Normalized pixel level treated as black",
+    )
+    parser.add_argument(
+        "--minimum-duration",
+        "--minimum",
+        type=_positive_float,
+        default=0.5,
+        help="Shortest black range to report in seconds",
+    )
+    parser.add_argument("--ffmpeg", default="ffmpeg", help="FFmpeg executable")
+    parser.add_argument("--timeout", type=_positive_float)
+    parser.add_argument("--json", action="store_true", help="Print black-range JSON")
+    parser.set_defaults(handler=_run_black_detection)
+
+
 def _add_doctor(commands: argparse._SubParsersAction[argparse.ArgumentParser]) -> None:
     parser = commands.add_parser(
         "doctor",
@@ -2519,6 +2560,27 @@ def _run_silence_detection(args: argparse.Namespace) -> int:
         print(json.dumps(_redact_json(data), indent=2, sort_keys=True))
     else:
         print(redact_text(_format_silence(result)))
+    return 0
+
+
+def _run_black_detection(args: argparse.Namespace) -> int:
+    result = detect_black(
+        cast(str, args.source),
+        track=cast(int, args.track),
+        picture_ratio=cast(float, args.picture_ratio),
+        pixel_threshold=cast(float, args.pixel_threshold),
+        minimum_duration=cast(float, args.minimum_duration),
+        ffmpeg=cast(str, args.ffmpeg),
+        timeout=cast(float | None, args.timeout),
+    )
+    if cast(bool, args.json):
+        data = asdict(result)
+        data["schema_version"] = _JSON_SCHEMA_VERSION
+        data["total_black"] = result.total_black
+        data["longest_black"] = result.longest_black
+        print(json.dumps(_redact_json(data), indent=2, sort_keys=True))
+    else:
+        print(redact_text(_format_black(result)))
     return 0
 
 
@@ -3011,6 +3073,29 @@ def _format_silence(result: SilenceReport) -> str:
         f"Minimum duration: {result.minimum_duration:g}s",
         f"Total silence: {result.total_silence:.3f}s",
         f"Longest silence: {longest}",
+    ]
+    if result.intervals:
+        lines.extend(("", "Intervals:"))
+        lines.extend(
+            f"  {index}. {item.start:.3f}s to {item.end:.3f}s ({item.duration:.3f}s)"
+            for index, item in enumerate(result.intervals, start=1)
+        )
+    return "\n".join(lines)
+
+
+def _format_black(result: BlackReport) -> str:
+    count = len(result.intervals)
+    noun = "interval" if count == 1 else "intervals"
+    longest = "none" if result.longest_black is None else f"{result.longest_black:.3f}s"
+    lines = [
+        f"Black report: {count} {noun}",
+        f"Source: {result.source}",
+        f"Video track: {result.track}",
+        f"Picture ratio: {result.picture_ratio:g}",
+        f"Pixel threshold: {result.pixel_threshold:g}",
+        f"Minimum duration: {result.minimum_duration:g}s",
+        f"Total black: {result.total_black:.3f}s",
+        f"Longest black: {longest}",
     ]
     if result.intervals:
         lines.extend(("", "Intervals:"))

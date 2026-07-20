@@ -13,6 +13,7 @@ from io import StringIO
 import pytest
 
 from flowmpeg import cli, diagnostics
+from flowmpeg.black import BlackInterval, BlackReport
 from flowmpeg.catalog import COMMAND_CATALOG
 from flowmpeg.comparison import MediaComparison, MediaSummary
 from flowmpeg.errors import (
@@ -832,6 +833,35 @@ def test_silence_report_json_includes_summary_values(
     assert report["schema_version"] == 1
     assert report["total_silence"] == pytest.approx(2.97)
     assert report["longest_silence"] == 2.25
+    assert len(report["intervals"]) == 2
+
+
+def test_black_report_prints_intervals(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    monkeypatch.setattr(cli, "detect_black", lambda *args, **kwargs: _black())
+
+    assert cli.main(["find-black", "tape.mp4", "--minimum", "0.4"]) == 0
+    output = capsys.readouterr().out
+
+    assert "Black report: 2 intervals" in output
+    assert "Total black: 2.900s" in output
+    assert "5.200s to 7.400s (2.200s)" in output
+
+
+def test_black_report_json_includes_summary_values(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    monkeypatch.setattr(cli, "detect_black", lambda *args, **kwargs: _black())
+
+    assert cli.main(["black-report", "tape.mp4", "--json"]) == 0
+    report = json.loads(capsys.readouterr().out)
+
+    assert report["schema_version"] == 1
+    assert report["total_black"] == pytest.approx(2.9)
+    assert report["longest_black"] == 2.2
     assert len(report["intervals"]) == 2
 
 
@@ -2103,5 +2133,19 @@ def _silence() -> SilenceReport:
         intervals=(
             SilenceInterval(0, 0.72, 0.72),
             SilenceInterval(5.25, 7.5, 2.25),
+        ),
+    )
+
+
+def _black() -> BlackReport:
+    return BlackReport(
+        source="tape.mp4",
+        track=0,
+        picture_ratio=0.98,
+        pixel_threshold=0.1,
+        minimum_duration=0.5,
+        intervals=(
+            BlackInterval(0, 0.7, 0.7),
+            BlackInterval(5.2, 7.4, 2.2),
         ),
     )
