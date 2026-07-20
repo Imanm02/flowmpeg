@@ -20,6 +20,84 @@ choose settings from measured input instead of guessing.
 Add `--json` when another program will read the result. Human reports favor
 short values; JSON keeps named fields and a schema version.
 
+## Check a delivery contract
+
+An audit can require more than the presence of audio and video. This one line
+checks a 1080p H.264 and AAC delivery file with a one-minute limit:
+
+```console
+flowmpeg audit delivery.mp4 --expect av --max-duration 60 --width 1920 --height 1080 --video-codec h264 --audio-codec aac --sample-rate 48000 --channels 2
+```
+
+The report prints the active contract before the measured values:
+
+```text
+Media audit: pass
+Source: delivery.mp4
+Expectation: av
+Failure threshold: error
+Constraints: duration <= 60s, width = 1920, height = 1080, video codec = h264, audio codec = aac, sample rate = 48000 Hz, channels = 2
+Container: QuickTime / MOV
+Duration: 58.2 seconds
+Size: 24.50 MiB
+Streams: 1 video, 1 audio, 0 subtitle
+Video: 1920x1080, 30 fps, h264
+Audio: 48000 Hz, 2 channel(s), aac
+Findings:
+  none
+```
+
+Each mismatch has a stable finding code and error severity:
+
+| Contract field | Finding | Example meaning |
+|---|---|---|
+| Minimum duration | `AUD203` | The program is shorter than required |
+| Maximum duration | `AUD204` | The upload exceeds its time limit |
+| Width | `AUD215` | The first video track has another width |
+| Height | `AUD216` | The first video track has another height |
+| Video codec | `AUD217` | The first video track uses another codec |
+| Audio codec | `AUD224` | The first audio track uses another codec |
+| Sample rate | `AUD225` | The first audio track uses another rate |
+| Channels | `AUD226` | The first audio track has another channel count |
+
+The codec values are FFprobe codec names such as `h264`, `hevc`, `aac`, or
+`opus`. Matching ignores letter case. Width and height apply to the first video
+track; audio constraints apply to the first audio track.
+
+Use both duration bounds when a platform requires a range:
+
+```console
+flowmpeg check-media advertisement.mp4 --expect av --min-duration 14.5 --max-duration 15.5 --fail-on warning
+```
+
+Exit code 9 means the probed file did not meet the selected audit policy. This
+makes the command usable as a release gate without parsing its prose output.
+
+## Define an audit contract in Python
+
+```python
+from flowmpeg import AuditConstraints, audit_media, probe
+
+contract = AuditConstraints(
+    minimum_duration=10,
+    maximum_duration=60,
+    width=1920,
+    height=1080,
+    video_codec="h264",
+    audio_codec="aac",
+    sample_rate=48000,
+    channels=2,
+)
+
+result = audit_media(probe("delivery.mp4"), expect="av", constraints=contract)
+if not result.passes():
+    for finding in result.findings:
+        print(finding.code, finding.message)
+```
+
+The constraints are included in audit JSON, so a stored report records both
+what was measured and what the file was expected to match.
+
 ## Find silence in one line
 
 ```console

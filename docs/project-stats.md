@@ -19,9 +19,9 @@ source change.
 | Test function definitions | 369 | `tests/test_*.py` |
 | FFmpeg integration tests | 35 | Pytest markers |
 | Documentation pages | 16 | `docs/*.md` |
-| Documented command lines | 383 | Markdown code lines |
-| Completed roadmap items | 107 | `ROADMAP.md` |
-| Open roadmap items | 5 | `ROADMAP.md` |
+| Documented command lines | 387 | Markdown code lines |
+| Completed roadmap items | 108 | `ROADMAP.md` |
+| Open roadmap items | 4 | `ROADMAP.md` |
 
 ## Category matrix
 

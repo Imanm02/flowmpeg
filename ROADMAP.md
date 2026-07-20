@@ -167,7 +167,7 @@ only a discussion or test placeholder.
 - [x] Report black video intervals with configurable picture and time levels.
 - [x] Report scene-change timecodes for chapter and thumbnail candidates.
 - [ ] Suggest crop rectangles from measured border data.
-- [ ] Check delivery constraints such as duration, dimensions, and codecs.
+- [x] Check delivery constraints such as duration, dimensions, and codecs.
 - [ ] Add measured two-pass loudness normalization as a workflow.
 - [ ] Define owned artifact sets for HLS and DASH outputs.
 - [ ] Define batch cancellation and temporary-file cleanup rules.

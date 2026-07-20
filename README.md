@@ -42,6 +42,7 @@ flowmpeg doctor
 flowmpeg doctor --command cut
 flowmpeg doctor --smoke-test
 flowmpeg audit input.mp4 --expect av
+flowmpeg audit delivery.mp4 --max-duration 60 --width 1920 --height 1080
 flowmpeg loudness episode.wav
 flowmpeg find-silence interview.wav
 flowmpeg find-black tape.mp4
@@ -55,8 +56,8 @@ exact path is unavailable.
 The smoke test creates a temporary 16 by 16 video, encodes one frame, probes
 the result, then removes it.
 
-The audit checks a media file against an expected stream shape and reports
-stable finding codes for scripts.
+The audit checks stream shape and optional delivery constraints. It reports
+stable finding codes for scripts and returns a separate policy-failure code.
 
 The loudness command measures integrated LUFS, true peak, loudness range, and
 the offset from a chosen normalization target without writing an output file.

@@ -1131,6 +1131,17 @@ rate, and channels. Findings have stable `AUD` codes. Errors include a missing
 required stream. Warnings include missing probe fields and odd video
 dimensions that may fail with common encoders.
 
+Require exact delivery values when a platform or client has a file contract:
+
+```console
+flowmpeg audit delivery.mp4 --expect av --max-duration 60 --width 1920 --height 1080 --video-codec h264 --audio-codec aac --sample-rate 48000 --channels 2
+```
+
+`--min-duration` and `--max-duration` set an allowed time range. Dimension and
+codec options check the first video track. Sample rate, channel count, and
+audio codec options check the first audio track. A missing value fails when a
+constraint requires it.
+
 Use a stricter threshold in a release script:
 
 ```console
@@ -1145,9 +1156,10 @@ finding list.
 The same checks are available in Python:
 
 ```python
-from flowmpeg import audit_media, probe
+from flowmpeg import AuditConstraints, audit_media, probe
 
-result = audit_media(probe("delivery.mp4"), expect="av")
+contract = AuditConstraints(maximum_duration=60, video_codec="h264")
+result = audit_media(probe("delivery.mp4"), expect="av", constraints=contract)
 if not result.passes("warning"):
     print(result.findings)
 ```

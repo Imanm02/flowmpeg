@@ -32,6 +32,7 @@ Try the generated files with these one-liners:
 ```console
 flowmpeg probe demo-media/sample.mp4
 flowmpeg audit demo-media/sample.mp4 --expect av
+flowmpeg audit demo-media/sample.mp4 --expect av --max-duration 5 --width 320 --height 180 --video-codec h264 --audio-codec aac
 flowmpeg loudness demo-media/voice.wav
 flowmpeg find-silence demo-media/voice.wav --noise-db -45 --minimum 0.2
 flowmpeg find-black demo-media/sample.mp4 --minimum 0.2
@@ -115,6 +116,7 @@ Paths can also be `pathlib.Path` objects.
 | Faster speech with stable pitch | `lesson.wav` | `lesson-fast.wav` |
 | Several recordings in sequence | WAV files | `show.wav` |
 | A loudness measurement report | `episode.wav` | Terminal text or JSON |
+| A delivery contract result | `delivery.mp4` | Pass or stable audit findings |
 | A silence interval report | `interview.wav` | Terminal text or JSON |
 | A black picture report | `tape.mp4` | Terminal text or JSON |
 | Scene-change timecodes | `interview.mp4` | Terminal text or JSON |
