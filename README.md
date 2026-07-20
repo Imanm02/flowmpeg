@@ -17,8 +17,9 @@ installed command is there when I want to run the same kind of job from CMD.
 
 ## Install from GitHub
 
-Flowmpeg needs Python 3.10 or newer. FFmpeg and FFprobe must also be available
-on `PATH`.
+Flowmpeg needs Python 3.10 or newer. FFmpeg and FFprobe can be found through
+`PATH`, or passed by executable path to setup, doctor, probe, and editing
+commands.
 
 ```console
 python -m pip install "git+https://github.com/Imanm02/flowmpeg.git"

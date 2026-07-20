@@ -60,6 +60,13 @@ For an unattended terminal, confirmation must be explicit:
 flowmpeg setup --install --yes
 ```
 
+Each package manager command has a ten-minute limit by default. Set a shorter
+or longer positive limit when needed:
+
+```console
+flowmpeg setup --install --yes --install-timeout 900
+```
+
 This action can install the `ffmpeg` package through an existing package
 manager. It does not install a package manager, add a package repository,
 download an archive itself, or change `PATH`. Commands run as argument lists
@@ -195,6 +202,12 @@ Doctor can check both custom paths:
 
 ```console
 flowmpeg doctor --ffmpeg C:\tools\ffmpeg\bin\ffmpeg.exe --ffprobe C:\tools\ffmpeg\bin\ffprobe.exe
+```
+
+Setup can perform the same read-only check:
+
+```console
+flowmpeg setup --ffmpeg C:\tools\ffmpeg\bin\ffmpeg.exe --ffprobe C:\tools\ffmpeg\bin\ffprobe.exe
 ```
 
 Python plans accept the executable at run time:

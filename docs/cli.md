@@ -16,8 +16,9 @@ the FFmpeg command without starting a process.
 
 ## Install and check the tools
 
-Flowmpeg needs Python 3.10 or newer. FFmpeg and FFprobe are separate programs
-and must be available on `PATH`.
+Flowmpeg needs Python 3.10 or newer. FFmpeg and FFprobe are separate programs.
+The defaults use `PATH`, while setup, doctor, probe, and editing commands also
+accept explicit executable paths.
 
 ```console
 python -m pip install "git+https://github.com/Imanm02/flowmpeg.git"
