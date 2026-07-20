@@ -69,7 +69,9 @@ Both inputs are two seconds long, so `blend.wav` is about 3.5 seconds long.
 
 ## Metadata-safe copy
 
-Remove container metadata and chapters from the branded result:
+Remove container metadata and chapters from the branded result. The source
+fixture starts with the title `Flowmpeg demo source`, which gives this check a
+known field to remove:
 
 ```console
 flowmpeg clean-metadata demo-output/branded.mp4 --no-progress -o demo-output/clean.mp4

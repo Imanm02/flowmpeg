@@ -17,7 +17,7 @@ It also verifies `sample.mp4` with FFprobe and prints a JSON summary.
 
 | Fixture | Media | What it helps test |
 |---|---|---|
-| `sample.mp4` | 320 by 180 video with 440 Hz audio | Single-input video jobs |
+| `sample.mp4` | Tagged 320 by 180 video with 440 Hz audio | Single-input video and metadata jobs |
 | `second.mp4` | 320 by 180 bars with 660 Hz audio | Joins, grids, and transitions |
 | `silent.mp4` | 320 by 180 video without audio | Optional audio handling |
 | `voice.wav` | 220 Hz WAV | Voice and waveform jobs |

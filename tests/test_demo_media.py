@@ -54,6 +54,9 @@ def test_demo_media_script_generates_example_inputs(tmp_path: Path) -> None:
     sheet = tmp_path / "sheet.jpg"
     blend = tmp_path / "blend.wav"
     assert cli.main(["probe", str(video)]) == 0
+    video_info = probe(video)
+    assert video_info.format is not None
+    assert dict(video_info.format.tags)["title"] == "Flowmpeg demo source"
     assert (
         cli.main(
             [

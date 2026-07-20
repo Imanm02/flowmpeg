@@ -96,6 +96,8 @@ def generate(
             "yuv420p",
             "-c:a",
             "aac",
+            "-metadata",
+            "title=Flowmpeg demo source",
             "-shortest",
             str(video),
         ),
