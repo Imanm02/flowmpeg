@@ -1873,7 +1873,9 @@ def _run_media(args: argparse.Namespace) -> int:
     if expected_duration is None and factory in _DURATION_FACTORIES:
         known_duration = values.get("duration")
         if isinstance(known_duration, float):
-            expected_duration = known_duration
+            expected_duration = (
+                known_duration * 2 if factory is shortcuts.boomerang else known_duration
+            )
         elif factory is shortcuts.trim:
             start = values.get("start")
             end = values.get("end")

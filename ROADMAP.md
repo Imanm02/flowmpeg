@@ -89,7 +89,7 @@ only a discussion or test placeholder.
 - [ ] Split doctor requirements by the exact encoders and muxers each command
   needs.
 - [x] Infer progress duration for start and end trims.
-- [ ] Infer doubled progress duration for boomerang outputs.
+- [x] Infer doubled progress duration for boomerang outputs.
 - [x] Add a documentation landing page organized by task.
 - [x] Add a generated project statistics report from source metadata.
 - [x] Test that generated statistics remain current.

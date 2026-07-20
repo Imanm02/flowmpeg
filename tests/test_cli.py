@@ -294,6 +294,21 @@ def test_trim_range_drives_progress_duration(
     assert received["expected_duration"] == 7.0
 
 
+def test_boomerang_doubles_progress_duration(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    received: dict[str, object] = {}
+
+    def fake_run(self: Plan, **kwargs: object) -> RunResult:
+        received.update(kwargs)
+        return RunResult(0, 0.1, "", None, (self.outputs[0].destination,))
+
+    monkeypatch.setattr(Plan, "run", fake_run)
+
+    assert cli.main(["bounce", "in.mp4", "--duration", "2.5", "-o", "out.mp4"]) == 0
+    assert received["expected_duration"] == 5.0
+
+
 def test_rotate_accepts_270_degrees(capsys: pytest.CaptureFixture[str]) -> None:
     code = cli.main(
         ["rotate", "in.mp4", "--degrees", "270", "-o", "out.mp4", "--dry-run"]
