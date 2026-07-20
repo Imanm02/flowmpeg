@@ -15,7 +15,7 @@ only a discussion or test placeholder.
   typed Flowmpeg error instead of a traceback.
 - [ ] Convert FFprobe startup permission and operating-system failures into a
   typed Flowmpeg error instead of a traceback.
-- [ ] Reject `-` as a synchronous runner input or output because the runner
+- [x] Reject `-` as a synchronous runner input or output because the runner
   reserves stdin and stdout.
 - [ ] Reject local output aliases such as `out.mp4` and `.\out.mp4` in one
   plan.

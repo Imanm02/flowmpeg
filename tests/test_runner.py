@@ -6,6 +6,7 @@ import pytest
 from flowmpeg import (
     BinaryNotFoundError,
     ExecutionError,
+    GraphError,
     OutputExistsError,
     Progress,
     input,
@@ -31,10 +32,23 @@ def test_runner_refuses_existing_output(tmp_path: Path) -> None:
         plan.run()
 
 
-def test_runner_rejects_pipe_conflicts() -> None:
+def test_plan_rejects_dash_output() -> None:
+    with pytest.raises(GraphError, match="start with a dash"):
+        output(input("movie.mp4").video(), to="-")
+
+
+def test_runner_rejects_output_pipe_conflicts() -> None:
     plan = output(input("movie.mp4").video(), to="pipe:1")
 
-    with pytest.raises(ValueError, match="reserves pipes"):
+    with pytest.raises(GraphError, match="reserves standard output"):
+        plan.run()
+
+
+@pytest.mark.parametrize("source", ["-", "pipe:0"])
+def test_runner_rejects_input_pipe_conflicts(source: str, tmp_path: Path) -> None:
+    plan = output(input(source).video(), to=tmp_path / "copy.mp4")
+
+    with pytest.raises(GraphError, match="does not accept standard input"):
         plan.run()
 
 

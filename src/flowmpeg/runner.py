@@ -18,6 +18,7 @@ from flowmpeg.diagnostics import display_argv, redact_text
 from flowmpeg.errors import (
     BinaryNotFoundError,
     ExecutionError,
+    GraphError,
     JobTimeoutError,
     OutputExistsError,
 )
@@ -194,10 +195,16 @@ def _check_outputs(plan: Plan) -> None:
 
 
 def _check_pipes(plan: Plan) -> None:
-    if any(node.source.startswith("pipe:") for node in plan.graph.inputs):
-        raise ValueError("The synchronous runner does not accept piped inputs")
-    if any(output.destination.startswith("pipe:") for output in plan.outputs):
-        raise ValueError("The synchronous runner reserves pipes for progress and logs")
+    if any(
+        node.source == "-" or node.source.startswith("pipe:")
+        for node in plan.graph.inputs
+    ):
+        raise GraphError("The synchronous runner does not accept standard input")
+    if any(
+        output.destination == "-" or output.destination.startswith("pipe:")
+        for output in plan.outputs
+    ):
+        raise GraphError("The synchronous runner reserves standard output")
 
 
 def _local_path(destination: str) -> Path | None:

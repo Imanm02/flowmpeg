@@ -479,6 +479,15 @@ def test_graph_error_returns_usage_code(capsys: pytest.CaptureFixture[str]) -> N
     assert "Combined fades" in capsys.readouterr().err
 
 
+def test_shortcut_dash_input_returns_usage_code(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    code = cli.main(["mute", "-", "-o", "out.mp4"])
+
+    assert code == 2
+    assert "start with a dash" in capsys.readouterr().err
+
+
 def test_keyboard_interrupt_returns_130(
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
