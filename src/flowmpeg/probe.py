@@ -184,7 +184,7 @@ def probe_raw(
         raise ProbeError(f"FFprobe timed out: {display_argv(argv)}") from error
 
     if completed.returncode != 0:
-        stderr = redact_text(completed.stderr[-8_000:]).strip()
+        stderr = redact_text(completed.stderr)[-8_000:].strip()
         message = f"FFprobe exited with code {completed.returncode}"
         raise ProbeError(
             message,

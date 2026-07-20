@@ -90,6 +90,28 @@ def test_probe_failure_keeps_bounded_stderr(
     assert captured.value.command.startswith("ffprobe")
 
 
+def test_probe_failure_redacts_before_bounding(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    completed = subprocess.CompletedProcess(
+        args=("ffprobe",),
+        returncode=1,
+        stdout="",
+        stderr=(
+            "https://media.example/video?token="
+            + "x" * 9_000
+            + "hidden-value\n"
+        ),
+    )
+    monkeypatch.setattr(subprocess, "run", lambda *args, **kwargs: completed)
+
+    with pytest.raises(ProbeError) as captured:
+        probe_raw("input.mp4")
+
+    assert "hidden-value" not in captured.value.stderr
+    assert "token=<redacted>" in captured.value.stderr
+
+
 def test_missing_probe_binary_has_specific_error() -> None:
     with pytest.raises(BinaryNotFoundError, match="was not found"):
         probe("sample.mp4", ffprobe="missing-flowmpeg-ffprobe")

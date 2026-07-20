@@ -17,7 +17,7 @@ from flowmpeg import (
     input,
     output,
 )
-from flowmpeg.runner import _stop_process, _TextTail
+from flowmpeg.runner import _read_stderr, _stop_process, _TextTail
 
 
 def test_runner_reports_missing_binary(tmp_path: Path) -> None:
@@ -92,6 +92,18 @@ def test_stderr_tail_keeps_the_latest_text() -> None:
     tail.append("abcde")
 
     assert tail.text() == "45678abcde"
+
+
+def test_stderr_reader_redacts_before_bounding() -> None:
+    tail = _TextTail(64)
+    stream = io.StringIO(
+        "https://media.example/video?token=" + "x" * 9_000 + "hidden-value\n"
+    )
+
+    _read_stderr(stream, tail)
+
+    assert "hidden-value" not in tail.text()
+    assert "token=<redacted>" in tail.text()
 
 
 def test_process_cleanup_does_not_mask_a_job_error() -> None:

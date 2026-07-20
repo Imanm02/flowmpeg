@@ -185,7 +185,7 @@ def _read_progress(
 
 def _read_stderr(stream: TextIO, tail: _TextTail) -> None:
     for line in stream:
-        tail.append(line)
+        tail.append(redact_text(line))
 
 
 def _stop_process(process: subprocess.Popen[str], grace: float) -> bool:
