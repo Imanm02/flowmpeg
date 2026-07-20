@@ -218,6 +218,15 @@ _BASE_COMMAND_CATALOG = (
         capability_group="voice-cleanup",
     ),
     CommandSpec(
+        "resample-audio",
+        "audio",
+        "Set audio rate and layout",
+        ("resample", "audio-standard"),
+        input_kind="audio",
+        output_kind="audio",
+        capability_group="audio-processing",
+    ),
+    CommandSpec(
         "crossfade-audio",
         "audio",
         "Crossfade two audio files",
@@ -685,6 +694,7 @@ _COMMAND_REQUIREMENTS = {
         "filter:silenceremove",
     ),
     "mono-audio": _requirements(*_WAV, "filter:aformat"),
+    "resample-audio": _requirements(*_WAV, "filter:aformat", "filter:aresample"),
     "crossfade-audio": _requirements(*_WAV, "filter:acrossfade"),
     "add-music": _requirements(*_MP4, "filter:amix", "filter:volume"),
     "duck-music": _requirements(

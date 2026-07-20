@@ -15,6 +15,7 @@ def test_shortcuts_namespace_is_public() -> None:
     assert shortcuts.trim.__module__ == "flowmpeg.shortcuts"
     assert set(shortcuts.__all__) == {
         "AudioCodec",
+        "AudioLayout",
         "AudioReplacementCodec",
         "CrossfadeCurve",
         "DeinterlaceMode",
@@ -65,6 +66,7 @@ def test_shortcuts_namespace_is_public() -> None:
         "reframe",
         "remove_audio",
         "remove_subtitles",
+        "resample_audio",
         "replace_audio",
         "resize",
         "reverse_clip",
@@ -832,6 +834,19 @@ def test_audio_cleanup_shortcuts_build_expected_chains() -> None:
     assert "aformat=channel_layouts=mono" in (mono.filter_graph() or "")
 
 
+def test_resample_audio_sets_rate_and_layout() -> None:
+    plan = shortcuts.resample_audio(
+        "interview.wav",
+        "standard.wav",
+        sample_rate=44_100,
+        layout="mono",
+    )
+
+    assert plan.filter_graph() == (
+        "[0:a:0]aresample=44100[a0];[a0]aformat=channel_layouts=mono[a1]"
+    )
+
+
 def test_crossfade_audio_maps_two_inputs() -> None:
     plan = shortcuts.crossfade_audio(
         "first.wav",
@@ -1224,6 +1239,16 @@ def test_shortcuts_accept_path_objects_and_overwrite() -> None:
             "in.mp4",
             "out.mp4",
             title="\x00",
+        ),
+        lambda: shortcuts.resample_audio(
+            "in.wav",
+            "out.wav",
+            sample_rate=7_999,
+        ),
+        lambda: shortcuts.resample_audio(
+            "in.wav",
+            "out.wav",
+            layout=cast(shortcuts.AudioLayout, "surround"),
         ),
     ],
 )
@@ -1750,6 +1775,7 @@ def test_new_audio_shortcuts_run(
     podcast = source.parent / "podcast.wav"
     mono = source.parent / "mono.wav"
     mono_opus = source.parent / "mono.opus"
+    resampled = source.parent / "resampled.wav"
     crossfaded = source.parent / "crossfaded.wav"
 
     shortcuts.denoise_audio(voice, denoised).run(ffmpeg=ffmpeg, timeout=10)
@@ -1759,6 +1785,12 @@ def test_new_audio_shortcuts_run(
         ffmpeg=ffmpeg,
         timeout=10,
     )
+    shortcuts.resample_audio(
+        voice,
+        resampled,
+        sample_rate=32_000,
+        layout="stereo",
+    ).run(ffmpeg=ffmpeg, timeout=10)
     shortcuts.crossfade_audio(
         voice,
         voice,
@@ -1770,6 +1802,9 @@ def test_new_audio_shortcuts_run(
     assert probe(podcast).audio_streams
     assert probe(mono).audio_streams[0].channels == 1
     assert probe(mono_opus).audio_streams[0].codec_name == "opus"
+    resampled_stream = probe(resampled).audio_streams[0]
+    assert resampled_stream.sample_rate == 32_000
+    assert resampled_stream.channels == 2
     assert probe(crossfaded).duration == pytest.approx(0.35, abs=0.1)
 
 

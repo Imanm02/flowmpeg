@@ -1186,6 +1186,20 @@ ff.mono_audio(
 ).run()
 ```
 
+### Standardize sample rate and channel layout
+
+```python
+ff.resample_audio(
+    "field-recording.wav",
+    "standard.wav",
+    sample_rate=48000,
+    layout="stereo",
+).run()
+```
+
+The sample rate can range from 8000 through 192000. The layout can be `mono`
+or `stereo`. Output codec choices match the other filtered audio shortcuts.
+
 ### Crossfade two tracks
 
 ```python
@@ -1466,6 +1480,7 @@ ff.trim("input.mp4", "clip.mp4", start=5, duration=20).run(
 | `podcast_voice` | Finished voice file | Filters, compresses, and normalizes speech |
 | `trim_silence` | Tighter audio file | Removes silence from both edges |
 | `mono_audio` | Mono audio file | Downmixes one selected track |
+| `resample_audio` | Standardized audio file | Sets sample rate and mono or stereo layout |
 | `crossfade_audio` | Joined audio file | Transitions between two inputs |
 | `extract_subtitles` | SRT, WebVTT, or ASS | Maps and encodes one text subtitle track |
 | `add_subtitles` | MP4 with selectable text | Adds one `mov_text` subtitle stream |

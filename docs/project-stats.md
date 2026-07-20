@@ -9,18 +9,18 @@ source change.
 
 | Measure | Count | Source |
 |---|---:|---|
-| Canonical terminal commands | 66 | `COMMAND_CATALOG` |
-| Command aliases | 64 | `COMMAND_CATALOG` |
-| Python shortcut functions | 57 | `shortcuts.__all__` |
-| One-line terminal examples | 67 | CLI example catalog |
+| Canonical terminal commands | 67 | `COMMAND_CATALOG` |
+| Command aliases | 66 | `COMMAND_CATALOG` |
+| Python shortcut functions | 58 | `shortcuts.__all__` |
+| One-line terminal examples | 68 | CLI example catalog |
 | Stable error identifiers | 16 | CLI error guide |
 | Stable audit findings | 12 | Media audit |
 | Doctor feature groups | 14 | Doctor requirements |
-| Test function definitions | 325 | `tests/test_*.py` |
+| Test function definitions | 326 | `tests/test_*.py` |
 | FFmpeg integration tests | 29 | Pytest markers |
 | Documentation pages | 15 | `docs/*.md` |
-| Documented command lines | 333 | Markdown code lines |
-| Completed roadmap items | 93 | `ROADMAP.md` |
+| Documented command lines | 335 | Markdown code lines |
+| Completed roadmap items | 94 | `ROADMAP.md` |
 | Open roadmap items | 0 | `ROADMAP.md` |
 
 ## Category matrix
@@ -31,7 +31,7 @@ counts distinct canonical commands with at least one built-in example.
 | Category | Commands | Aliases | Examples | Coverage | Python | Bar |
 |---|---:|---:|---:|---:|---:|---|
 | video | 18 | 20 | 19 | 18/18 (100%) | 18 | `##################` |
-| audio | 13 | 14 | 13 | 13/13 (100%) | 13 | `#############` |
+| audio | 14 | 16 | 14 | 14/14 (100%) | 14 | `##############` |
 | composition | 9 | 9 | 9 | 9/9 (100%) | 9 | `#########` |
 | effects | 5 | 4 | 5 | 5/5 (100%) | 5 | `#####` |
 | images | 6 | 7 | 6 | 6/6 (100%) | 6 | `######` |
@@ -53,7 +53,7 @@ The bar uses one `#` per canonical command carrying the tag.
 | delivery | 18 | 19 | `##################` |
 | discover | 4 | 4 | `####` |
 | inspect | 5 | 5 | `#####` |
-| podcast | 13 | 13 | `#############` |
+| podcast | 14 | 14 | `##############` |
 | privacy | 4 | 4 | `####` |
 | silent-input | 31 | 32 | `###############################` |
 

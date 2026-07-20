@@ -107,6 +107,10 @@ _BASE_EXAMPLES = (
     ),
     _Example("audio", "flowmpeg mono interview.wav --codec mp3 -o interview.mp3"),
     _Example(
+        "audio",
+        "flowmpeg resample interview.wav --sample-rate 48000 --layout mono -o standard.wav",
+    ),
+    _Example(
         "audio", "flowmpeg crossfade intro.wav main.wav --duration 2 -o program.wav"
     ),
     _Example("audio", "flowmpeg music talk.mp4 music.mp3 -o scored.mp4"),
@@ -503,6 +507,7 @@ def build_parser() -> argparse.ArgumentParser:
     _add_podcast_voice(commands)
     _add_trim_silence(commands)
     _add_mono_audio(commands)
+    _add_resample_audio(commands)
     _add_crossfade_audio(commands)
     _add_extract_subtitles(commands)
     _add_add_subtitles(commands)
@@ -1681,6 +1686,24 @@ def _add_mono_audio(
         aliases=("mono",),
     )
     _source(parser)
+    _audio_file_options(parser)
+    _output(parser)
+
+
+def _add_resample_audio(
+    commands: argparse._SubParsersAction[argparse.ArgumentParser],
+) -> None:
+    parser = _command(
+        commands,
+        "resample-audio",
+        "Set one audio track's sample rate and channel layout.",
+        shortcuts.resample_audio,
+        ("source",),
+        aliases=("resample", "audio-standard"),
+    )
+    _source(parser)
+    parser.add_argument("--sample-rate", type=_positive_int, default=48_000)
+    parser.add_argument("--layout", choices=("mono", "stereo"), default="stereo")
     _audio_file_options(parser)
     _output(parser)
 

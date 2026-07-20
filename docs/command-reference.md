@@ -29,7 +29,7 @@ Exact needs are checked by `flowmpeg doctor --command NAME`.
 | `mute-section` | `silence-section` | media | media | `creator` | `audio-processing` | `encoder:aac`, `encoder:libx264`, `filter:volume`, `muxer:mp4` |
 | `boomerang` | `bounce` | media | media | `creator`, `silent-input` | `reverse` | `encoder:aac`, `encoder:libx264`, `filter:areverse`, `filter:asetpts`, `filter:asplit`, `filter:atrim`, `filter:concat`, `filter:reverse`, `filter:setpts`, `filter:split`, `filter:trim`, `muxer:mp4` |
 
-## Audio (13)
+## Audio (14)
 
 | Command | Aliases | Input | Output | Tags | Doctor group | Exact needs |
 |---|---|---|---|---|---|---|
@@ -42,6 +42,7 @@ Exact needs are checked by `flowmpeg doctor --command NAME`.
 | `podcast-voice` | `voice` | audio | audio | `podcast`, `delivery` | `voice-cleanup` | `encoder:pcm_s16le`, `filter:acompressor`, `filter:afftdn`, `filter:aresample`, `filter:highpass`, `filter:loudnorm`, `filter:lowpass`, `muxer:wav` |
 | `trim-silence` | `desilence` | audio | audio | `podcast`, `delivery` | `voice-cleanup` | `encoder:pcm_s16le`, `filter:areverse`, `filter:asetpts`, `filter:atrim`, `filter:silenceremove`, `muxer:wav` |
 | `mono-audio` | `mono` | audio | audio | `podcast` | `voice-cleanup` | `encoder:pcm_s16le`, `filter:aformat`, `muxer:wav` |
+| `resample-audio` | `resample`, `audio-standard` | audio | audio | `podcast` | `audio-processing` | `encoder:pcm_s16le`, `filter:aformat`, `filter:aresample`, `muxer:wav` |
 | `crossfade-audio` | `crossfade` | audio | audio | `podcast`, `creator` | `audio-processing` | `encoder:pcm_s16le`, `filter:acrossfade`, `muxer:wav` |
 | `add-music` | `music` | media | video | `podcast` | `audio-processing` | `encoder:aac`, `encoder:libx264`, `filter:amix`, `filter:volume`, `muxer:mp4` |
 | `duck-music` | `duck` | media | video | `podcast` | `audio-processing` | `encoder:aac`, `encoder:libx264`, `filter:amix`, `filter:asplit`, `filter:sidechaincompress`, `filter:volume`, `muxer:mp4` |

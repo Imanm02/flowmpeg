@@ -55,6 +55,7 @@ SocialTarget = Literal["vertical", "portrait", "square", "landscape"]
 SocialFill = Literal["blur", "crop", "fit"]
 CrossfadeCurve = Literal["tri", "qsin", "exp"]
 AudioCodec = Literal["mp3", "aac", "opus", "wav", "flac", "copy"]
+AudioLayout = Literal["mono", "stereo"]
 AudioReplacementCodec = Literal["aac", "copy"]
 ReplacementDuration = Literal["video", "shortest"]
 NamedPosition = Literal[
@@ -95,6 +96,7 @@ _audio_suffixes: dict[AudioCodec, frozenset[str]] = {
 
 __all__ = [
     "AudioCodec",
+    "AudioLayout",
     "AudioReplacementCodec",
     "CrossfadeCurve",
     "DeinterlaceMode",
@@ -145,6 +147,7 @@ __all__ = [
     "reframe",
     "remove_audio",
     "remove_subtitles",
+    "resample_audio",
     "replace_audio",
     "resize",
     "reverse_clip",
@@ -1807,6 +1810,33 @@ def mono_audio(
 
     _nonnegative_integer("track", track)
     audio = _audio_track(source, track).filter("aformat", channel_layouts="mono")
+    return _audio_plan(audio, to, (source,), codec, bitrate, overwrite)
+
+
+def resample_audio(
+    source: Pathish,
+    to: Pathish,
+    *,
+    track: int = 0,
+    sample_rate: int = 48_000,
+    layout: AudioLayout = "stereo",
+    codec: AudioCodec = "wav",
+    bitrate: str | None = None,
+    overwrite: bool = False,
+) -> Plan:
+    """Set the sample rate and channel layout of one audio track."""
+
+    _nonnegative_integer("track", track)
+    if (
+        isinstance(sample_rate, bool)
+        or not isinstance(sample_rate, int)
+        or not 8_000 <= sample_rate <= 192_000
+    ):
+        raise GraphError("Sample rate must be an integer from 8000 through 192000")
+    if layout not in {"mono", "stereo"}:
+        raise GraphError(f"Unknown audio layout: {layout}")
+    audio = _audio_track(source, track).filter("aresample", sample_rate)
+    audio = audio.filter("aformat", channel_layouts=layout)
     return _audio_plan(audio, to, (source,), codec, bitrate, overwrite)
 
 
