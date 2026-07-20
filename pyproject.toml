@@ -31,6 +31,9 @@ classifiers = [
 ]
 dependencies = []
 
+[project.scripts]
+flowmpeg = "flowmpeg.cli:main"
+
 [project.optional-dependencies]
 dev = [
     "mypy>=1.15",

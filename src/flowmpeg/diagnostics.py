@@ -19,6 +19,7 @@ _secret_options = {
     "-headers",
     "-http_proxy",
 }
+_cmd_metacharacters = frozenset("&|<>()^")
 
 
 def redact_argv(argv: Iterable[str]) -> tuple[str, ...]:
@@ -53,8 +54,20 @@ def display_argv(argv: Iterable[str], *, redact: bool = True) -> str:
     if redact:
         values = redact_argv(values)
     if os.name == "nt":
-        return subprocess.list2cmdline(values)
+        return _windows_display_argv(values)
     return shlex.join(values)
+
+
+def _windows_display_argv(argv: Iterable[str]) -> str:
+    tokens: list[str] = []
+    for value in argv:
+        rendered = subprocess.list2cmdline((value,))
+        if any(character in value for character in _cmd_metacharacters) and not (
+            rendered.startswith('"') and rendered.endswith('"')
+        ):
+            rendered = f'"{rendered}"'
+        tokens.append(rendered)
+    return " ".join(tokens)
 
 
 def _redact_token(token: str) -> str:
