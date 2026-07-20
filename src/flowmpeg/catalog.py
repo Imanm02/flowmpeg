@@ -595,6 +595,15 @@ _BASE_COMMAND_CATALOG = (
         capability_group="video-processing",
     ),
     CommandSpec(
+        "detect-scenes",
+        "inspect",
+        "Find scene-change timecodes in a video track",
+        ("scenes", "scene-report", "find-scenes"),
+        input_kind="video",
+        output_kind="report",
+        capability_group="video-processing",
+    ),
+    CommandSpec(
         "doctor",
         "inspect",
         "Check tools and media capabilities",
@@ -716,6 +725,7 @@ _COMMAND_TAGS = {
     "analyze-loudness": ("archive",),
     "detect-silence": ("archive",),
     "detect-black": ("archive",),
+    "detect-scenes": ("archive", "creator"),
     "tag-media": ("archive", "copy"),
 }
 
@@ -953,6 +963,7 @@ _COMMAND_REQUIREMENTS = {
     "analyze-loudness": ("filter:loudnorm",),
     "detect-silence": ("filter:silencedetect",),
     "detect-black": ("filter:blackdetect",),
+    "detect-scenes": _requirements("filter:metadata", "filter:select"),
 }
 
 COMMAND_CATALOG = tuple(

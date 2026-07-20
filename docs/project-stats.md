@@ -9,15 +9,15 @@ source change.
 
 | Measure | Count | Source |
 |---|---:|---|
-| Canonical terminal commands | 79 | `COMMAND_CATALOG` |
-| Command aliases | 89 | `COMMAND_CATALOG` |
+| Canonical terminal commands | 80 | `COMMAND_CATALOG` |
+| Command aliases | 92 | `COMMAND_CATALOG` |
 | Python shortcut functions | 67 | `shortcuts.__all__` |
-| One-line terminal examples | 80 | CLI example catalog |
+| One-line terminal examples | 81 | CLI example catalog |
 | Stable error identifiers | 16 | CLI error guide |
 | Stable audit findings | 12 | Media audit |
 | Doctor feature groups | 15 | Doctor requirements |
-| Test function definitions | 356 | `tests/test_*.py` |
-| FFmpeg integration tests | 34 | Pytest markers |
+| Test function definitions | 362 | `tests/test_*.py` |
+| FFmpeg integration tests | 35 | Pytest markers |
 | Documentation pages | 16 | `docs/*.md` |
 | Documented command lines | 377 | Markdown code lines |
 | Completed roadmap items | 106 | `ROADMAP.md` |
@@ -37,7 +37,7 @@ counts distinct canonical commands with at least one built-in example.
 | images | 6 | 7 | 6 | 6/6 (100%) | 6 | `######` |
 | subtitles | 4 | 5 | 4 | 4/4 (100%) | 4 | `####` |
 | metadata | 3 | 4 | 3 | 3/3 (100%) | 2 | `###` |
-| inspect | 8 | 9 | 8 | 8/8 (100%) | 0 | `########` |
+| inspect | 9 | 12 | 9 | 9/9 (100%) | 0 | `#########` |
 | help | 4 | 0 | 4 | 4/4 (100%) | 0 | `####` |
 
 ## Use-case coverage
@@ -47,12 +47,12 @@ The bar uses one `#` per canonical command carrying the tag.
 | Tag | Commands | Examples | Bar |
 |---|---:|---:|---|
 | accessibility | 4 | 4 | `####` |
-| archive | 16 | 16 | `################` |
+| archive | 17 | 17 | `#################` |
 | copy | 7 | 7 | `#######` |
-| creator | 43 | 44 | `###########################################` |
+| creator | 44 | 45 | `############################################` |
 | delivery | 21 | 22 | `#####################` |
 | discover | 4 | 4 | `####` |
-| inspect | 8 | 8 | `########` |
+| inspect | 9 | 9 | `#########` |
 | podcast | 20 | 20 | `####################` |
 | privacy | 4 | 4 | `####` |
 | silent-input | 33 | 34 | `#################################` |

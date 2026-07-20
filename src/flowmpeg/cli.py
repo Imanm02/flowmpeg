@@ -45,6 +45,7 @@ from flowmpeg.probe import (
 )
 from flowmpeg.processes import popen_group_options, stop_process_tree
 from flowmpeg.progress import Progress
+from flowmpeg.scenes import SceneReport, detect_scenes
 from flowmpeg.silence import SilenceReport, detect_silence
 
 _Factory = Callable[..., Plan]
@@ -187,6 +188,7 @@ _BASE_EXAMPLES = (
     _Example("inspect", "flowmpeg loudness episode.wav"),
     _Example("inspect", "flowmpeg find-silence interview.wav"),
     _Example("inspect", "flowmpeg find-black tape.mp4"),
+    _Example("inspect", "flowmpeg scenes interview.mp4"),
     _Example("inspect", "flowmpeg doctor"),
     _Example("inspect", "flowmpeg setup"),
     _Example("help", "flowmpeg errors"),
@@ -559,6 +561,7 @@ def build_parser() -> argparse.ArgumentParser:
     _add_loudness(commands)
     _add_silence_detection(commands)
     _add_black_detection(commands)
+    _add_scene_detection(commands)
     _add_doctor(commands)
     _add_setup(commands)
     _add_errors(commands)
@@ -2276,6 +2279,31 @@ def _add_black_detection(
     parser.set_defaults(handler=_run_black_detection)
 
 
+def _add_scene_detection(
+    commands: argparse._SubParsersAction[argparse.ArgumentParser],
+) -> None:
+    parser = commands.add_parser(
+        "detect-scenes",
+        aliases=["scenes", "scene-report", "find-scenes"],
+        help="Find scene-change timecodes in a video track.",
+        description="Find scene-change candidates without writing a media file.",
+        allow_abbrev=False,
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+    _source(parser)
+    parser.add_argument("--track", type=_nonnegative_int, default=0)
+    parser.add_argument(
+        "--threshold",
+        type=_finite_float,
+        default=0.35,
+        help="Minimum normalized scene-change score",
+    )
+    parser.add_argument("--ffmpeg", default="ffmpeg", help="FFmpeg executable")
+    parser.add_argument("--timeout", type=_positive_float)
+    parser.add_argument("--json", action="store_true", help="Print scene JSON")
+    parser.set_defaults(handler=_run_scene_detection)
+
+
 def _add_doctor(commands: argparse._SubParsersAction[argparse.ArgumentParser]) -> None:
     parser = commands.add_parser(
         "doctor",
@@ -2581,6 +2609,26 @@ def _run_black_detection(args: argparse.Namespace) -> int:
         print(json.dumps(_redact_json(data), indent=2, sort_keys=True))
     else:
         print(redact_text(_format_black(result)))
+    return 0
+
+
+def _run_scene_detection(args: argparse.Namespace) -> int:
+    result = detect_scenes(
+        cast(str, args.source),
+        track=cast(int, args.track),
+        threshold=cast(float, args.threshold),
+        ffmpeg=cast(str, args.ffmpeg),
+        timeout=cast(float | None, args.timeout),
+    )
+    if cast(bool, args.json):
+        data = asdict(result)
+        data["schema_version"] = _JSON_SCHEMA_VERSION
+        data["strongest_change"] = (
+            None if result.strongest_change is None else asdict(result.strongest_change)
+        )
+        print(json.dumps(_redact_json(data), indent=2, sort_keys=True))
+    else:
+        print(redact_text(_format_scenes(result)))
     return 0
 
 
@@ -3102,6 +3150,33 @@ def _format_black(result: BlackReport) -> str:
         lines.extend(
             f"  {index}. {item.start:.3f}s to {item.end:.3f}s ({item.duration:.3f}s)"
             for index, item in enumerate(result.intervals, start=1)
+        )
+    return "\n".join(lines)
+
+
+def _format_scenes(result: SceneReport) -> str:
+    count = len(result.changes)
+    noun = "change" if count == 1 else "changes"
+    strongest = (
+        "none"
+        if result.strongest_change is None
+        else (
+            f"{result.strongest_change.time:.3f}s "
+            f"(score {result.strongest_change.score:.3f})"
+        )
+    )
+    lines = [
+        f"Scene report: {count} {noun}",
+        f"Source: {result.source}",
+        f"Video track: {result.track}",
+        f"Threshold: {result.threshold:g}",
+        f"Strongest change: {strongest}",
+    ]
+    if result.changes:
+        lines.extend(("", "Changes:"))
+        lines.extend(
+            f"  {index}. {item.time:.3f}s (score {item.score:.3f})"
+            for index, item in enumerate(result.changes, start=1)
         )
     return "\n".join(lines)
 

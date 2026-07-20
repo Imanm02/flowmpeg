@@ -108,7 +108,7 @@ Exact needs are checked by `flowmpeg doctor --command NAME`.
 | `remux` | `rewrap`, `copy-container` | media | media | `archive`, `copy`, `delivery` | none | `muxer:matroska` |
 | `tag-media` | `label-media` | media | media | `archive`, `copy` | none | `muxer:mp4` |
 
-## Inspect (8)
+## Inspect (9)
 
 | Command | Aliases | Input | Output | Tags | Doctor group | Exact needs |
 |---|---|---|---|---|---|---|
@@ -118,6 +118,7 @@ Exact needs are checked by `flowmpeg doctor --command NAME`.
 | `analyze-loudness` | `loudness`, `measure-loudness` | audio | report | `inspect`, `archive` | `audio-processing` | `filter:loudnorm` |
 | `detect-silence` | `silence-report`, `find-silence` | audio | report | `inspect`, `archive` | `audio-processing` | `filter:silencedetect` |
 | `detect-black` | `black-report`, `find-black` | video | report | `inspect`, `archive` | `video-processing` | `filter:blackdetect` |
+| `detect-scenes` | `scenes`, `scene-report`, `find-scenes` | video | report | `inspect`, `archive`, `creator` | `video-processing` | `filter:metadata`, `filter:select` |
 | `doctor` | none | none | report | `inspect` | none | none |
 | `setup` | `install-tools` | none | report | `inspect` | none | none |
 

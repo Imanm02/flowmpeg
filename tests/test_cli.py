@@ -36,6 +36,7 @@ from flowmpeg.probe import (
 )
 from flowmpeg.progress import Progress
 from flowmpeg.runner import RunResult
+from flowmpeg.scenes import SceneChange, SceneReport
 from flowmpeg.silence import SilenceInterval, SilenceReport
 
 
@@ -863,6 +864,34 @@ def test_black_report_json_includes_summary_values(
     assert report["total_black"] == pytest.approx(2.9)
     assert report["longest_black"] == 2.2
     assert len(report["intervals"]) == 2
+
+
+def test_scene_report_prints_timecodes(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    monkeypatch.setattr(cli, "detect_scenes", lambda *args, **kwargs: _scenes())
+
+    assert cli.main(["scenes", "interview.mp4", "--threshold", "0.3"]) == 0
+    output = capsys.readouterr().out
+
+    assert "Scene report: 2 changes" in output
+    assert "Strongest change: 8.500s (score 0.910)" in output
+    assert "2.000s (score 0.400)" in output
+
+
+def test_scene_report_json_includes_strongest_change(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    monkeypatch.setattr(cli, "detect_scenes", lambda *args, **kwargs: _scenes())
+
+    assert cli.main(["scene-report", "interview.mp4", "--json"]) == 0
+    report = json.loads(capsys.readouterr().out)
+
+    assert report["schema_version"] == 1
+    assert report["strongest_change"] == {"score": 0.91, "time": 8.5}
+    assert len(report["changes"]) == 2
 
 
 def test_doctor_json_reports_ready(
@@ -2147,5 +2176,17 @@ def _black() -> BlackReport:
         intervals=(
             BlackInterval(0, 0.7, 0.7),
             BlackInterval(5.2, 7.4, 2.2),
+        ),
+    )
+
+
+def _scenes() -> SceneReport:
+    return SceneReport(
+        source="interview.mp4",
+        track=0,
+        threshold=0.35,
+        changes=(
+            SceneChange(2, 0.4),
+            SceneChange(8.5, 0.91),
         ),
     )
