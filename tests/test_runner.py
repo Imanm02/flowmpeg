@@ -19,7 +19,12 @@ from flowmpeg import (
     input,
     output,
 )
-from flowmpeg.runner import _read_stderr, _stop_process, _TextTail
+from flowmpeg.runner import (
+    _read_stderr,
+    _stop_process,
+    _TextTail,
+    _warn_unconfirmed_cleanup,
+)
 
 
 def test_runner_reports_missing_binary(tmp_path: Path) -> None:
@@ -191,6 +196,17 @@ def test_process_cleanup_does_not_mask_a_job_error() -> None:
     process = cast(subprocess.Popen[str], BrokenProcess())
 
     assert _stop_process(process, 0.0) is False
+
+
+def test_cleanup_warning_cannot_mask_a_job_error(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def fail_warning(*args: object, **kwargs: object) -> None:
+        raise RuntimeWarning("warnings are errors")
+
+    monkeypatch.setattr("flowmpeg.runner.warnings.warn", fail_warning)
+
+    _warn_unconfirmed_cleanup()
 
 
 def test_process_cleanup_kills_after_poll_failure() -> None:

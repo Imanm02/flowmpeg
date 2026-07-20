@@ -136,11 +136,7 @@ def run(
                 on_progress(event)
     except BaseException:
         if not _stop_process(process, termination_grace):
-            warnings.warn(
-                "FFmpeg cleanup could not confirm process exit",
-                RuntimeWarning,
-                stacklevel=2,
-            )
+            _warn_unconfirmed_cleanup()
         raise
     finally:
         if progress_started:
@@ -206,6 +202,17 @@ def _is_finite_number(value: object) -> bool:
 def _read_stderr(stream: TextIO, tail: _TextTail) -> None:
     for line in stream:
         tail.append(redact_text(line))
+
+
+def _warn_unconfirmed_cleanup() -> None:
+    try:
+        warnings.warn(
+            "FFmpeg cleanup could not confirm process exit",
+            RuntimeWarning,
+            stacklevel=3,
+        )
+    except Warning:
+        return
 
 
 def _stop_process(process: subprocess.Popen[str], grace: float) -> bool:
