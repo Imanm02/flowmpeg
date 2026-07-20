@@ -235,6 +235,28 @@ def test_media_command_runs_and_reports_output(
     }
 
 
+def test_finished_output_hides_url_secrets(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    def fake_run(self: Plan, **kwargs: object) -> RunResult:
+        del self, kwargs
+        return RunResult(
+            0,
+            0.1,
+            "",
+            None,
+            ("https://example.com/upload?token=REDACT_ME",),
+        )
+
+    monkeypatch.setattr(Plan, "run", fake_run)
+
+    assert cli.main(["mute", "in.mp4", "-o", "out.mp4"]) == 0
+    output = capsys.readouterr().out
+    assert "REDACT_ME" not in output
+    assert "token=<redacted>" in output
+
+
 def test_known_duration_drives_progress(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

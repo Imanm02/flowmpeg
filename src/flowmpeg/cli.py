@@ -1710,7 +1710,7 @@ def _run_media(args: argparse.Namespace) -> int:
     finally:
         if progress_printer is not None:
             progress_printer.close()
-    destinations = ", ".join(result.outputs)
+    destinations = ", ".join(redact_text(destination) for destination in result.outputs)
     print(f"Finished in {result.elapsed:.2f}s: {destinations}")
     return 0
 
