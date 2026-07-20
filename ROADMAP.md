@@ -42,7 +42,7 @@ only a discussion or test placeholder.
 - [x] Ignore audio bitrate controls when audio output is disabled.
 - [x] Reject Boolean audio, video, and subtitle stream indexes.
 - [x] Reject unordered filter option collections.
-- [ ] Reject duplicate filter option names.
+- [x] Reject duplicate filter option names.
 - [ ] Strengthen runtime validation for graph model values.
 - [ ] Add a package-manager timeout and map timeout failures to `FMG304`.
 - [ ] Treat end-of-file at the setup confirmation prompt as cancellation.

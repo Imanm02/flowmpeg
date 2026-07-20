@@ -78,6 +78,18 @@ def test_unordered_filter_options_are_rejected() -> None:
         )
 
 
+def test_duplicate_filter_options_are_rejected() -> None:
+    video = input("movie.mp4").video()
+
+    with pytest.raises(GraphError, match="must be unique"):
+        apply_filter(
+            (video,),
+            "scale",
+            output_kinds=(StreamKind.VIDEO,),
+            options=(("width", 640), ("width", 1280)),
+        )
+
+
 def test_subtitle_split_is_rejected() -> None:
     with pytest.raises(GraphError, match="Subtitle streams cannot be split"):
         input("movie.mkv").subtitle().split()

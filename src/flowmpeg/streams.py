@@ -161,7 +161,10 @@ def apply_filter(
     key = new_node_key()
     if isinstance(options, (set, frozenset)):
         raise GraphError("Filter options must have a stable order")
-    option_items = options.items() if isinstance(options, Mapping) else options
+    option_items = tuple(options.items() if isinstance(options, Mapping) else options)
+    option_names = [name for name, _ in option_items]
+    if len(option_names) != len(set(option_names)):
+        raise GraphError("Filter option names must be unique")
     node = FilterNode(
         key=key,
         name=name,
