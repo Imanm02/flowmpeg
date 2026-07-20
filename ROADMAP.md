@@ -25,6 +25,15 @@ only a discussion or test placeholder.
   without mapping a missing audio stream.
 - [x] Guarantee even H.264 dimensions for compression, resize, crop, and grid
   outputs.
+- [x] Accept integer audio speed factors without calling float-only methods.
+- [x] Redact runner and probe errors before keeping a bounded tail.
+- [x] Reject raw FFmpeg options that can replace Flowmpeg inputs, mappings,
+  filter graphs, overwrite policy, or progress channels.
+- [x] Parse FFprobe sample aspect ratios that use colon notation.
+- [x] Verify that configured FFmpeg and FFprobe paths identify the requested
+  programs.
+- [x] Normalize Windows extended path prefixes before checking new output
+  aliases.
 - [ ] Put a safe resource bound around two-pass edge-silence trimming.
 - [ ] Make doctor requirements cover every filter and output capability used by
   each public command.
@@ -54,6 +63,17 @@ only a discussion or test placeholder.
 - [x] Treat end-of-file at the setup confirmation prompt as cancellation.
 - [x] Let setup inspect custom FFmpeg and FFprobe executable paths.
 - [x] Include tool return codes and bounded failure reasons in doctor JSON.
+- [x] Reject nonfinite, Boolean, text, and oversized runner control values.
+- [x] Reject malformed numeric and switch values in public audio and video
+  recipes.
+- [x] Treat dangling symbolic links as existing outputs during preflight.
+- [x] Keep cleanup warnings from replacing the active job error.
+- [x] Normalize null outputs according to the current operating system.
+- [x] Reject unordered filter streams, arguments, and output kinds.
+- [x] Test the dependency versions recorded in `uv.lock` in CI.
+- [ ] Stop the full FFmpeg process tree after a timeout or callback failure.
+- [ ] Bound or coalesce queued progress events when a callback is slow.
+- [ ] Make package-manager timeouts stop descendant processes.
 
 ## Product and discovery work
 
@@ -66,6 +86,8 @@ only a discussion or test placeholder.
   group.
 - [ ] Add an optional doctor smoke test that encodes and probes a tiny generated
   input.
+- [ ] Split doctor requirements by the exact encoders and muxers each command
+  needs.
 - [ ] Infer progress duration for start and end trims.
 - [ ] Infer doubled progress duration for boomerang outputs.
 - [x] Add a documentation landing page organized by task.
@@ -73,6 +95,19 @@ only a discussion or test placeholder.
 - [x] Test that generated statistics remain current.
 - [x] Parse documented terminal options, not only command names.
 - [ ] Build safe graph examples without starting FFmpeg.
+- [ ] Execute CMD, PowerShell, and Bash loop examples in documentation tests.
+- [ ] Add built-in examples for every editing, inspection, and help command.
+- [ ] Keep built-in example categories aligned with the command catalog.
+- [ ] Add creator, podcast, privacy, archive, copy, inspect, and silent-input
+  tags to commands and examples.
+- [ ] Generate the CLI command map from the command catalog.
+- [ ] Add effects and metadata to the documentation task index.
+- [ ] Add a before-and-after media comparison command with JSON output.
+- [ ] Expand demo media with a second clip, silent video, logo, music, and image
+  sequence inputs.
+- [ ] Run join, grid, watermark, social, GIF, contact sheet, crossfade, and
+  metadata cleanup in the demo lab.
+- [ ] Document that exit code 3 also covers an unmet doctor requirement.
 - [x] Add an encode, copy, and filter behavior matrix.
 - [x] Add a stream retention and track-selection matrix.
 - [x] Add a social frame dimension and fill-mode comparison.
