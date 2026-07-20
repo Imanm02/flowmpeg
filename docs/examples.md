@@ -34,6 +34,7 @@ flowmpeg probe demo-media/sample.mp4
 flowmpeg audit demo-media/sample.mp4 --expect av
 flowmpeg loudness demo-media/voice.wav
 flowmpeg cut demo-media/sample.mp4 --duration 1 -o demo-media/clip.mp4
+flowmpeg loop demo-media/sample.mp4 --duration 3 -o demo-media/looped.mp4
 flowmpeg webm demo-media/sample.mp4 -o demo-media/sample.webm
 flowmpeg hevc demo-media/sample.mp4 -o demo-media/sample-hevc.mp4
 flowmpeg av1 demo-media/sample.mp4 --speed 10 -o demo-media/sample-av1.webm
@@ -95,6 +96,7 @@ Paths can also be `pathlib.Path` objects.
 | I want to create | Input | Output |
 | --- | --- | --- |
 | A selected time range | `interview.mp4` | `clip.mp4` |
+| A repeated motion background | `motion.mp4` | `background.mp4` |
 | A smaller video | `interview.mp4` | `small.mp4` |
 | An open-codec web video | `interview.mp4` | `delivery.webm` |
 | A compact HEVC delivery file | `camera-master.mov` | `camera-hevc.mp4` |

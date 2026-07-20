@@ -144,6 +144,7 @@ __all__ = [
     "join_audio_files",
     "join_normalized",
     "join_matching",
+    "loop_video",
     "image_sequence_video",
     "make_gif",
     "mix_audio_files",
@@ -750,6 +751,39 @@ def trim(
         to,
         start=start,
         end=end,
+        include_audio=False,
+        preset=preset,
+        overwrite=overwrite,
+    )
+    return plan.with_missing_audio_fallback(fallback, source)
+
+
+def loop_video(
+    source: Pathish,
+    to: Pathish,
+    *,
+    duration: float,
+    include_audio: bool = True,
+    preset: VideoPreset = "web",
+    overwrite: bool = False,
+) -> Plan:
+    """Repeat a media input until an exact output duration."""
+
+    _bounded_number("duration", duration, 0.01, 86_400)
+    include_audio = _require_boolean("include_audio", include_audio)
+    clip = media(
+        source,
+        "-stream_loop",
+        "-1",
+        audio=include_audio,
+    ).trim(start=0, end=duration)
+    plan = _web_plan(clip, to, (source,), preset, overwrite)
+    if not include_audio:
+        return plan
+    fallback = loop_video(
+        source,
+        to,
+        duration=duration,
         include_audio=False,
         preset=preset,
         overwrite=overwrite,

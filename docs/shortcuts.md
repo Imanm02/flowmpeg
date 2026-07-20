@@ -126,6 +126,19 @@ ff.trim("interview.mp4", "answer.mp4", start=42, end=68).run()
 
 Video and audio timestamps are reset to zero after trimming.
 
+### Repeat a short clip to an exact duration
+
+```python
+ff.loop_video(
+    "logo-motion.mp4",
+    "background.mp4",
+    duration=30,
+).run()
+```
+
+The shortcut loops the input, trims both timelines, and handles a silent source
+at run time. Durations from 0.01 seconds through 24 hours are accepted.
+
 ### Keep a duration from a start time
 
 **Input:** `meeting.mp4`
@@ -1537,6 +1550,7 @@ ff.trim("input.mp4", "clip.mp4", start=5, duration=20).run(
 | `transcode_hevc` | HEVC and AAC MP4 | Encodes selected video and optional audio |
 | `transcode_av1` | AV1 and Opus WebM | Encodes selected video and optional audio |
 | `trim` | Accurate time range | Filters paired timestamps, then encodes |
+| `loop_video` | Exact-duration repeated video | Loops input and trims paired timelines |
 | `resize` | New width or height | Encodes video and keeps optional audio |
 | `remove_audio` | Video-only file | Copies video and drops other streams |
 | `extract_audio` | MP3, AAC, Opus, WAV, FLAC, or copy | Maps one audio track |

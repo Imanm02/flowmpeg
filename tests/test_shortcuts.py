@@ -58,6 +58,7 @@ def test_shortcuts_namespace_is_public() -> None:
         "join_audio_files",
         "image_sequence_video",
         "join_matching",
+        "loop_video",
         "make_gif",
         "mix_audio_files",
         "mono_audio",
@@ -243,6 +244,23 @@ def test_trim_accepts_duration() -> None:
         "[0:a:0]atrim=start=2:end=5[a0];"
         "[a0]asetpts=PTS-STARTPTS[a1]"
     )
+
+
+def test_loop_video_repeats_input_and_trims_timeline() -> None:
+    plan = shortcuts.loop_video(
+        "motion.mp4",
+        "background.mp4",
+        duration=30,
+    )
+    argv = plan.raw_argv()
+
+    assert argv[argv.index("-stream_loop") : argv.index("-stream_loop") + 2] == (
+        "-stream_loop",
+        "-1",
+    )
+    assert "trim=start=0:end=30" in (plan.filter_graph() or "")
+    assert "atrim=start=0:end=30" in (plan.filter_graph() or "")
+    assert plan.missing_audio_fallback is not None
 
 
 def test_resize_preserves_aspect_ratio() -> None:
@@ -1180,6 +1198,7 @@ def test_shortcuts_accept_path_objects_and_overwrite() -> None:
         lambda: shortcuts.transcode_av1("in.mov", "out.mp4"),
         lambda: shortcuts.transcode_av1("in.mov", "out.webm", crf=64),
         lambda: shortcuts.transcode_av1("in.mov", "out.webm", speed=14),
+        lambda: shortcuts.loop_video("in.mp4", "out.mp4", duration=86_401),
         lambda: shortcuts.join_normalized(("one.mp4",), "out.mp4"),
         lambda: shortcuts.join_normalized(
             ("one.mp4", "two.mp4"), "out.mp4", width=1279
@@ -1850,6 +1869,24 @@ def test_av1_transcode_runs(
     info = probe(target)
     assert info.video_streams[0].codec_name == "av1"
     assert not info.audio_streams
+
+
+@pytest.mark.integration
+def test_loop_video_runs_to_requested_duration(
+    shortcut_media: tuple[str, Path, Path, Path],
+) -> None:
+    ffmpeg, source, _, _ = shortcut_media
+    target = source.parent / "looped.mp4"
+
+    shortcuts.loop_video(source, target, duration=0.75).run(
+        ffmpeg=ffmpeg,
+        timeout=15,
+    )
+
+    info = probe(target)
+    assert info.duration == pytest.approx(0.75, abs=0.08)
+    assert info.video_streams
+    assert info.audio_streams
 
 
 @pytest.mark.integration

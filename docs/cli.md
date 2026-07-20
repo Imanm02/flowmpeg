@@ -95,6 +95,7 @@ The table below is a compact editing index for scanning this longer guide.
 | Convert to HEVC MP4 | `transcode-hevc` | `hevc`, `h265` |
 | Convert to AV1 WebM | `transcode-av1` | `av1`, `svt-av1` |
 | Cut a time range | `trim` | `cut` |
+| Repeat to a duration | `loop-video` | `loop`, `repeat-video` |
 | Resize by one side | `resize` | `scale` |
 | Remove the audio stream | `remove-audio` | `mute`, `strip-audio` |
 | Save one audio track | `extract-audio` | `audio` |
@@ -241,6 +242,16 @@ flowmpeg cut meeting.mp4 --start 90 --duration 15 -o answer.mp4
 ```
 
 The command resets the video and audio timelines to zero.
+
+### Repeat a clip to an exact duration
+
+```console
+flowmpeg loop logo-motion.mp4 --duration 30 -o background.mp4
+```
+
+The input repeats as many times as needed, then video and optional audio are cut
+at the requested duration. The limit is 24 hours. Silent inputs are detected at
+run time, or `--no-audio` can skip that check.
 
 ### Cut between two timestamps
 

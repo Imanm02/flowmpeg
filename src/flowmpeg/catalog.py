@@ -57,6 +57,13 @@ _BASE_COMMAND_CATALOG = (
         capability_group="web-video",
     ),
     CommandSpec(
+        "loop-video",
+        "video",
+        "Repeat video to an exact duration",
+        ("loop", "repeat-video"),
+        capability_group="web-video",
+    ),
+    CommandSpec(
         "resize",
         "video",
         "Resize while keeping aspect ratio",
@@ -636,6 +643,7 @@ _COMMAND_TAGS = {
     "transcode-hevc": ("archive", "delivery", "silent-input"),
     "transcode-av1": ("archive", "delivery", "silent-input"),
     "trim": ("delivery", "silent-input"),
+    "loop-video": ("creator", "silent-input"),
     "resize": ("delivery", "silent-input"),
     "remove-audio": ("copy", "privacy", "silent-input"),
     "compress-video": ("delivery", "silent-input"),
@@ -708,6 +716,13 @@ _COMMAND_REQUIREMENTS = {
         "muxer:webm",
     ),
     "trim": _requirements(
+        *_MP4,
+        "filter:asetpts",
+        "filter:atrim",
+        "filter:setpts",
+        "filter:trim",
+    ),
+    "loop-video": _requirements(
         *_MP4,
         "filter:asetpts",
         "filter:atrim",

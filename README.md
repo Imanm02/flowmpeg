@@ -62,6 +62,7 @@ the offset from a chosen normalization target without writing an output file.
 
 ```console
 flowmpeg cut input.mp4 --start 10 --duration 20 -o clip.mp4
+flowmpeg loop motion.mp4 --duration 30 -o background.mp4
 flowmpeg webm input.mov --crf 30 -o delivery.webm
 flowmpeg hevc input.mov --crf 28 -o archive.mp4
 flowmpeg av1 input.mov --crf 35 --speed 8 -o delivery-av1.webm

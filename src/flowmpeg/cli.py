@@ -79,6 +79,7 @@ _BASE_EXAMPLES = (
     _Example("video", "flowmpeg av1 recording.mov -o recording-av1.webm"),
     _Example("video", "flowmpeg convert animation.mov --no-audio -o animation.mp4"),
     _Example("video", "flowmpeg cut input.mp4 --start 5 --duration 12 -o clip.mp4"),
+    _Example("video", "flowmpeg loop logo-motion.mp4 --duration 30 -o background.mp4"),
     _Example("video", "flowmpeg resize input.mp4 --width 1280 -o smaller.mp4"),
     _Example("video", "flowmpeg rotate sideways.mp4 --degrees 90 -o upright.mp4"),
     _Example("video", "flowmpeg mute input.mp4 -o silent.mp4"),
@@ -485,6 +486,7 @@ def build_parser() -> argparse.ArgumentParser:
     _add_transcode_hevc(commands)
     _add_transcode_av1(commands)
     _add_trim(commands)
+    _add_loop_video(commands)
     _add_resize(commands)
     _add_remove_audio(commands)
     _add_extract_audio(commands)
@@ -792,6 +794,23 @@ def _add_trim(commands: argparse._SubParsersAction[argparse.ArgumentParser]) -> 
     timing = parser.add_mutually_exclusive_group()
     timing.add_argument("--end", type=_positive_float)
     timing.add_argument("--duration", type=_positive_float)
+    _audio_toggle(parser)
+    _output(parser)
+
+
+def _add_loop_video(
+    commands: argparse._SubParsersAction[argparse.ArgumentParser],
+) -> None:
+    parser = _command(
+        commands,
+        "loop-video",
+        "Repeat a media input until an exact duration.",
+        shortcuts.loop_video,
+        ("source",),
+        aliases=("loop", "repeat-video"),
+    )
+    _source(parser)
+    parser.add_argument("--duration", type=_positive_float, required=True)
     _audio_toggle(parser)
     _output(parser)
 

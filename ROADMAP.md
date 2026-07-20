@@ -140,6 +140,7 @@ only a discussion or test placeholder.
 - [x] Add bounded audio synchronization delays.
 - [x] Add normalized end-to-end audio joins.
 - [x] Add AV1 and Opus WebM delivery output.
+- [x] Add exact-duration media looping with silent input fallback.
 
 ## Current limits
 
