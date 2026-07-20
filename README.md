@@ -28,8 +28,9 @@ flowmpeg setup
 ```
 
 `flowmpeg setup` checks the tools without changing the machine. If either tool
-is missing, it prints an exact package manager command. Installation is opt-in
-with `flowmpeg setup --install` and requires confirmation. The
+is missing, it prints an exact package manager command when a supported manager
+is available. Installation is opt-in with `flowmpeg setup --install` and
+requires confirmation. The
 [installation guide](docs/installation.md) explains Windows, macOS, Linux, CI,
 custom executable paths, and every setup status.
 
@@ -221,8 +222,9 @@ fanout before starting FFmpeg.
 ## Project status
 
 Flowmpeg is pre-alpha. The graph, compiler, and runner contracts are tested,
-but the public API may change before the first stable release. Current work is
-tracked in [CHANGELOG.md](CHANGELOG.md).
+but the public API may change before the first stable release. Open work and
+verified limits are tracked in [ROADMAP.md](ROADMAP.md). Shipped changes are
+recorded in [CHANGELOG.md](CHANGELOG.md).
 
 ## Development
 

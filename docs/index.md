@@ -49,9 +49,10 @@ check local support   -> flowmpeg doctor
 ```
 
 All editing commands protect existing outputs by default. Add `--dry-run` to
-inspect a redacted FFmpeg command, or `--explain` to see its inputs, filters,
-and mapped outputs. Python shortcut calls return a `Plan`, so building one does
-not start FFmpeg.
+inspect a redacted FFmpeg command without running it. `--explain` prints the
+inputs, filters, and mapped outputs before the job runs, so combine it with
+`--dry-run` for inspection only. Python shortcut calls return a `Plan`, so
+building one does not start FFmpeg.
 
 ## Browse by media domain
 

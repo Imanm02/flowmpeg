@@ -75,11 +75,11 @@ flowmpeg resize input.mp4 --width 1280 -o smaller.mp4 --overwrite
 | Mix music under video | `add-music` | `music` |
 | Join matching clips | `join-matching` | `join` |
 | Mix audio files | `mix-audio` | `mix`, `mix-audio-files` |
-| Arrange video cells | `grid` | `grid` |
+| Arrange video cells | `grid` | - |
 | Save one frame | `thumbnail` | `thumb` |
 | Create an animated GIF | `make-gif` | `gif` |
-| Rotate displayed video | `rotate` | `rotate` |
-| Crop a rectangle | `crop` | `crop` |
+| Rotate displayed video | `rotate` | - |
+| Crop a rectangle | `crop` | - |
 | Change playback speed | `change-speed` | `speed` |
 | Normalize loudness | `normalize-loudness` | `normalize` |
 | Fit a fixed canvas | `fit-canvas` | `fit` |
@@ -96,10 +96,10 @@ flowmpeg resize input.mp4 --width 1280 -o smaller.mp4 --overwrite
 | Fill a custom frame | `reframe` | `fill-frame` |
 | Prepare a social frame | `social-video` | `social` |
 | Set a constant frame rate | `set-frame-rate` | `fps` |
-| Deinterlace video | `deinterlace` | `deinterlace` |
+| Deinterlace video | `deinterlace` | - |
 | Mirror video | `flip-video` | `flip`, `mirror` |
 | Adjust color levels | `adjust-colors` | `color` |
-| Sharpen video | `sharpen` | `sharpen` |
+| Sharpen video | `sharpen` | - |
 | Hold the last frame | `freeze-end` | `freeze` |
 | Mute one time range | `mute-section` | `silence-section` |
 | Blur a fixed rectangle | `blur-region` | `privacy-blur` |
