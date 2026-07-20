@@ -15,9 +15,9 @@ source change.
 | One-line terminal examples | 61 | CLI example catalog |
 | Stable error identifiers | 16 | CLI error guide |
 | Doctor feature groups | 12 | Doctor requirements |
-| Test function definitions | 283 | `tests/test_*.py` |
+| Test function definitions | 284 | `tests/test_*.py` |
 | FFmpeg integration tests | 24 | Pytest markers |
-| Documentation pages | 13 | `docs/*.md` |
+| Documentation pages | 14 | `docs/*.md` |
 | Documented command lines | 273 | Markdown code lines |
 | Completed roadmap items | 71 | `ROADMAP.md` |
 | Open roadmap items | 12 | `ROADMAP.md` |

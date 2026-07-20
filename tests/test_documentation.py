@@ -237,3 +237,15 @@ def test_generated_project_statistics_are_current() -> None:
     )
 
     assert completed.returncode == 0, completed.stderr
+
+
+def test_generated_command_reference_is_current() -> None:
+    completed = subprocess.run(
+        (sys.executable, "scripts/command_reference.py", "--check"),
+        cwd=_ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert completed.returncode == 0, completed.stderr
