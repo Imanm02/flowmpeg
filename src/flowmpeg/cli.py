@@ -160,6 +160,7 @@ _EXAMPLES = tuple(_tag_example(example) for example in _BASE_EXAMPLES)
 
 _DURATION_FACTORIES = (
     shortcuts.trim,
+    shortcuts.boomerang,
     shortcuts.make_gif,
     shortcuts.fade_edges,
     shortcuts.reverse_clip,
