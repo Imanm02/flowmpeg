@@ -1165,6 +1165,16 @@ def test_commands_are_grouped_by_task(capsys: pytest.CaptureFixture[str]) -> Non
     assert "crossfade-audio (crossfade):" in output
 
 
+def test_commands_filter_one_task_category(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    assert cli.main(["commands", "--category", "images"]) == 0
+    output = capsys.readouterr().out
+    assert "IMAGES (" in output
+    assert "make-gif (gif):" in output
+    assert "VIDEO (" not in output
+
+
 def test_no_arguments_prints_help(capsys: pytest.CaptureFixture[str]) -> None:
     assert cli.main([]) == 0
     assert "usage: flowmpeg" in capsys.readouterr().out

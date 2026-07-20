@@ -1699,6 +1699,11 @@ def _add_commands(
         description="List commands by task category.",
         allow_abbrev=False,
     )
+    parser.add_argument(
+        "--category",
+        choices=CATEGORIES,
+        help="Show one task category",
+    )
     parser.set_defaults(handler=_run_commands)
 
 
@@ -1923,8 +1928,9 @@ def _run_examples(args: argparse.Namespace) -> int:
 
 
 def _run_commands(args: argparse.Namespace) -> int:
-    del args
-    for category in CATEGORIES:
+    selected = cast(str | None, args.category)
+    categories = (selected,) if selected is not None else CATEGORIES
+    for category in categories:
         specs = [spec for spec in COMMAND_CATALOG if spec.category == category]
         print(f"{category.upper()} ({len(specs)})")
         for spec in specs:
