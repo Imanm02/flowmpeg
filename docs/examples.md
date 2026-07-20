@@ -34,6 +34,7 @@ flowmpeg probe demo-media/sample.mp4
 flowmpeg cut demo-media/sample.mp4 --duration 1 -o demo-media/clip.mp4
 flowmpeg webm demo-media/sample.mp4 -o demo-media/sample.webm
 flowmpeg waveform demo-media/voice.wav -o demo-media/waveform.png
+flowmpeg audio demo-media/sample.mp4 --codec opus -o demo-media/audio.opus
 flowmpeg captions demo-media/sample.mp4 demo-media/captions.srt -o demo-media/captioned.mp4
 flowmpeg burn-captions demo-media/sample.mp4 demo-media/captions.srt -o demo-media/open-captioned.mp4
 flowmpeg audiogram demo-media/voice.wav demo-media/cover.jpg -o demo-media/audiogram.mp4

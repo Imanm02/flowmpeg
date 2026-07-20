@@ -329,10 +329,11 @@ Set another bitrate when file size matters:
 flowmpeg audio interview.mp4 --bitrate 96k -o voice-small.mp3
 ```
 
-### Extract AAC, WAV, or FLAC
+### Extract AAC, Opus, WAV, or FLAC
 
 ```console
 flowmpeg extract-audio movie.mkv --codec aac -o soundtrack.m4a
+flowmpeg extract-audio interview.mp4 --codec opus --bitrate 96k -o voice.opus
 flowmpeg extract-audio lesson.mp4 --codec wav -o lesson.wav
 flowmpeg extract-audio concert.mkv --codec flac -o concert.flac
 ```
@@ -847,7 +848,7 @@ flowmpeg mono stereo.wav --codec mp3 --bitrate 128k -o mono.mp3
 
 Silence trimming keeps pauses inside the recording. Its required duration must
 cover the source and cannot exceed 600 seconds, which bounds reverse-filter
-memory. Mono accepts MP3, AAC, WAV, or FLAC output.
+memory. Mono accepts MP3, AAC, Opus, WAV, or FLAC output.
 
 ### Crossfade two audio files
 

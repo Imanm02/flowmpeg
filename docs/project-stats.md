@@ -15,11 +15,11 @@ source change.
 | One-line terminal examples | 63 | CLI example catalog |
 | Stable error identifiers | 16 | CLI error guide |
 | Doctor feature groups | 13 | Doctor requirements |
-| Test function definitions | 312 | `tests/test_*.py` |
+| Test function definitions | 313 | `tests/test_*.py` |
 | FFmpeg integration tests | 26 | Pytest markers |
 | Documentation pages | 15 | `docs/*.md` |
-| Documented command lines | 321 | Markdown code lines |
-| Completed roadmap items | 88 | `ROADMAP.md` |
+| Documented command lines | 323 | Markdown code lines |
+| Completed roadmap items | 89 | `ROADMAP.md` |
 | Open roadmap items | 0 | `ROADMAP.md` |
 
 ## Category matrix

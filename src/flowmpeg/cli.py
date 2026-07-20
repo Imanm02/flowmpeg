@@ -180,6 +180,8 @@ _DURATION_FACTORIES = (
 
 _EXAMPLE_CATEGORIES = tuple(dict.fromkeys(example.category for example in _EXAMPLES))
 
+_AUDIO_CODEC_CHOICES = ("mp3", "aac", "opus", "wav", "flac")
+
 _FEATURE_REQUIREMENTS = {
     "web-video": (
         "encoder:aac",
@@ -195,10 +197,12 @@ _FEATURE_REQUIREMENTS = {
         "encoder:aac",
         "encoder:flac",
         "encoder:libmp3lame",
+        "encoder:libopus",
         "encoder:pcm_s16le",
         "muxer:flac",
         "muxer:ipod",
         "muxer:mp3",
+        "muxer:opus",
         "muxer:wav",
     ),
     "composition": (
@@ -731,7 +735,7 @@ def _add_extract_audio(
     parser.add_argument("--track", type=_nonnegative_int, default=0)
     parser.add_argument(
         "--codec",
-        choices=("mp3", "aac", "wav", "flac", "copy"),
+        choices=(*_AUDIO_CODEC_CHOICES, "copy"),
         default="mp3",
     )
     parser.add_argument("--bitrate")
@@ -854,7 +858,7 @@ def _add_mix_audio(
     _normalize_toggle(parser)
     parser.add_argument(
         "--codec",
-        choices=("mp3", "aac", "wav", "flac"),
+        choices=_AUDIO_CODEC_CHOICES,
         default="wav",
     )
     parser.add_argument("--bitrate")
@@ -1004,7 +1008,7 @@ def _add_normalize(
     parser.add_argument("--sample-rate", type=_positive_int, default=48_000)
     parser.add_argument(
         "--codec",
-        choices=("mp3", "aac", "wav", "flac"),
+        choices=_AUDIO_CODEC_CHOICES,
         default="wav",
     )
     parser.add_argument("--bitrate")
@@ -1490,7 +1494,7 @@ def _audio_file_options(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--track", type=_nonnegative_int, default=0)
     parser.add_argument(
         "--codec",
-        choices=("mp3", "aac", "wav", "flac"),
+        choices=_AUDIO_CODEC_CHOICES,
         default="wav",
     )
     parser.add_argument("--bitrate")
@@ -1621,7 +1625,7 @@ def _add_crossfade_audio(
     parser.add_argument("--curve", choices=("tri", "qsin", "exp"), default="tri")
     parser.add_argument(
         "--codec",
-        choices=("mp3", "aac", "wav", "flac"),
+        choices=_AUDIO_CODEC_CHOICES,
         default="wav",
     )
     parser.add_argument("--bitrate")

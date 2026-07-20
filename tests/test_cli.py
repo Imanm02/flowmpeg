@@ -129,6 +129,30 @@ def test_every_media_command_builds_a_dry_run(
     assert captured.err == ""
 
 
+def test_audio_commands_accept_opus_output(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    assert (
+        cli.main(
+            [
+                "extract-audio",
+                "in.mp4",
+                "--codec",
+                "opus",
+                "--bitrate",
+                "96k",
+                "-o",
+                "out.opus",
+                "--dry-run",
+            ]
+        )
+        == 0
+    )
+    output = capsys.readouterr().out
+    assert "-c:a libopus" in output
+    assert "-b:a 96k" in output
+
+
 @pytest.mark.parametrize(
     "arguments",
     [
@@ -782,6 +806,7 @@ def test_doctor_checks_filters_and_ass_subtitles(
         "yadif",
         "ass",
         "matroska",
+        "opus",
         "srt",
         "webm",
     ):

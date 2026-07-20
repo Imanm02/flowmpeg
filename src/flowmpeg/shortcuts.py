@@ -54,7 +54,7 @@ DeinterlaceMode = Literal["bwdif", "yadif"]
 SocialTarget = Literal["vertical", "portrait", "square", "landscape"]
 SocialFill = Literal["blur", "crop", "fit"]
 CrossfadeCurve = Literal["tri", "qsin", "exp"]
-AudioCodec = Literal["mp3", "aac", "wav", "flac", "copy"]
+AudioCodec = Literal["mp3", "aac", "opus", "wav", "flac", "copy"]
 AudioReplacementCodec = Literal["aac", "copy"]
 ReplacementDuration = Literal["video", "shortest"]
 NamedPosition = Literal[
@@ -87,6 +87,7 @@ SpectrumColor = Literal[
 _audio_suffixes: dict[AudioCodec, frozenset[str]] = {
     "mp3": frozenset({".mp3"}),
     "aac": frozenset({".aac", ".m4a"}),
+    "opus": frozenset({".opus"}),
     "wav": frozenset({".wav"}),
     "flac": frozenset({".flac"}),
     "copy": frozenset(),
@@ -2142,6 +2143,10 @@ def _audio_args(
         value = "192k" if bitrate is None else bitrate
         _validate_bitrate(value)
         return ("-c:a", "aac", "-b:a", value)
+    if codec == "opus":
+        value = "128k" if bitrate is None else bitrate
+        _validate_bitrate(value)
+        return ("-c:a", "libopus", "-b:a", value)
     if codec == "wav":
         _reject_bitrate(codec, bitrate)
         return ("-c:a", "pcm_s16le")

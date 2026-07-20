@@ -91,6 +91,7 @@ only a discussion or test placeholder.
 - [x] Accept shortcut aliases in exact doctor command checks.
 - [x] Add a one-line command that burns external subtitles into video frames.
 - [x] Add VP9 and Opus WebM delivery shortcuts with explicit quality controls.
+- [x] Support Opus output across extraction and filtered audio shortcuts.
 - [x] Split doctor requirements by the exact encoders and muxers each command
   needs.
 - [x] Infer progress duration for start and end trims.

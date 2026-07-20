@@ -239,6 +239,7 @@ def test_remove_audio_copies_only_video() -> None:
     [
         ("audio.mp3", "mp3", ("-c:a", "libmp3lame", "-b:a", "192k")),
         ("audio.m4a", "aac", ("-c:a", "aac", "-b:a", "192k")),
+        ("audio.opus", "opus", ("-c:a", "libopus", "-b:a", "128k")),
         ("audio.wav", "wav", ("-c:a", "pcm_s16le")),
         ("audio.flac", "flac", ("-c:a", "flac")),
         ("audio.mka", "copy", ("-c:a", "copy")),
@@ -1574,11 +1575,16 @@ def test_new_audio_shortcuts_run(
     denoised = source.parent / "denoised.wav"
     podcast = source.parent / "podcast.wav"
     mono = source.parent / "mono.wav"
+    mono_opus = source.parent / "mono.opus"
     crossfaded = source.parent / "crossfaded.wav"
 
     shortcuts.denoise_audio(voice, denoised).run(ffmpeg=ffmpeg, timeout=10)
     shortcuts.podcast_voice(voice, podcast).run(ffmpeg=ffmpeg, timeout=10)
     shortcuts.mono_audio(voice, mono).run(ffmpeg=ffmpeg, timeout=10)
+    shortcuts.mono_audio(voice, mono_opus, codec="opus", bitrate="64k").run(
+        ffmpeg=ffmpeg,
+        timeout=10,
+    )
     shortcuts.crossfade_audio(
         voice,
         voice,
@@ -1589,6 +1595,7 @@ def test_new_audio_shortcuts_run(
     assert probe(denoised).audio_streams
     assert probe(podcast).audio_streams
     assert probe(mono).audio_streams[0].channels == 1
+    assert probe(mono_opus).audio_streams[0].codec_name == "opus"
     assert probe(crossfaded).duration == pytest.approx(0.35, abs=0.1)
 
 

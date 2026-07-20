@@ -244,6 +244,17 @@ ff.extract_audio("interview.mp4", "small.mp3", bitrate="96k").run()
 ff.extract_audio("movie.mkv", "soundtrack.m4a", codec="aac").run()
 ```
 
+### Extract Opus audio
+
+```python
+ff.extract_audio(
+    "interview.mp4",
+    "voice.opus",
+    codec="opus",
+    bitrate="96k",
+).run()
+```
+
 ### Extract uncompressed WAV audio
 
 ```python
@@ -1363,7 +1374,7 @@ ff.trim("input.mp4", "clip.mp4", start=5, duration=20).run(
 | `trim` | Accurate time range | Filters paired timestamps, then encodes |
 | `resize` | New width or height | Encodes video and keeps optional audio |
 | `remove_audio` | Video-only file | Copies video and drops other streams |
-| `extract_audio` | MP3, AAC, WAV, FLAC, or copy | Maps one audio track |
+| `extract_audio` | MP3, AAC, Opus, WAV, FLAC, or copy | Maps one audio track |
 | `replace_audio` | MP4 with another track | Copies video and replaces original audio |
 | `watermark` | Branded MP4 | Encodes overlay video and keeps optional audio |
 | `add_music` | MP4 with mixed or new music | Encodes audio and video |
