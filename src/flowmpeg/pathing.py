@@ -42,7 +42,10 @@ def same_destination(first: str, second: str) -> bool:
 
 
 def _path_id(path: Path) -> str:
-    return os.path.normcase(os.path.realpath(os.path.abspath(path)))
+    value = os.fspath(path)
+    if os.name == "nt":
+        value = _strip_windows_extended_prefix(value)
+    return os.path.normcase(os.path.realpath(os.path.abspath(value)))
 
 
 def _is_null_path(path: Path) -> bool:
@@ -61,3 +64,11 @@ def _is_null_destination(value: str) -> bool:
     else:
         return False
     return _is_null_path(path)
+
+
+def _strip_windows_extended_prefix(value: str) -> str:
+    if value.startswith("\\\\?\\UNC\\"):
+        return "\\\\" + value[8:]
+    if value.startswith("\\\\?\\"):
+        return value[4:]
+    return value
