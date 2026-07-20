@@ -86,6 +86,7 @@ def test_shortcuts_namespace_is_public() -> None:
         "tag_media",
         "thumbnail",
         "transcode",
+        "transcode_av1",
         "transcode_hevc",
         "trim",
         "trim_audio_file",
@@ -174,6 +175,22 @@ def test_hevc_transcode_sets_x265_and_hvc1() -> None:
     assert ("-crf", "26") in pairs
     assert ("-preset", "slow") in pairs
     assert ("-c:a", "aac") in pairs
+
+
+def test_av1_transcode_sets_svt_and_opus() -> None:
+    plan = shortcuts.transcode_av1(
+        "source.mov",
+        "delivery.webm",
+        crf=32,
+        speed=10,
+        audio_bitrate="96k",
+    )
+    pairs = tuple(zip(plan.raw_argv(), plan.raw_argv()[1:], strict=False))
+
+    assert ("-c:v", "libsvtav1") in pairs
+    assert ("-crf", "32") in pairs
+    assert ("-preset", "10") in pairs
+    assert ("-c:a", "libopus") in pairs
 
 
 @pytest.mark.parametrize(
@@ -1160,6 +1177,9 @@ def test_shortcuts_accept_path_objects_and_overwrite() -> None:
             "out.mp4",
             encoder_preset=cast(shortcuts.EncoderPreset, "quick"),
         ),
+        lambda: shortcuts.transcode_av1("in.mov", "out.mp4"),
+        lambda: shortcuts.transcode_av1("in.mov", "out.webm", crf=64),
+        lambda: shortcuts.transcode_av1("in.mov", "out.webm", speed=14),
         lambda: shortcuts.join_normalized(("one.mp4",), "out.mp4"),
         lambda: shortcuts.join_normalized(
             ("one.mp4", "two.mp4"), "out.mp4", width=1279
@@ -1801,6 +1821,34 @@ def test_hevc_transcode_runs(
 
     info = probe(target)
     assert info.video_streams[0].codec_name == "hevc"
+    assert not info.audio_streams
+
+
+@pytest.mark.integration
+def test_av1_transcode_runs(
+    shortcut_media: tuple[str, Path, Path, Path],
+) -> None:
+    ffmpeg, source, _, _ = shortcut_media
+    encoders = subprocess.run(
+        (ffmpeg, "-hide_banner", "-encoders"),
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout
+    if "libsvtav1" not in encoders:
+        pytest.skip("The FFmpeg build does not include libsvtav1")
+    target = source.parent / "delivery-av1.webm"
+
+    shortcuts.transcode_av1(
+        source,
+        target,
+        crf=45,
+        speed=13,
+        include_audio=False,
+    ).run(ffmpeg=ffmpeg, timeout=30)
+
+    info = probe(target)
+    assert info.video_streams[0].codec_name == "av1"
     assert not info.audio_streams
 
 

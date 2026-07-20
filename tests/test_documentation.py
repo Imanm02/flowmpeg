@@ -294,7 +294,7 @@ def test_shortcut_reference_names_every_factory() -> None:
         if inspect.isfunction(getattr(shortcuts, name))
     }
 
-    assert len(factories) == 64
+    assert len(factories) == 65
     for name in factories:
         assert f"`{name}`" in text
 

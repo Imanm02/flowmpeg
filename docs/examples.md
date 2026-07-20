@@ -36,6 +36,7 @@ flowmpeg loudness demo-media/voice.wav
 flowmpeg cut demo-media/sample.mp4 --duration 1 -o demo-media/clip.mp4
 flowmpeg webm demo-media/sample.mp4 -o demo-media/sample.webm
 flowmpeg hevc demo-media/sample.mp4 -o demo-media/sample-hevc.mp4
+flowmpeg av1 demo-media/sample.mp4 --speed 10 -o demo-media/sample-av1.webm
 flowmpeg waveform demo-media/voice.wav -o demo-media/waveform.png
 flowmpeg audio demo-media/sample.mp4 --codec opus -o demo-media/audio.opus
 flowmpeg resample demo-media/voice.wav --sample-rate 48000 --layout mono -o demo-media/voice-standard.wav
@@ -97,6 +98,7 @@ Paths can also be `pathlib.Path` objects.
 | A smaller video | `interview.mp4` | `small.mp4` |
 | An open-codec web video | `interview.mp4` | `delivery.webm` |
 | A compact HEVC delivery file | `camera-master.mov` | `camera-hevc.mp4` |
+| An AV1 delivery file | `camera-master.mov` | `camera-av1.webm` |
 | A silent video | `interview.mp4` | `silent.mp4` |
 | An MP3 from a video | `interview.mp4` | `voice.mp3` |
 | Standard-rate mono audio | `field.wav` | `field-standard.wav` |

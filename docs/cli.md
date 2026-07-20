@@ -93,6 +93,7 @@ The table below is a compact editing index for scanning this longer guide.
 | Convert to web MP4 | `transcode` | `convert` |
 | Convert to VP9 WebM | `transcode-webm` | `webm`, `vp9` |
 | Convert to HEVC MP4 | `transcode-hevc` | `hevc`, `h265` |
+| Convert to AV1 WebM | `transcode-av1` | `av1`, `svt-av1` |
 | Cut a time range | `trim` | `cut` |
 | Resize by one side | `resize` | `scale` |
 | Remove the audio stream | `remove-audio` | `mute`, `strip-audio` |
@@ -209,6 +210,16 @@ flowmpeg hevc camera-master.mov --crf 28 --encoder-preset medium -o camera-hevc.
 HEVC CRF accepts 0 through 51. Lower values retain more detail. The output uses
 the `hvc1` video tag for recognition in Apple players. Use `--no-audio` for a
 video-only source.
+
+### Convert to AV1 and Opus WebM
+
+```console
+flowmpeg av1 camera-master.mov --crf 35 --speed 8 -o camera-av1.webm
+```
+
+AV1 CRF accepts 0 through 63. Lower values retain more detail. Speed accepts 0
+through 13, where larger values encode faster. Run
+`flowmpeg doctor --command av1` to check for the SVT-AV1 encoder.
 
 Commands that change audio timing inspect their sources when they run. `cut`,
 `join`, `speed`, `fade`, `freeze`, `reverse`, and `bounce` select a video-only
@@ -1196,6 +1207,7 @@ parts of the command set are supported by the installed FFmpeg build:
 - `web-video`
 - `webm-video`
 - `hevc-video`
+- `av1-video`
 - `audio-files`
 - `composition`
 - `video-effects`

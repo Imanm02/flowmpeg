@@ -6,13 +6,14 @@ This file is generated from `COMMAND_CATALOG`. Run
 Tags describe use cases. Capability groups provide broad doctor checks.
 Exact needs are checked by `flowmpeg doctor --command NAME`.
 
-## Video (18)
+## Video (19)
 
 | Command | Aliases | Input | Output | Tags | Doctor group | Exact needs |
 |---|---|---|---|---|---|---|
 | `transcode` | `convert` | media | media | `creator`, `delivery`, `silent-input` | `web-video` | `encoder:aac`, `encoder:libx264`, `muxer:mp4` |
 | `transcode-webm` | `webm`, `vp9` | media | media | `creator`, `delivery`, `silent-input` | `webm-video` | `encoder:libopus`, `encoder:libvpx-vp9`, `muxer:webm` |
 | `transcode-hevc` | `hevc`, `h265` | media | media | `creator`, `archive`, `delivery`, `silent-input` | `hevc-video` | `encoder:aac`, `encoder:libx265`, `muxer:mp4` |
+| `transcode-av1` | `av1`, `svt-av1` | media | media | `creator`, `archive`, `delivery`, `silent-input` | `av1-video` | `encoder:libopus`, `encoder:libsvtav1`, `muxer:webm` |
 | `trim` | `cut` | media | media | `creator`, `delivery`, `silent-input` | `web-video` | `encoder:aac`, `encoder:libx264`, `filter:asetpts`, `filter:atrim`, `filter:setpts`, `filter:trim`, `muxer:mp4` |
 | `resize` | `scale` | media | media | `creator`, `delivery`, `silent-input` | `web-video` | `encoder:aac`, `encoder:libx264`, `filter:scale`, `muxer:mp4` |
 | `remove-audio` | `mute`, `strip-audio` | media | video | `creator`, `copy`, `privacy`, `silent-input` | none | `muxer:mp4` |

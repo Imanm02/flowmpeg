@@ -76,6 +76,7 @@ _BASE_EXAMPLES = (
     _Example("video", "flowmpeg convert recording.mov -o recording.mp4"),
     _Example("video", "flowmpeg webm recording.mov -o recording.webm"),
     _Example("video", "flowmpeg hevc recording.mov -o recording-hevc.mp4"),
+    _Example("video", "flowmpeg av1 recording.mov -o recording-av1.webm"),
     _Example("video", "flowmpeg convert animation.mov --no-audio -o animation.mp4"),
     _Example("video", "flowmpeg cut input.mp4 --start 5 --duration 12 -o clip.mp4"),
     _Example("video", "flowmpeg resize input.mp4 --width 1280 -o smaller.mp4"),
@@ -226,6 +227,11 @@ _FEATURE_REQUIREMENTS = {
         "encoder:aac",
         "encoder:libx265",
         "muxer:mp4",
+    ),
+    "av1-video": (
+        "encoder:libopus",
+        "encoder:libsvtav1",
+        "muxer:webm",
     ),
     "audio-files": (
         "encoder:aac",
@@ -477,6 +483,7 @@ def build_parser() -> argparse.ArgumentParser:
     _add_transcode(commands)
     _add_transcode_webm(commands)
     _add_transcode_hevc(commands)
+    _add_transcode_av1(commands)
     _add_trim(commands)
     _add_resize(commands)
     _add_remove_audio(commands)
@@ -748,6 +755,25 @@ def _add_transcode_hevc(
         default="medium",
     )
     parser.add_argument("--audio-bitrate", default="160k")
+    _audio_toggle(parser)
+    _output(parser)
+
+
+def _add_transcode_av1(
+    commands: argparse._SubParsersAction[argparse.ArgumentParser],
+) -> None:
+    parser = _command(
+        commands,
+        "transcode-av1",
+        "Encode AV1 video and Opus audio in WebM.",
+        shortcuts.transcode_av1,
+        ("source",),
+        aliases=("av1", "svt-av1"),
+    )
+    _source(parser)
+    parser.add_argument("--crf", type=_nonnegative_int, default=35)
+    parser.add_argument("--speed", type=_nonnegative_int, default=8)
+    parser.add_argument("--audio-bitrate", default="128k")
     _audio_toggle(parser)
     _output(parser)
 

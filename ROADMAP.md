@@ -139,6 +139,7 @@ only a discussion or test placeholder.
 - [x] Add matched audio edge fades with duration checks.
 - [x] Add bounded audio synchronization delays.
 - [x] Add normalized end-to-end audio joins.
+- [x] Add AV1 and Opus WebM delivery output.
 
 ## Current limits
 

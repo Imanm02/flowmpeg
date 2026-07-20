@@ -99,6 +99,21 @@ ff.transcode_hevc(
 The `hvc1` video tag improves recognition in Apple players. Run
 `flowmpeg doctor --command hevc` before a batch to check for `libx265`.
 
+### Encode AV1 and Opus WebM
+
+```python
+ff.transcode_av1(
+    "camera-master.mov",
+    "camera-av1.webm",
+    crf=35,
+    speed=8,
+).run()
+```
+
+The shortcut uses SVT-AV1 and optional Opus audio. Speed 0 does more encoding
+work; speed 13 is the fastest setting. Use `include_audio=False` for a silent
+source.
+
 ### Keep an exact time range
 
 **Input:** `interview.mp4`
@@ -1520,6 +1535,7 @@ ff.trim("input.mp4", "clip.mp4", start=5, duration=20).run(
 | `transcode` | Web MP4 | Encodes selected video and optional audio |
 | `transcode_webm` | VP9 and Opus WebM | Encodes selected video and optional audio |
 | `transcode_hevc` | HEVC and AAC MP4 | Encodes selected video and optional audio |
+| `transcode_av1` | AV1 and Opus WebM | Encodes selected video and optional audio |
 | `trim` | Accurate time range | Filters paired timestamps, then encodes |
 | `resize` | New width or height | Encodes video and keeps optional audio |
 | `remove_audio` | Video-only file | Copies video and drops other streams |

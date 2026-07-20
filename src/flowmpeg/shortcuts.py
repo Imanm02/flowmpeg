@@ -172,6 +172,7 @@ __all__ = [
     "trim_audio_file",
     "trim_silence",
     "transcode",
+    "transcode_av1",
     "transcode_hevc",
     "transcode_webm",
     "trim",
@@ -284,6 +285,48 @@ def transcode_hevc(
     )
     if clip.audio is not None:
         args += ("-c:a", "aac", "-b:a", audio_bitrate)
+    plan = output(
+        _require_video(clip),
+        *(stream for stream in (clip.audio,) if stream is not None),
+        to=to,
+        args=args,
+    )
+    return _set_overwrite(plan, overwrite)
+
+
+def transcode_av1(
+    source: Pathish,
+    to: Pathish,
+    *,
+    crf: int = 35,
+    speed: int = 8,
+    audio_bitrate: str = "128k",
+    include_audio: bool = True,
+    overwrite: bool = False,
+) -> Plan:
+    """Encode AV1 video and optional Opus audio in WebM."""
+
+    if isinstance(crf, bool) or not isinstance(crf, int) or not 0 <= crf <= 63:
+        raise GraphError("AV1 CRF must be an integer between 0 and 63")
+    if isinstance(speed, bool) or not isinstance(speed, int) or not 0 <= speed <= 13:
+        raise GraphError("AV1 speed must be an integer between 0 and 13")
+    clip = _media_with_optional_audio(source, include_audio)
+    if clip.audio is not None:
+        _validate_bitrate(audio_bitrate)
+    _require_suffix(to, frozenset({".webm"}), "AV1 WebM output")
+    _validate_paths((source,), to)
+    args: tuple[str, ...] = (
+        "-c:v",
+        "libsvtav1",
+        "-crf",
+        str(crf),
+        "-preset",
+        str(speed),
+        "-pix_fmt",
+        "yuv420p",
+    )
+    if clip.audio is not None:
+        args += ("-c:a", "libopus", "-b:a", audio_bitrate)
     plan = output(
         _require_video(clip),
         *(stream for stream in (clip.audio,) if stream is not None),

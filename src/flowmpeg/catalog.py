@@ -43,6 +43,13 @@ _BASE_COMMAND_CATALOG = (
         capability_group="hevc-video",
     ),
     CommandSpec(
+        "transcode-av1",
+        "video",
+        "Encode AV1 and Opus WebM",
+        ("av1", "svt-av1"),
+        capability_group="av1-video",
+    ),
+    CommandSpec(
         "trim",
         "video",
         "Cut an exact time range",
@@ -627,6 +634,7 @@ _COMMAND_TAGS = {
     "transcode": ("delivery", "silent-input"),
     "transcode-webm": ("delivery", "silent-input"),
     "transcode-hevc": ("archive", "delivery", "silent-input"),
+    "transcode-av1": ("archive", "delivery", "silent-input"),
     "trim": ("delivery", "silent-input"),
     "resize": ("delivery", "silent-input"),
     "remove-audio": ("copy", "privacy", "silent-input"),
@@ -693,6 +701,11 @@ _COMMAND_REQUIREMENTS = {
         "encoder:aac",
         "encoder:libx265",
         "muxer:mp4",
+    ),
+    "transcode-av1": (
+        "encoder:libopus",
+        "encoder:libsvtav1",
+        "muxer:webm",
     ),
     "trim": _requirements(
         *_MP4,
