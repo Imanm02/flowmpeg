@@ -131,6 +131,7 @@ __all__ = [
     "denoise_audio",
     "extract_audio",
     "extract_subtitles",
+    "fade_audio_edges",
     "fade_edges",
     "fit_canvas",
     "flip_video",
@@ -1886,6 +1887,39 @@ def set_audio_volume(
     _nonnegative_integer("track", track)
     _bounded_number("gain_db", gain_db, -60, 30)
     audio = _audio_track(source, track).filter("volume", f"{gain_db:g}dB")
+    return _audio_plan(audio, to, (source,), codec, bitrate, overwrite)
+
+
+def fade_audio_edges(
+    source: Pathish,
+    to: Pathish,
+    *,
+    duration: float,
+    fade_in: float = 1,
+    fade_out: float = 1,
+    track: int = 0,
+    codec: AudioCodec = "wav",
+    bitrate: str | None = None,
+    overwrite: bool = False,
+) -> Plan:
+    """Apply optional fades at both edges of one audio track."""
+
+    _positive_number("duration", duration)
+    _nonnegative_number("fade_in", fade_in)
+    _nonnegative_number("fade_out", fade_out)
+    _nonnegative_integer("track", track)
+    if fade_in + fade_out > duration:
+        raise GraphError("Combined audio fades cannot exceed the source duration")
+    audio = _audio_track(source, track)
+    if fade_in > 0:
+        audio = fade_audio(audio, fade_type="in", duration=fade_in)
+    if fade_out > 0:
+        audio = fade_audio(
+            audio,
+            fade_type="out",
+            start=duration - fade_out,
+            duration=fade_out,
+        )
     return _audio_plan(audio, to, (source,), codec, bitrate, overwrite)
 
 

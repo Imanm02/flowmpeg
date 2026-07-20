@@ -47,6 +47,7 @@ def test_shortcuts_namespace_is_public() -> None:
         "duck_music",
         "extract_audio",
         "extract_subtitles",
+        "fade_audio_edges",
         "fade_edges",
         "fit_canvas",
         "flip_video",
@@ -873,6 +874,20 @@ def test_set_audio_volume_uses_decibel_gain() -> None:
     assert plan.filter_graph() == "[0:a:0]volume=6.5dB[a0]"
 
 
+def test_fade_audio_edges_places_the_out_fade() -> None:
+    plan = shortcuts.fade_audio_edges(
+        "music.wav",
+        "faded.wav",
+        duration=120,
+        fade_in=2,
+        fade_out=4,
+    )
+
+    assert plan.filter_graph() == (
+        "[0:a:0]afade=t=in:st=0:d=2[a0];[a0]afade=t=out:st=116:d=4[a1]"
+    )
+
+
 def test_crossfade_audio_maps_two_inputs() -> None:
     plan = shortcuts.crossfade_audio(
         "first.wav",
@@ -1303,6 +1318,13 @@ def test_shortcuts_accept_path_objects_and_overwrite() -> None:
             "in.wav",
             "out.wav",
             gain_db=31,
+        ),
+        lambda: shortcuts.fade_audio_edges(
+            "in.wav",
+            "out.wav",
+            duration=3,
+            fade_in=2,
+            fade_out=2,
         ),
     ],
 )
@@ -1832,6 +1854,7 @@ def test_new_audio_shortcuts_run(
     resampled = source.parent / "resampled.wav"
     trimmed = source.parent / "trimmed-audio.wav"
     louder = source.parent / "louder.wav"
+    faded_audio = source.parent / "faded-audio.wav"
     crossfaded = source.parent / "crossfaded.wav"
 
     shortcuts.denoise_audio(voice, denoised).run(ffmpeg=ffmpeg, timeout=10)
@@ -1857,6 +1880,13 @@ def test_new_audio_shortcuts_run(
         ffmpeg=ffmpeg,
         timeout=10,
     )
+    shortcuts.fade_audio_edges(
+        voice,
+        faded_audio,
+        duration=0.35,
+        fade_in=0.05,
+        fade_out=0.05,
+    ).run(ffmpeg=ffmpeg, timeout=10)
     shortcuts.crossfade_audio(
         voice,
         voice,
@@ -1873,6 +1903,7 @@ def test_new_audio_shortcuts_run(
     assert resampled_stream.channels == 2
     assert probe(trimmed).duration == pytest.approx(0.1, abs=0.03)
     assert probe(louder).audio_streams
+    assert probe(faded_audio).audio_streams
     assert probe(crossfaded).duration == pytest.approx(0.35, abs=0.1)
 
 

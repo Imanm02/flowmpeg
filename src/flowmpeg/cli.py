@@ -117,6 +117,10 @@ _BASE_EXAMPLES = (
     ),
     _Example("audio", "flowmpeg gain quiet.wav --gain-db 6 -o louder.wav"),
     _Example(
+        "audio",
+        "flowmpeg audio-fade music.wav --duration 120 --fade-in 2 --fade-out 4 -o faded.wav",
+    ),
+    _Example(
         "audio", "flowmpeg crossfade intro.wav main.wav --duration 2 -o program.wav"
     ),
     _Example("audio", "flowmpeg music talk.mp4 music.mp3 -o scored.mp4"),
@@ -518,6 +522,7 @@ def build_parser() -> argparse.ArgumentParser:
     _add_mono_audio(commands)
     _add_resample_audio(commands)
     _add_volume_audio(commands)
+    _add_fade_audio(commands)
     _add_crossfade_audio(commands)
     _add_extract_subtitles(commands)
     _add_add_subtitles(commands)
@@ -1753,6 +1758,25 @@ def _add_volume_audio(
     )
     _source(parser)
     parser.add_argument("--gain-db", type=_finite_float, required=True)
+    _audio_file_options(parser)
+    _output(parser)
+
+
+def _add_fade_audio(
+    commands: argparse._SubParsersAction[argparse.ArgumentParser],
+) -> None:
+    parser = _command(
+        commands,
+        "fade-audio",
+        "Apply fades at both edges of one audio track.",
+        shortcuts.fade_audio_edges,
+        ("source",),
+        aliases=("audio-fade",),
+    )
+    _source(parser)
+    parser.add_argument("--duration", type=_positive_float, required=True)
+    parser.add_argument("--fade-in", type=_nonnegative_float, default=1.0)
+    parser.add_argument("--fade-out", type=_nonnegative_float, default=1.0)
     _audio_file_options(parser)
     _output(parser)
 

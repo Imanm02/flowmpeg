@@ -140,6 +140,7 @@ The table below is a compact editing index for scanning this longer guide.
 | Downmix to mono | `mono-audio` | `mono` |
 | Set audio rate and layout | `resample-audio` | `resample`, `audio-standard` |
 | Apply fixed audio gain | `volume-audio` | `gain`, `volume` |
+| Fade audio edges | `fade-audio` | `audio-fade` |
 | Crossfade two audio files | `crossfade-audio` | `crossfade` |
 | Extract a subtitle track | `extract-subtitles` | `subtitles` |
 | Add selectable subtitles | `add-subtitles` | `captions` |
@@ -884,6 +885,7 @@ flowmpeg cut-audio interview.wav --start 30 --duration 12 -o answer.wav
 flowmpeg mono stereo.wav --codec mp3 --bitrate 128k -o mono.mp3
 flowmpeg resample field.wav --sample-rate 48000 --layout stereo -o standard.wav
 flowmpeg gain quiet.wav --gain-db 6 -o louder.wav
+flowmpeg audio-fade music.wav --duration 120 --fade-in 2 --fade-out 4 -o faded.wav
 ```
 
 Silence trimming keeps pauses inside the recording. Its required duration must
@@ -895,6 +897,8 @@ stereo. This is useful before joins, mixes, speech tools, and upload checks.
 zero. It can select another audio-only track with `--track`.
 `gain` accepts values from -60 through 30 dB. Positive values raise the level;
 negative values lower it. Check for clipping with `flowmpeg loudness`.
+`audio-fade` needs the source duration so it can place the ending fade. Set
+either fade length to zero to disable that edge.
 
 ### Crossfade two audio files
 

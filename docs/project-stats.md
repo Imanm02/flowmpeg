@@ -9,18 +9,18 @@ source change.
 
 | Measure | Count | Source |
 |---|---:|---|
-| Canonical terminal commands | 71 | `COMMAND_CATALOG` |
-| Command aliases | 74 | `COMMAND_CATALOG` |
-| Python shortcut functions | 61 | `shortcuts.__all__` |
-| One-line terminal examples | 72 | CLI example catalog |
+| Canonical terminal commands | 72 | `COMMAND_CATALOG` |
+| Command aliases | 75 | `COMMAND_CATALOG` |
+| Python shortcut functions | 62 | `shortcuts.__all__` |
+| One-line terminal examples | 73 | CLI example catalog |
 | Stable error identifiers | 16 | CLI error guide |
 | Stable audit findings | 12 | Media audit |
 | Doctor feature groups | 14 | Doctor requirements |
-| Test function definitions | 335 | `tests/test_*.py` |
+| Test function definitions | 336 | `tests/test_*.py` |
 | FFmpeg integration tests | 30 | Pytest markers |
 | Documentation pages | 15 | `docs/*.md` |
-| Documented command lines | 346 | Markdown code lines |
-| Completed roadmap items | 98 | `ROADMAP.md` |
+| Documented command lines | 348 | Markdown code lines |
+| Completed roadmap items | 99 | `ROADMAP.md` |
 | Open roadmap items | 0 | `ROADMAP.md` |
 
 ## Category matrix
@@ -31,7 +31,7 @@ counts distinct canonical commands with at least one built-in example.
 | Category | Commands | Aliases | Examples | Coverage | Python | Bar |
 |---|---:|---:|---:|---:|---:|---|
 | video | 18 | 20 | 19 | 18/18 (100%) | 18 | `##################` |
-| audio | 16 | 20 | 16 | 16/16 (100%) | 14 | `################` |
+| audio | 17 | 21 | 17 | 17/17 (100%) | 14 | `#################` |
 | composition | 9 | 9 | 9 | 9/9 (100%) | 9 | `#########` |
 | effects | 5 | 4 | 5 | 5/5 (100%) | 5 | `#####` |
 | images | 6 | 7 | 6 | 6/6 (100%) | 6 | `######` |
@@ -53,7 +53,7 @@ The bar uses one `#` per canonical command carrying the tag.
 | delivery | 19 | 20 | `###################` |
 | discover | 4 | 4 | `####` |
 | inspect | 6 | 6 | `######` |
-| podcast | 16 | 16 | `################` |
+| podcast | 17 | 17 | `#################` |
 | privacy | 4 | 4 | `####` |
 | silent-input | 31 | 32 | `###############################` |
 

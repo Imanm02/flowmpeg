@@ -136,6 +136,7 @@ only a discussion or test placeholder.
 - [x] Add typed EBU R128 loudness measurement reports.
 - [x] Add direct audio-track trimming with end or duration.
 - [x] Add bounded decibel gain for selected audio tracks.
+- [x] Add matched audio edge fades with duration checks.
 
 ## Current limits
 

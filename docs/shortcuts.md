@@ -1228,6 +1228,21 @@ Gain accepts -60 through 30 dB. A positive value raises the level and a
 negative value lowers it. Use `measure_loudness` or the `loudness` command to
 check the result.
 
+### Fade both audio edges
+
+```python
+ff.fade_audio_edges(
+    "music.wav",
+    "music-faded.wav",
+    duration=120,
+    fade_in=2,
+    fade_out=4,
+).run()
+```
+
+The required duration places the ending fade. Set either fade length to zero
+to disable that edge. The combined fades cannot exceed the source duration.
+
 ### Crossfade two tracks
 
 ```python
@@ -1525,6 +1540,7 @@ ff.trim("input.mp4", "clip.mp4", start=5, duration=20).run(
 | `mono_audio` | Mono audio file | Downmixes one selected track |
 | `resample_audio` | Standardized audio file | Sets sample rate and mono or stereo layout |
 | `set_audio_volume` | Gain-adjusted audio file | Applies a fixed decibel change |
+| `fade_audio_edges` | Faded audio file | Places optional fades at both edges |
 | `crossfade_audio` | Joined audio file | Transitions between two inputs |
 | `extract_subtitles` | SRT, WebVTT, or ASS | Maps and encodes one text subtitle track |
 | `add_subtitles` | MP4 with selectable text | Adds one `mov_text` subtitle stream |
