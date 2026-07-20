@@ -32,6 +32,7 @@ flowmpeg examples --search subtitle
 | Process a folder from a shell | [Batch jobs](batch-jobs.md) | CMD, PowerShell, Bash, failure choices |
 | Understand a failure | [Error guide](errors.md) | Exit codes, `FMG` identifiers, recovery steps |
 | Extend the graph layer | [Design notes](design.md) | Nodes, streams, compilation, runner boundary |
+| Practice custom graphs safely | [Graph lab](graph-lab.md) | Compiled layouts without starting FFmpeg |
 | Check current and planned work | [Roadmap](../ROADMAP.md) | Verified bugs, release gates, current limits |
 | See source-backed project counts | [Project statistics](project-stats.md) | Commands, examples, tests, task distribution |
 | Compare stream and encoding behavior | [Visual guide](visual-guide.md) | Matrices and data-flow diagrams |
