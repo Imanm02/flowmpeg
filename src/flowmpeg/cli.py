@@ -69,6 +69,7 @@ _EXAMPLES = (
     _Example("video", "flowmpeg convert animation.mov --no-audio -o animation.mp4"),
     _Example("video", "flowmpeg cut input.mp4 --start 5 --duration 12 -o clip.mp4"),
     _Example("video", "flowmpeg resize input.mp4 --width 1280 -o smaller.mp4"),
+    _Example("video", "flowmpeg rotate sideways.mp4 --degrees 90 -o upright.mp4"),
     _Example("video", "flowmpeg mute input.mp4 -o silent.mp4"),
     _Example(
         "video", "flowmpeg reframe screen.mp4 --width 720 --height 1280 -o short.mp4"
@@ -104,6 +105,10 @@ _EXAMPLES = (
     _Example("composition", "flowmpeg join part-1.mp4 part-2.mp4 -o joined.mp4"),
     _Example("composition", "flowmpeg grid cam-1.mp4 cam-2.mp4 -o grid.mp4"),
     _Example("composition", "flowmpeg fit portrait.mp4 -o portrait-wide.mp4"),
+    _Example(
+        "composition",
+        "flowmpeg blurred-background portrait.mp4 -o portrait-wide.mp4",
+    ),
     _Example(
         "composition", "flowmpeg still-video cover.jpg episode.mp3 -o episode.mp4"
     ),

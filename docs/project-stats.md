@@ -12,10 +12,10 @@ source change.
 | Canonical terminal commands | 59 | `COMMAND_CATALOG` |
 | Command aliases | 53 | `COMMAND_CATALOG` |
 | Python shortcut functions | 52 | `shortcuts.__all__` |
-| One-line terminal examples | 54 | CLI example catalog |
+| One-line terminal examples | 56 | CLI example catalog |
 | Stable error identifiers | 16 | CLI error guide |
 | Doctor feature groups | 12 | Doctor requirements |
-| Test functions | 272 | `tests/test_*.py` |
+| Test functions | 273 | `tests/test_*.py` |
 | FFmpeg integration tests | 24 | Pytest markers |
 | Documentation pages | 12 | `docs/*.md` |
 | Documented command lines | 268 | Markdown code lines |
