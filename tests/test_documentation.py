@@ -6,6 +6,9 @@ from pathlib import Path
 
 import pytest
 
+from flowmpeg import shortcuts
+from flowmpeg.plan import Plan
+
 _ROOT = Path(__file__).parents[1]
 _MARKDOWN_FILES = (_ROOT / "README.md", *sorted((_ROOT / "docs").glob("*.md")))
 _PYTHON_BLOCK = re.compile(r"^```python\s*\n(.*?)^```", re.MULTILINE | re.DOTALL)
@@ -49,3 +52,17 @@ def test_local_markdown_links_resolve(path: Path) -> None:
         if not target or "://" in target:
             continue
         assert (path.parent / target).exists(), target
+
+
+def test_shortcut_guide_examples_build(monkeypatch: pytest.MonkeyPatch) -> None:
+    def skip_run(self: Plan, **kwargs: object) -> None:
+        return None
+
+    monkeypatch.setattr(Plan, "run", skip_run)
+    path = _ROOT / "docs" / "shortcuts.md"
+    text = path.read_text(encoding="utf-8")
+    namespace: dict[str, object] = {"ff": shortcuts}
+    for match in _PYTHON_BLOCK.finditer(text):
+        line = text.count("\n", 0, match.start()) + 1
+        code = compile(match.group(1), f"{path.name}:{line}", "exec")
+        exec(code, namespace)

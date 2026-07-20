@@ -14,6 +14,21 @@ before I choose to run it.
 Nothing starts while a plan is being built. I can inspect the command, read a
 plain explanation, validate the graph, or pass the plan to the process runner.
 
+## One-line jobs
+
+```python
+from flowmpeg import shortcuts as ff
+
+ff.trim("input.mp4", "clip.mp4", start=10, end=30).run()
+ff.resize("input.mp4", "small.mp4", width=1280).run()
+ff.extract_audio("input.mp4", "audio.mp3").run()
+ff.watermark("input.mp4", "logo.png", "branded.mp4").run()
+```
+
+Shortcuts still return normal plans. They support command inspection,
+overwrite protection, progress callbacks, and timeouts. The
+[one-line guide](docs/shortcuts.md) contains more than 50 copyable calls.
+
 ## One plan from several inputs
 
 ```python
@@ -76,6 +91,8 @@ outputs for common jobs:
 - Copy subtitles and call raw FFmpeg filters
 - Produce multiple outputs, inspect metadata, and report progress
 
+For shorter file-to-file calls, see the [shortcut guide](docs/shortcuts.md).
+
 ## What works today
 
 - Immutable audio, video, and subtitle stream references
@@ -112,11 +129,12 @@ command for display.
 
 ## How a plan is built
 
-Flowmpeg has three public levels:
+Flowmpeg has four public levels:
 
-1. `Clip` methods and recipe functions describe media intent.
-2. Typed streams form an immutable directed graph.
-3. The compiler produces an argv tuple for one FFmpeg process.
+1. File shortcuts build plans for common jobs.
+2. `Clip` methods and recipe functions describe media intent.
+3. Typed streams form an immutable directed graph.
+4. The compiler produces an argv tuple for one FFmpeg process.
 
 Compilation does not read input files, create temporary files, or start a
 process. Probing and execution are separate operations. More detail is in the

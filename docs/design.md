@@ -6,6 +6,8 @@ boundary keeps most behavior testable without an FFmpeg process.
 ## Layers
 
 ```text
+Path-to-path shortcuts
+        |
 Clip methods and recipes
         |
 Typed stream graph
@@ -24,6 +26,9 @@ node identity, while labels are assigned later from topological order.
 The recipe layer does not own a second graph format. Audio mixing, overlays,
 and clip operations all expand into the same filter nodes exposed by the
 low-level API.
+
+Shortcuts are a thin path-level layer. They return ordinary `Plan` objects and
+do not probe inputs, start processes, or introduce another graph format.
 
 ## Compiler rules
 

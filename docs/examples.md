@@ -7,6 +7,9 @@ job, what file comes out, and which FFmpeg operation does the work.
 Building a plan does not start FFmpeg. A file is written only after
 `plan.run()` is called.
 
+For compact path-to-path calls, the [one-line shortcut guide](shortcuts.md)
+contains more than 50 variants.
+
 ```text
 input files -> media graph -> plan -> FFmpeg process -> output files
 ```
