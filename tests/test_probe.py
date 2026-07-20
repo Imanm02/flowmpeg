@@ -2,6 +2,7 @@ import shutil
 import subprocess
 from math import inf, nan
 from pathlib import Path
+from typing import cast
 
 import pytest
 
@@ -131,10 +132,13 @@ def test_unusable_probe_binary_has_specific_error(
         probe_raw("sample.mp4", ffprobe="blocked-ffprobe")
 
 
-@pytest.mark.parametrize("timeout", [0.0, -1.0, inf, nan, True])
-def test_probe_rejects_invalid_timeouts(timeout: float) -> None:
+@pytest.mark.parametrize(
+    "timeout",
+    [0.0, -1.0, inf, nan, True, "1", 10**1_000],
+)
+def test_probe_rejects_invalid_timeouts(timeout: object) -> None:
     with pytest.raises(ValueError, match="positive and finite"):
-        probe_raw("sample.mp4", timeout=timeout)
+        probe_raw("sample.mp4", timeout=cast(float, timeout))
 
 
 @pytest.mark.integration

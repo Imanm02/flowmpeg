@@ -147,9 +147,7 @@ def probe_raw(
         raise BinaryNotFoundError(
             "The FFprobe executable cannot be empty", tool="ffprobe"
         )
-    if timeout is not None and (
-        isinstance(timeout, bool) or not math.isfinite(timeout) or timeout <= 0
-    ):
+    if timeout is not None and not _positive_finite_number(timeout):
         raise ValueError("Probe timeout must be positive and finite")
 
     argv = (
@@ -302,6 +300,15 @@ def _mapping(value: object) -> Mapping[str, object] | None:
     if not all(isinstance(key, str) for key in value):
         return None
     return cast(Mapping[str, object], value)
+
+
+def _positive_finite_number(value: object) -> bool:
+    if isinstance(value, bool) or not isinstance(value, int | float):
+        return False
+    try:
+        return math.isfinite(value) and value > 0
+    except OverflowError:
+        return False
 
 
 def _string(value: object) -> str | None:
