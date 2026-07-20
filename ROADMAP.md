@@ -101,7 +101,7 @@ only a discussion or test placeholder.
 - [ ] Add creator, podcast, privacy, archive, copy, inspect, and silent-input
   tags to commands and examples.
 - [ ] Generate the CLI command map from the command catalog.
-- [ ] Add effects and metadata to the documentation task index.
+- [x] Add effects and metadata to the documentation task index.
 - [ ] Add a before-and-after media comparison command with JSON output.
 - [ ] Expand demo media with a second clip, silent video, logo, music, and image
   sequence inputs.

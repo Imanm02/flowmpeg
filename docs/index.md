@@ -64,8 +64,10 @@ building one does not start FFmpeg.
 | Timeline edits | `cut`, `speed`, `freeze`, `bounce` | `trim`, `change_speed`, `freeze_end` |
 | Audio | `audio`, `mix`, `voice`, `crossfade` | `extract_audio`, `mix_audio_files`, `podcast_voice` |
 | Composition | `pip`, `grid`, `mark`, `audiogram` | `picture_in_picture`, `grid`, `watermark` |
+| Effects and privacy | `fade`, `color`, `sharpen`, `privacy-blur`, `reverse` | `fade_edges`, `adjust_colors`, `blur_region` |
 | Images | `thumb`, `gif`, `sheet`, `waveform` | `thumbnail`, `make_gif`, `contact_sheet` |
 | Subtitles | `subtitles`, `captions`, `strip-subtitles` | subtitle shortcut functions |
+| Metadata | `clean-metadata`, `tag` | `strip_metadata`, `tag_audio` |
 | Inspection | `probe`, `doctor`, `errors` | `probe`, typed errors, plan inspection |
 
 The command catalog is also available as JSON for shell completion, editor
