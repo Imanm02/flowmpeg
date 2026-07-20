@@ -701,6 +701,26 @@ def test_failed_capability_listing_is_unknown(
     assert set(features.values()) == {None}
 
 
+def test_doctor_required_group_controls_exit_code(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    monkeypatch.setattr(
+        cli,
+        "_tool_report",
+        lambda *args: {"ok": True, "status": "ready", "path": "tool"},
+    )
+    monkeypatch.setattr(cli, "_capability_report", lambda *args: {})
+    monkeypatch.setattr(
+        cli,
+        "_feature_report",
+        lambda capabilities: {"web-video": False},
+    )
+
+    assert cli.main(["doctor", "--require", "web-video"]) == 3
+    assert "Required group: web-video (not ready)" in capsys.readouterr().out
+
+
 def test_setup_ready_is_read_only(
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],

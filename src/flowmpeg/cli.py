@@ -1671,6 +1671,11 @@ def _add_doctor(commands: argparse._SubParsersAction[argparse.ArgumentParser]) -
     parser.add_argument("--ffmpeg", default="ffmpeg", help="FFmpeg executable")
     parser.add_argument("--ffprobe", default="ffprobe", help="FFprobe executable")
     parser.add_argument("--timeout", type=_positive_float, default=10.0)
+    parser.add_argument(
+        "--require",
+        choices=tuple(_FEATURE_REQUIREMENTS),
+        help="Fail unless one feature group is ready",
+    )
     parser.add_argument("--json", action="store_true")
     parser.set_defaults(handler=_run_doctor)
 
@@ -1836,6 +1841,11 @@ def _run_doctor(args: argparse.Namespace) -> int:
         capabilities = _capability_report(ffmpeg_path, timeout)
     features = _feature_report(capabilities)
     okay = bool(ffmpeg.get("ok")) and bool(ffprobe.get("ok"))
+    required_group = cast(str | None, args.require)
+    required_state = (
+        features.get(required_group) if required_group is not None else None
+    )
+    required_ready = required_group is None or required_state is True
     report: dict[str, object] = {
         "ok": okay,
         "flowmpeg_version": __version__,
@@ -1844,12 +1854,14 @@ def _run_doctor(args: argparse.Namespace) -> int:
         "ffprobe": ffprobe,
         "capabilities": capabilities,
         "features": features,
+        "required_group": required_group,
+        "required_ready": required_ready,
     }
     if cast(bool, args.json):
         print(json.dumps(report, indent=2, sort_keys=True))
     else:
         print(_format_doctor(report))
-    return 0 if okay else 3
+    return 0 if okay and required_ready else 3
 
 
 def _run_setup(args: argparse.Namespace) -> int:
@@ -2428,6 +2440,10 @@ def _format_doctor(report: dict[str, object]) -> str:
             if present is None:
                 state = "unknown"
             lines.append(f"  {name}: {state}")
+    required_group = report.get("required_group")
+    if isinstance(required_group, str):
+        state = "ready" if report.get("required_ready") is True else "not ready"
+        lines.append(f"Required group: {required_group} ({state})")
     lines.append(f"Core ready: {'yes' if report['ok'] else 'no'}")
     return "\n".join(lines)
 

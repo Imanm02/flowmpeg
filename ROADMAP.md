@@ -56,7 +56,7 @@ only a discussion or test placeholder.
 - [x] Add `flowmpeg commands` with category filtering.
 - [x] Add machine-readable command catalog output.
 - [x] Add category and search filters to `flowmpeg examples`.
-- [ ] Add `doctor --require GROUP` for scripts that depend on one feature
+- [x] Add `doctor --require GROUP` for scripts that depend on one feature
   group.
 - [ ] Add an optional doctor smoke test that encodes and probes a tiny generated
   input.
