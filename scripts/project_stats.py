@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import ast
+import inspect
 import sys
 from collections import Counter
 from pathlib import Path
@@ -65,6 +66,9 @@ def render() -> str:
     docs, documented_commands = _documentation_counts()
     completed, open_items = _roadmap_counts()
     aliases = sum(len(spec.aliases) for spec in COMMAND_CATALOG)
+    shortcut_functions = sum(
+        inspect.isfunction(getattr(shortcuts, name)) for name in shortcuts.__all__
+    )
     category_counts = Counter(spec.category for spec in COMMAND_CATALOG)
     lines = [
         "# Flowmpeg project statistics",
@@ -80,7 +84,7 @@ def render() -> str:
         "|---|---:|---|",
         f"| Canonical terminal commands | {len(COMMAND_CATALOG)} | `COMMAND_CATALOG` |",
         f"| Short command aliases | {aliases} | `COMMAND_CATALOG` |",
-        f"| Python shortcut functions | {len(shortcuts.__all__)} | `shortcuts.__all__` |",
+        f"| Python shortcut functions | {shortcut_functions} | `shortcuts.__all__` |",
         f"| One-line terminal examples | {len(_EXAMPLES)} | CLI example catalog |",
         f"| Stable error identifiers | {len(_ERROR_GUIDE)} | CLI error guide |",
         f"| Doctor feature groups | {len(_FEATURE_REQUIREMENTS)} | Doctor requirements |",
