@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import os
-import re
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import TypeVar, cast
@@ -19,9 +18,8 @@ from flowmpeg.model import (
     StreamKind,
     StreamRef,
     new_node_key,
+    validate_filter_name,
 )
-
-_filter_name = re.compile(r"^[A-Za-z0-9_]+(?:@[A-Za-z0-9_.-]+)?$")
 
 
 @dataclass(frozen=True, slots=True)
@@ -152,8 +150,7 @@ def apply_filter(
         raise GraphError("A filter requires at least one stream")
     if any(stream.ref.optional for stream in streams):
         raise GraphError("Optional input streams cannot feed filters")
-    if not _filter_name.fullmatch(name):
-        raise GraphError(f"Invalid filter name: {name!r}")
+    validate_filter_name(name)
 
     kinds = tuple(output_kinds)
     if not kinds:

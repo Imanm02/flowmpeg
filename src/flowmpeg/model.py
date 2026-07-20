@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from collections import deque
 from collections.abc import Iterable
 from dataclasses import dataclass
@@ -26,6 +27,7 @@ class Expression:
 FilterValue: TypeAlias = str | int | float | bool | Expression
 
 _node_ids = count()
+_filter_name = re.compile(r"^[A-Za-z0-9_]+(?:@[A-Za-z0-9_.-]+)?$")
 
 
 class StreamKind(str, Enum):
@@ -122,8 +124,7 @@ class FilterNode:
     def __post_init__(self) -> None:
         if not isinstance(self.key, NodeKey):
             raise GraphError("Filters require a node key")
-        if not isinstance(self.name, str) or not self.name:
-            raise GraphError("Filter names cannot be empty")
+        validate_filter_name(self.name)
         if not self.inputs:
             raise GraphError("Filters require at least one input")
         if not all(isinstance(value, StreamRef) for value in self.inputs):
@@ -247,6 +248,13 @@ class MediaGraph:
 
 def _is_filter_value(value: object) -> bool:
     return isinstance(value, (str, int, float, bool, Expression))
+
+
+def validate_filter_name(value: object) -> None:
+    """Reject names that can alter FFmpeg filter graph structure."""
+
+    if not isinstance(value, str) or not _filter_name.fullmatch(value):
+        raise GraphError(f"Invalid filter name: {value!r}")
 
 
 def expr(value: str) -> Expression:

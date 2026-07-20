@@ -109,6 +109,19 @@ def test_invalid_filter_name_is_rejected() -> None:
         input("movie.mp4").video().filter("scale;movie=bad")
 
 
+def test_hand_built_filter_name_cannot_change_graph_structure() -> None:
+    source = InputNode(NodeKey(40), "movie.mp4")
+    stream = StreamRef(source.key, 0, StreamKind.VIDEO)
+
+    with pytest.raises(GraphError, match="Invalid filter name"):
+        FilterNode(
+            NodeKey(41),
+            "null;movie=other.mp4",
+            (stream,),
+            (StreamKind.VIDEO,),
+        )
+
+
 def test_unordered_filter_options_are_rejected() -> None:
     video = input("movie.mp4").video()
 
