@@ -24,6 +24,14 @@ from flowmpeg.probe import (
     probe_raw,
 )
 from flowmpeg.progress import Progress
+from flowmpeg.recipes.audio import (
+    delay_audio,
+    duck_audio,
+    fade_audio,
+    mix_audio,
+    trim_audio,
+    volume,
+)
 from flowmpeg.runner import RunResult, run
 from flowmpeg.streams import (
     AudioStream,
@@ -65,10 +73,16 @@ __all__ = [
     "VideoStreamInfo",
     "__version__",
     "apply_filter",
+    "delay_audio",
+    "duck_audio",
     "expr",
+    "fade_audio",
     "input",
+    "mix_audio",
     "output",
     "probe",
     "probe_raw",
     "run",
+    "trim_audio",
+    "volume",
 ]
