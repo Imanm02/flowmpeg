@@ -19,7 +19,7 @@ source change.
 | FFmpeg integration tests | 26 | Pytest markers |
 | Documentation pages | 15 | `docs/*.md` |
 | Documented command lines | 314 | Markdown code lines |
-| Completed roadmap items | 84 | `ROADMAP.md` |
+| Completed roadmap items | 85 | `ROADMAP.md` |
 | Open roadmap items | 0 | `ROADMAP.md` |
 
 ## Category matrix

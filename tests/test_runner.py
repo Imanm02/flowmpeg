@@ -23,7 +23,11 @@ from flowmpeg import (
     input,
     output,
 )
-from flowmpeg.processes import _signal_process_tree, stop_process_tree
+from flowmpeg.processes import (
+    _WINDOWS_CREATE_NEW_PROCESS_GROUP,
+    _signal_process_tree,
+    stop_process_tree,
+)
 from flowmpeg.runner import (
     _put_latest,
     _read_stderr,
@@ -292,7 +296,7 @@ def test_runner_configures_a_separate_process_group(
     plan.run()
 
     if os.name == "nt":
-        assert captured["creationflags"] == subprocess.CREATE_NEW_PROCESS_GROUP
+        assert captured["creationflags"] == _WINDOWS_CREATE_NEW_PROCESS_GROUP
     else:
         assert captured["start_new_session"] is True
 

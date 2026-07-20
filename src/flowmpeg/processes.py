@@ -8,13 +8,16 @@ import subprocess
 from typing import Any
 
 _WINDOWS = os.name == "nt"
+_WINDOWS_CREATE_NEW_PROCESS_GROUP = int(
+    getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0)
+)
 
 
 def popen_group_options() -> dict[str, Any]:
     """Return Popen options that isolate a new process tree."""
 
     if _WINDOWS:
-        return {"creationflags": subprocess.CREATE_NEW_PROCESS_GROUP}
+        return {"creationflags": _WINDOWS_CREATE_NEW_PROCESS_GROUP}
     return {"start_new_session": True}
 
 
