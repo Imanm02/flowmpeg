@@ -76,7 +76,9 @@ def test_local_markdown_links_resolve(path: Path) -> None:
 
 def _markdown_anchors(path: Path) -> set[str]:
     text = path.read_text(encoding="utf-8")
-    return {_github_anchor(match.group(1)) for match in _MARKDOWN_HEADING.finditer(text)}
+    return {
+        _github_anchor(match.group(1)) for match in _MARKDOWN_HEADING.finditer(text)
+    }
 
 
 def _github_anchor(heading: str) -> str:

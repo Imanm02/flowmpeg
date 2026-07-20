@@ -100,11 +100,7 @@ def test_probe_failure_redacts_before_bounding(
         args=("ffprobe",),
         returncode=1,
         stdout="",
-        stderr=(
-            "https://media.example/video?token="
-            + "x" * 9_000
-            + "hidden-value\n"
-        ),
+        stderr=("https://media.example/video?token=" + "x" * 9_000 + "hidden-value\n"),
     )
     monkeypatch.setattr(subprocess, "run", lambda *args, **kwargs: completed)
 

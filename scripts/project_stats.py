@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import ast
 import inspect
+import shlex
 import sys
 from collections import Counter
 from pathlib import Path
@@ -13,7 +14,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
 from flowmpeg import shortcuts  # noqa: E402
-from flowmpeg.catalog import CATEGORIES, COMMAND_CATALOG  # noqa: E402
+from flowmpeg.catalog import CATEGORIES, COMMAND_CATALOG, command_spec  # noqa: E402
 from flowmpeg.cli import _ERROR_GUIDE, _EXAMPLES, _FEATURE_REQUIREMENTS  # noqa: E402
 
 TARGET = ROOT / "docs" / "project-stats.md"
@@ -66,10 +67,29 @@ def render() -> str:
     docs, documented_commands = _documentation_counts()
     completed, open_items = _roadmap_counts()
     aliases = sum(len(spec.aliases) for spec in COMMAND_CATALOG)
+    shortcut_names = set(shortcuts.__all__)
     shortcut_functions = sum(
         inspect.isfunction(getattr(shortcuts, name)) for name in shortcuts.__all__
     )
     category_counts = Counter(spec.category for spec in COMMAND_CATALOG)
+    alias_counts = Counter(
+        spec.category for spec in COMMAND_CATALOG for _ in spec.aliases
+    )
+    example_counts = Counter(example.category for example in _EXAMPLES)
+    covered_commands: dict[str, set[str]] = {category: set() for category in CATEGORIES}
+    for example in _EXAMPLES:
+        values = shlex.split(example.command)
+        spec = command_spec(values[1])
+        if spec is not None:
+            covered_commands[spec.category].add(spec.name)
+    shortcut_counts = Counter(
+        spec.category
+        for spec in COMMAND_CATALOG
+        if any(
+            name.replace("-", "_") in shortcut_names
+            for name in (spec.name, *spec.aliases)
+        )
+    )
     lines = [
         "# Flowmpeg project statistics",
         "",
@@ -88,29 +108,38 @@ def render() -> str:
         f"| One-line terminal examples | {len(_EXAMPLES)} | CLI example catalog |",
         f"| Stable error identifiers | {len(_ERROR_GUIDE)} | CLI error guide |",
         f"| Doctor feature groups | {len(_FEATURE_REQUIREMENTS)} | Doctor requirements |",
-        f"| Test functions | {tests} | `tests/test_*.py` |",
+        f"| Test function definitions | {tests} | `tests/test_*.py` |",
         f"| FFmpeg integration tests | {integration} | Pytest markers |",
         f"| Documentation pages | {docs} | `docs/*.md` |",
         f"| Documented command lines | {documented_commands} | Markdown code lines |",
         f"| Completed roadmap items | {completed} | `ROADMAP.md` |",
         f"| Open roadmap items | {open_items} | `ROADMAP.md` |",
         "",
-        "## Commands by task",
+        "## Category matrix",
         "",
-        "The bar is one `#` per canonical command.",
+        "The command bar uses one `#` per canonical command. Example coverage",
+        "counts distinct canonical commands with at least one built-in example.",
         "",
-        "| Category | Commands | Bar |",
-        "|---|---:|---|",
+        "| Category | Commands | Aliases | Examples | Coverage | Python | Bar |",
+        "|---|---:|---:|---:|---:|---:|---|",
     ]
     for category in CATEGORIES:
         count = category_counts[category]
-        lines.append(f"| {category} | {count} | `{'#' * count}` |")
+        covered = len(covered_commands[category])
+        percent = round(covered / count * 100) if count else 0
+        lines.append(
+            f"| {category} | {count} | {alias_counts[category]} | "
+            f"{example_counts[category]} | {covered}/{count} ({percent}%) | "
+            f"{shortcut_counts[category]} | `{'#' * count}` |"
+        )
     lines.extend(
         (
             "",
             "## What the counts mean",
             "",
             "Aliases are alternate terminal spellings, not separate operations.",
+            "Python counts catalog commands with a shortcut that has the same",
+            "canonical or alias spelling after hyphens become underscores.",
             "A test function may contain several assertions or parameter cases.",
             "Documented command lines count lines beginning with `flowmpeg` after",
             "leading spaces are removed. The report does not claim a count of all",

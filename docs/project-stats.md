@@ -15,32 +15,35 @@ source change.
 | One-line terminal examples | 60 | CLI example catalog |
 | Stable error identifiers | 16 | CLI error guide |
 | Doctor feature groups | 12 | Doctor requirements |
-| Test functions | 273 | `tests/test_*.py` |
+| Test function definitions | 273 | `tests/test_*.py` |
 | FFmpeg integration tests | 24 | Pytest markers |
 | Documentation pages | 12 | `docs/*.md` |
 | Documented command lines | 268 | Markdown code lines |
 | Completed roadmap items | 63 | `ROADMAP.md` |
 | Open roadmap items | 20 | `ROADMAP.md` |
 
-## Commands by task
+## Category matrix
 
-The bar is one `#` per canonical command.
+The command bar uses one `#` per canonical command. Example coverage
+counts distinct canonical commands with at least one built-in example.
 
-| Category | Commands | Bar |
-|---|---:|---|
-| video | 16 | `################` |
-| audio | 13 | `#############` |
-| composition | 8 | `########` |
-| effects | 5 | `#####` |
-| images | 6 | `######` |
-| subtitles | 3 | `###` |
-| metadata | 1 | `#` |
-| inspect | 3 | `###` |
-| help | 4 | `####` |
+| Category | Commands | Aliases | Examples | Coverage | Python | Bar |
+|---|---:|---:|---:|---:|---:|---|
+| video | 16 | 16 | 17 | 16/16 (100%) | 16 | `################` |
+| audio | 13 | 14 | 13 | 13/13 (100%) | 13 | `#############` |
+| composition | 8 | 7 | 8 | 8/8 (100%) | 8 | `########` |
+| effects | 5 | 4 | 5 | 5/5 (100%) | 5 | `#####` |
+| images | 6 | 7 | 6 | 6/6 (100%) | 6 | `######` |
+| subtitles | 3 | 3 | 3 | 3/3 (100%) | 3 | `###` |
+| metadata | 1 | 1 | 1 | 1/1 (100%) | 1 | `#` |
+| inspect | 3 | 1 | 3 | 3/3 (100%) | 0 | `###` |
+| help | 4 | 0 | 4 | 4/4 (100%) | 0 | `####` |
 
 ## What the counts mean
 
 Aliases are alternate terminal spellings, not separate operations.
+Python counts catalog commands with a shortcut that has the same
+canonical or alias spelling after hyphens become underscores.
 A test function may contain several assertions or parameter cases.
 Documented command lines count lines beginning with `flowmpeg` after
 leading spaces are removed. The report does not claim a count of all

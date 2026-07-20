@@ -1275,9 +1275,7 @@ def test_example_catalog_parses_every_command() -> None:
 
 def test_example_categories_match_the_command_catalog() -> None:
     commands = {
-        name: spec
-        for spec in COMMAND_CATALOG
-        for name in (spec.name, *spec.aliases)
+        name: spec for spec in COMMAND_CATALOG for name in (spec.name, *spec.aliases)
     }
 
     for example in cli._EXAMPLES:
@@ -1287,9 +1285,7 @@ def test_example_categories_match_the_command_catalog() -> None:
 
 def test_examples_cover_every_catalog_command() -> None:
     commands = {
-        name: spec
-        for spec in COMMAND_CATALOG
-        for name in (spec.name, *spec.aliases)
+        name: spec for spec in COMMAND_CATALOG for name in (spec.name, *spec.aliases)
     }
     covered = {
         commands[shlex.split(example.command)[1]].name for example in cli._EXAMPLES
