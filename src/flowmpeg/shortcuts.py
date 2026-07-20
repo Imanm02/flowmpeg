@@ -614,7 +614,7 @@ def extract_audio(
     _nonnegative_integer("track", track)
     _validate_paths((source,), to)
     args = _audio_args(to, codec, bitrate)
-    plan = output(input(source).audio(track), to=to, args=args)
+    plan = output(_audio_track(source, track), to=to, args=args)
     return _set_overwrite(plan, overwrite)
 
 
@@ -640,7 +640,7 @@ def replace_audio(
         raise GraphError("Video-length audio padding requires AAC encoding")
 
     video = input(video_source).video()
-    audio = input(audio_source).audio(track)
+    audio = _audio_track(audio_source, track)
     if duration == "video":
         audio = audio.filter("apad")
 
@@ -780,7 +780,7 @@ def mix_audio_files(
 
     streams: list[AudioStream] = []
     for index, source in enumerate(source_values):
-        stream = input(source).audio()
+        stream = _audio_track(source)
         if volumes is not None:
             _nonnegative_number("volume", volumes[index])
             stream = _volume_if_needed(stream, volumes[index])
@@ -981,7 +981,7 @@ def normalize_loudness(
         raise GraphError("Normalized audio must be encoded")
     _validate_paths((source,), to)
     audio = normalize_audio_stream(
-        input(source).audio(),
+        _audio_track(source),
         integrated=integrated,
         loudness_range=loudness_range,
         true_peak=true_peak,
@@ -1085,7 +1085,7 @@ def waveform_image(
         "filter": "peak",
     }
     (waveform,) = apply_filter(
-        (input(source).audio(track),),
+        (_audio_track(source, track),),
         "showwavespic",
         output_kinds=(StreamKind.VIDEO,),
         options=waveform_options,
@@ -1141,7 +1141,7 @@ def spectrum_image(
         "legend": legend,
     }
     (spectrum,) = apply_filter(
-        (input(source).audio(track),),
+        (_audio_track(source, track),),
         "showspectrumpic",
         output_kinds=(StreamKind.VIDEO,),
         options=spectrum_options,
@@ -1184,7 +1184,7 @@ def still_image_video(
         height=height,
         color=color,
     )
-    audio = input(audio_source).audio(track)
+    audio = _audio_track(audio_source, track)
     return _web_plan(
         Clip(picture, audio),
         to,
@@ -1430,7 +1430,7 @@ def denoise_audio(
     _nonnegative_integer("track", track)
     _bounded_number("reduction", reduction, 0.01, 97)
     _bounded_number("noise_floor", noise_floor, -80, -20)
-    audio = input(source).audio(track).filter(
+    audio = _audio_track(source, track).filter(
         "afftdn",
         nr=reduction,
         nf=noise_floor,
@@ -1460,7 +1460,7 @@ def compress_audio(
     _bounded_number("attack", attack, 0.01, 2_000)
     _bounded_number("release", release, 0.01, 9_000)
     _bounded_number("makeup", makeup, 1, 64)
-    audio = input(source).audio(track).filter(
+    audio = _audio_track(source, track).filter(
         "acompressor",
         threshold=threshold,
         ratio=ratio,
@@ -1495,7 +1495,7 @@ def podcast_voice(
     _require_boolean("denoise", denoise)
     _require_boolean("compress", compress)
     _bounded_number("integrated", integrated, -70, -5)
-    audio = input(source).audio(track).filter("highpass", f=highpass)
+    audio = _audio_track(source, track).filter("highpass", f=highpass)
     audio = audio.filter("lowpass", f=lowpass)
     if denoise:
         audio = audio.filter("afftdn", nr=12, nf=-50)
@@ -1533,7 +1533,7 @@ def trim_silence(
         "start_duration": minimum,
         "start_threshold": f"{threshold_db:g}dB",
     }
-    audio = input(source).audio(track).filter("silenceremove", **options)
+    audio = _audio_track(source, track).filter("silenceremove", **options)
     audio = audio.filter("areverse")
     audio = audio.filter("silenceremove", **options)
     audio = audio.filter("areverse")
@@ -1552,7 +1552,7 @@ def mono_audio(
     """Downmix one selected audio track to mono."""
 
     _nonnegative_integer("track", track)
-    audio = input(source).audio(track).filter("aformat", channel_layouts="mono")
+    audio = _audio_track(source, track).filter("aformat", channel_layouts="mono")
     return _audio_plan(audio, to, (source,), codec, bitrate, overwrite)
 
 
@@ -1573,7 +1573,7 @@ def crossfade_audio(
     if curve not in {"tri", "qsin", "exp"}:
         raise GraphError(f"Unknown crossfade curve: {curve}")
     (audio,) = apply_filter(
-        (input(first).audio(), input(second).audio()),
+        (_audio_track(first), _audio_track(second)),
         "acrossfade",
         output_kinds=(StreamKind.AUDIO,),
         options={"d": duration, "c1": curve, "c2": curve},
@@ -1728,7 +1728,7 @@ def podcast_audiogram(
         height=height,
         color="black",
     )
-    output_audio, visual_audio = input(audio_source).audio(track).split()
+    output_audio, visual_audio = _audio_track(audio_source, track).split()
     wave_options: dict[str, FilterValue] = {
         "s": f"{wave_width}x{wave_height}",
         "mode": "line",
@@ -1820,7 +1820,7 @@ def tag_audio(
         assert value is not None
         _metadata_value(name, value)
         args.extend(("-metadata", f"{name}={value}"))
-    plan = output(input(source).audio(track), to=to, args=args)
+    plan = output(_audio_track(source, track), to=to, args=args)
     return _set_overwrite(plan, overwrite)
 
 
@@ -2046,6 +2046,10 @@ def _require_video(clip: Clip) -> VideoStream:
     if clip.video is None:
         raise GraphError("Shortcut requires a video stream")
     return clip.video
+
+
+def _audio_track(source: Pathish, track: int = 0) -> AudioStream:
+    return input(source).audio(track)
 
 
 def _media_with_optional_audio(source: Pathish, include_audio: bool) -> Clip:

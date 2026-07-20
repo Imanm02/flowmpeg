@@ -647,12 +647,11 @@ def test_compress_video_exposes_size_controls() -> None:
     assert graph == "[0:v:0]scale=w=trunc(min(iw\\,1280)/2)*2:h=-2[v0]"
     argv = plan.raw_argv()
     assert argv[argv.index("-crf") : argv.index("-crf") + 2] == ("-crf", "30")
-    assert argv[
-        argv.index("-preset") : argv.index("-preset") + 2
-    ] == ("-preset", "slow")
-    assert argv[
-        argv.index("-b:a") : argv.index("-b:a") + 2
-    ] == ("-b:a", "96k")
+    assert argv[argv.index("-preset") : argv.index("-preset") + 2] == (
+        "-preset",
+        "slow",
+    )
+    assert argv[argv.index("-b:a") : argv.index("-b:a") + 2] == ("-b:a", "96k")
 
 
 @pytest.mark.parametrize("bitrate", ["", "0k", "128 kbps", "fast", "-1k"])
@@ -747,9 +746,7 @@ def test_audio_cleanup_shortcuts_build_expected_chains() -> None:
     mono = shortcuts.mono_audio("voice.wav", "mono.wav")
 
     assert "afftdn=nr=12:nf=-50" in (denoised.filter_graph() or "")
-    assert "acompressor=threshold=0.125:ratio=3" in (
-        compressed.filter_graph() or ""
-    )
+    assert "acompressor=threshold=0.125:ratio=3" in (compressed.filter_graph() or "")
     podcast_graph = podcast.filter_graph() or ""
     assert "highpass=f=80" in podcast_graph
     assert "lowpass=f=12000" in podcast_graph
@@ -767,9 +764,7 @@ def test_crossfade_audio_maps_two_inputs() -> None:
         curve="qsin",
     )
 
-    assert plan.filter_graph() == (
-        "[0:a:0][1:a:0]acrossfade=d=2:c1=qsin:c2=qsin[a0]"
-    )
+    assert plan.filter_graph() == ("[0:a:0][1:a:0]acrossfade=d=2:c1=qsin:c2=qsin[a0]")
     assert plan.raw_argv().count("-i") == 2
 
 
