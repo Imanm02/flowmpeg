@@ -52,6 +52,7 @@ def test_demo_media_script_generates_example_inputs(tmp_path: Path) -> None:
     square = tmp_path / "square.mp4"
     preview = tmp_path / "preview.gif"
     sheet = tmp_path / "sheet.jpg"
+    blend = tmp_path / "blend.wav"
     assert cli.main(["probe", str(video)]) == 0
     assert (
         cli.main(
@@ -213,6 +214,23 @@ def test_demo_media_script_generates_example_inputs(tmp_path: Path) -> None:
         )
         == 0
     )
+    assert (
+        cli.main(
+            [
+                "crossfade",
+                str(tmp_path / "voice.wav"),
+                str(tmp_path / "music.wav"),
+                "--duration",
+                "0.5",
+                "--codec",
+                "wav",
+                "--no-progress",
+                "-o",
+                str(blend),
+            ]
+        )
+        == 0
+    )
 
     for target in (
         clip,
@@ -225,6 +243,7 @@ def test_demo_media_script_generates_example_inputs(tmp_path: Path) -> None:
         square,
         preview,
         sheet,
+        blend,
     ):
         assert target.stat().st_size > 0
     assert len(probe(captioned).subtitle_streams) == 1
@@ -249,3 +268,7 @@ def test_demo_media_script_generates_example_inputs(tmp_path: Path) -> None:
     assert preview_info.duration == pytest.approx(2.0, abs=0.2)
     sheet_video = probe(sheet).video_streams[0]
     assert (sheet_video.width, sheet_video.height) == (320, 180)
+    blend_info = probe(blend)
+    assert blend_info.duration == pytest.approx(3.5, abs=0.2)
+    assert len(blend_info.audio_streams) == 1
+    assert blend_info.video_streams == ()
