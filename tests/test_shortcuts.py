@@ -605,7 +605,7 @@ def test_compress_video_exposes_size_controls() -> None:
     )
 
     graph = plan.filter_graph()
-    assert graph == "[0:v:0]scale=w=min(iw\\,1280):h=-2[v0]"
+    assert graph == "[0:v:0]scale=w=trunc(min(iw\\,1280)/2)*2:h=-2[v0]"
     argv = plan.raw_argv()
     assert argv[argv.index("-crf") : argv.index("-crf") + 2] == ("-crf", "30")
     assert argv[
@@ -1308,6 +1308,43 @@ def test_new_video_shortcuts_run(
     assert (reframed_video.width, reframed_video.height) == (48, 64)
     assert probe(corrected).video_streams
     assert probe(private).video_streams
+
+
+@pytest.mark.integration
+def test_compress_video_handles_odd_source_dimensions(tmp_path: Path) -> None:
+    ffmpeg = shutil.which("ffmpeg")
+    if ffmpeg is None:
+        pytest.skip("FFmpeg is required")
+    source = tmp_path / "odd.mkv"
+    target = tmp_path / "compressed.mp4"
+    subprocess.run(
+        (
+            ffmpeg,
+            "-hide_banner",
+            "-loglevel",
+            "error",
+            "-y",
+            "-f",
+            "lavfi",
+            "-i",
+            "testsrc=size=63x47:duration=0.2",
+            "-c:v",
+            "ffv1",
+            str(source),
+        ),
+        check=True,
+    )
+
+    shortcuts.compress_video(
+        source,
+        target,
+        max_width=64,
+        include_audio=False,
+    ).run(ffmpeg=ffmpeg, timeout=10)
+
+    video = probe(target).video_streams[0]
+    assert video.width is not None and video.width % 2 == 0
+    assert video.height is not None and video.height % 2 == 0
 
 
 @pytest.mark.integration

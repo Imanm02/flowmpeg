@@ -201,7 +201,7 @@ def compress_video(
         _even_positive_integer("max_width", max_width)
         video = video.filter(
             "scale",
-            w=expr(f"min(iw,{max_width})"),
+            w=expr(f"trunc(min(iw,{max_width})/2)*2"),
             h=-2,
         )
     _require_suffix(to, frozenset({".mp4"}), "Compressed video output")
