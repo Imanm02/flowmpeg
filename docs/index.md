@@ -31,6 +31,7 @@ flowmpeg examples --search subtitle
 | Understand a failure | [Error guide](errors.md) | Exit codes, `FMG` identifiers, recovery steps |
 | Extend the graph layer | [Design notes](design.md) | Nodes, streams, compilation, runner boundary |
 | Check current and planned work | [Roadmap](../ROADMAP.md) | Verified bugs, release gates, current limits |
+| See source-backed project counts | [Project statistics](project-stats.md) | Commands, examples, tests, task distribution |
 
 ## Pick an interface
 

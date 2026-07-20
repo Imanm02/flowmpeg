@@ -63,8 +63,8 @@ only a discussion or test placeholder.
 - [ ] Infer progress duration for start and end trims.
 - [ ] Infer doubled progress duration for boomerang outputs.
 - [x] Add a documentation landing page organized by task.
-- [ ] Add a generated project statistics report from source metadata.
-- [ ] Test that generated statistics remain current.
+- [x] Add a generated project statistics report from source metadata.
+- [x] Test that generated statistics remain current.
 - [ ] Parse documented terminal options, not only command names.
 - [ ] Build safe graph examples without starting FFmpeg.
 - [ ] Add an encode, copy, and filter behavior matrix.

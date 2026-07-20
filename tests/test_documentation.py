@@ -4,6 +4,8 @@ import argparse
 import ast
 import inspect
 import re
+import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -118,3 +120,15 @@ def test_shortcut_reference_names_every_factory() -> None:
     assert len(factories) == 52
     for name in factories:
         assert f"`{name}`" in text
+
+
+def test_generated_project_statistics_are_current() -> None:
+    completed = subprocess.run(
+        (sys.executable, "scripts/project_stats.py", "--check"),
+        cwd=_ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert completed.returncode == 0, completed.stderr
