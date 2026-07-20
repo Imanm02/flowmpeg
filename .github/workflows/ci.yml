@@ -20,17 +20,17 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: python -m pip install --upgrade pip
-      - run: python -m pip install -e ".[dev]"
-      - run: flowmpeg --version
-      - run: python -m flowmpeg --version
-      - run: python -m ruff check .
-      - run: python -m ruff format --check .
-      - run: python -m mypy src tests examples
+      - uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b
+      - run: uv sync --locked --extra dev
+      - run: uv run --frozen flowmpeg --version
+      - run: uv run --frozen python -m flowmpeg --version
+      - run: uv run --frozen python -m ruff check .
+      - run: uv run --frozen python -m ruff format --check .
+      - run: uv run --frozen python -m mypy src tests examples
       - run: >-
-          python -m pytest -m "not integration"
+          uv run --frozen python -m pytest -m "not integration"
           --cov=flowmpeg --cov-report=term-missing --cov-fail-under=75
-      - run: python -m pip wheel . --no-deps --wheel-dir dist
+      - run: uv build --wheel --out-dir dist
       - run: python -m venv wheel-test
       - run: wheel-test/bin/python -m pip install --no-index --find-links dist flowmpeg
       - run: wheel-test/bin/flowmpeg --version
@@ -59,10 +59,10 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-      - run: python -m pip install --upgrade pip
-      - run: python -m pip install -e ".[dev]"
-      - run: flowmpeg --version
-      - run: python -m pytest -m "not integration"
+      - uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b
+      - run: uv sync --locked --extra dev
+      - run: uv run --frozen flowmpeg --version
+      - run: uv run --frozen python -m pytest -m "not integration"
 
   integration-tests:
     name: FFmpeg integration tests
@@ -73,8 +73,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b
       - run: sudo apt-get update
       - run: sudo apt-get install --yes ffmpeg
-      - run: python -m pip install --upgrade pip
-      - run: python -m pip install -e ".[dev]"
-      - run: python -m pytest -m integration
+      - run: uv sync --locked --extra dev
+      - run: uv run --frozen python -m pytest -m integration
