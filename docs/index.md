@@ -32,6 +32,7 @@ flowmpeg examples --search subtitle
 | Extend the graph layer | [Design notes](design.md) | Nodes, streams, compilation, runner boundary |
 | Check current and planned work | [Roadmap](../ROADMAP.md) | Verified bugs, release gates, current limits |
 | See source-backed project counts | [Project statistics](project-stats.md) | Commands, examples, tests, task distribution |
+| Compare stream and encoding behavior | [Visual guide](visual-guide.md) | Matrices and data-flow diagrams |
 
 ## Pick an interface
 

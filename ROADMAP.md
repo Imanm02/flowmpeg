@@ -67,7 +67,7 @@ only a discussion or test placeholder.
 - [x] Test that generated statistics remain current.
 - [x] Parse documented terminal options, not only command names.
 - [ ] Build safe graph examples without starting FFmpeg.
-- [ ] Add an encode, copy, and filter behavior matrix.
+- [x] Add an encode, copy, and filter behavior matrix.
 - [ ] Add a stream retention and track-selection matrix.
 - [ ] Add a social frame dimension and fill-mode comparison.
 - [ ] Add a plan lifecycle and failure-path diagram.

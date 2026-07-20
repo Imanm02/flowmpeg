@@ -17,10 +17,10 @@ source change.
 | Doctor feature groups | 12 | Doctor requirements |
 | Test functions | 206 | `tests/test_*.py` |
 | FFmpeg integration tests | 22 | Pytest markers |
-| Documentation pages | 9 | `docs/*.md` |
-| Documented command lines | 209 | Markdown code lines |
-| Completed roadmap items | 32 | `ROADMAP.md` |
-| Open roadmap items | 21 | `ROADMAP.md` |
+| Documentation pages | 10 | `docs/*.md` |
+| Documented command lines | 211 | Markdown code lines |
+| Completed roadmap items | 33 | `ROADMAP.md` |
+| Open roadmap items | 20 | `ROADMAP.md` |
 
 ## Commands by task
 
