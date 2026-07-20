@@ -15,7 +15,7 @@ source change.
 | One-line terminal examples | 54 | CLI example catalog |
 | Stable error identifiers | 16 | CLI error guide |
 | Doctor feature groups | 12 | Doctor requirements |
-| Test functions | 235 | `tests/test_*.py` |
+| Test functions | 236 | `tests/test_*.py` |
 | FFmpeg integration tests | 24 | Pytest markers |
 | Documentation pages | 12 | `docs/*.md` |
 | Documented command lines | 268 | Markdown code lines |

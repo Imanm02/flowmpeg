@@ -206,7 +206,7 @@ def normalize_loudness(
 
 
 def _tempo_stages(factor: float) -> tuple[float, ...]:
-    remaining = factor
+    remaining = float(factor)
     stages: list[float] = []
     while remaining > 2:
         stages.append(2.0)

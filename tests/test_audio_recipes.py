@@ -5,6 +5,8 @@ import pytest
 
 from flowmpeg import GraphError, input, output
 from flowmpeg.recipes.audio import (
+    _tempo_stages,
+    change_audio_speed,
     delay_audio,
     duck_audio,
     fade_audio,
@@ -12,6 +14,18 @@ from flowmpeg.recipes.audio import (
     trim_audio,
     volume,
 )
+
+
+def test_integer_speed_factor_builds_float_tempo_stages() -> None:
+    source = input("voice.wav").audio()
+
+    changed = change_audio_speed(source, 2)
+
+    assert _tempo_stages(2) == (2.0,)
+    assert all(isinstance(stage, float) for stage in _tempo_stages(2))
+    assert output(changed, to="fast.wav").filter_graph() == (
+        "[0:a:0]atempo=2[a0];[a0]asetpts=PTS-STARTPTS[a1]"
+    )
 
 
 def test_audio_mix_compiles_gains_and_weights() -> None:
