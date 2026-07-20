@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import re
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass, replace
 from typing import TYPE_CHECKING
@@ -11,6 +12,8 @@ from flowmpeg.diagnostics import redact_text
 from flowmpeg.errors import GraphError
 from flowmpeg.model import MediaGraph, StreamRef
 from flowmpeg.streams import Stream
+
+_protocol = re.compile(r"^[A-Za-z][A-Za-z0-9+.-]+:")
 
 if TYPE_CHECKING:
     from flowmpeg.compiler import CompiledCommand
@@ -89,7 +92,9 @@ class Plan:
         if not self.outputs:
             raise GraphError("Plans require at least one output")
 
-        destinations = [output.destination for output in self.outputs]
+        destinations = [
+            _destination_id(output.destination) for output in self.outputs
+        ]
         if len(destinations) != len(set(destinations)):
             raise GraphError("Output destinations must be unique")
 
@@ -204,3 +209,10 @@ def _ordered_args(args: Iterable[str]) -> tuple[str, ...]:
     if not all(isinstance(value, str) for value in values):
         raise GraphError("Raw arguments must be strings")
     return values
+
+
+def _destination_id(destination: str) -> str:
+    drive, _ = os.path.splitdrive(destination)
+    if not drive and _protocol.match(destination):
+        return destination
+    return os.path.normcase(os.path.abspath(destination))

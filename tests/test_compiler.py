@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import pytest
 
 from flowmpeg import (
@@ -163,3 +165,12 @@ def test_deep_filter_chain_compiles_without_recursion() -> None:
 def test_unordered_raw_arguments_are_rejected() -> None:
     with pytest.raises(GraphError, match="stable order"):
         output(input("movie.mp4").video(), to="copy.mp4", args={"-an"})
+
+
+def test_local_output_aliases_are_rejected() -> None:
+    source = input("in.mp4")
+    plan = output(source.video(), to="out.mp4")
+    absolute_alias = Path.cwd() / "out.mp4"
+
+    with pytest.raises(GraphError, match="must be unique"):
+        plan.add_output(source.video(), to=absolute_alias)
