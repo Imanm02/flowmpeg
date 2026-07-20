@@ -134,6 +134,40 @@ def test_unordered_filter_options_are_rejected() -> None:
         )
 
 
+def test_unordered_filter_arguments_are_rejected() -> None:
+    video = input("movie.mp4").video()
+
+    with pytest.raises(GraphError, match="arguments must have a stable order"):
+        apply_filter(
+            (video,),
+            "scale",
+            output_kinds=(StreamKind.VIDEO,),
+            args={640, 360},
+        )
+
+
+def test_unordered_filter_output_kinds_are_rejected() -> None:
+    video = input("movie.mp4").video()
+
+    with pytest.raises(GraphError, match="output kinds must have a stable order"):
+        apply_filter(
+            (video,),
+            "split",
+            output_kinds=cast(tuple[StreamKind, ...], {StreamKind.VIDEO}),
+        )
+
+
+def test_unordered_filter_streams_are_rejected() -> None:
+    video = input("movie.mp4").video()
+
+    with pytest.raises(GraphError, match="streams must have a stable order"):
+        apply_filter(
+            cast(tuple[VideoStream, ...], {video}),
+            "null",
+            output_kinds=(StreamKind.VIDEO,),
+        )
+
+
 def test_duplicate_filter_options_are_rejected() -> None:
     video = input("movie.mp4").video()
 

@@ -146,18 +146,24 @@ def apply_filter(
 ) -> tuple[Stream, ...]:
     """Connect one or more streams to an FFmpeg filter node."""
 
+    if isinstance(streams, (set, frozenset)):
+        raise GraphError("Filter streams must have a stable order")
     if not streams:
         raise GraphError("A filter requires at least one stream")
     if any(stream.ref.optional for stream in streams):
         raise GraphError("Optional input streams cannot feed filters")
     validate_filter_name(name)
 
+    if isinstance(output_kinds, (set, frozenset)):
+        raise GraphError("Filter output kinds must have a stable order")
     kinds = tuple(output_kinds)
     if not kinds:
         raise GraphError("A filter requires at least one output kind")
 
     graph = MediaGraph.merge(stream.graph for stream in streams)
     key = new_node_key()
+    if isinstance(args, (set, frozenset)):
+        raise GraphError("Filter arguments must have a stable order")
     if isinstance(options, (set, frozenset)):
         raise GraphError("Filter options must have a stable order")
     option_items = tuple(options.items() if isinstance(options, Mapping) else options)
