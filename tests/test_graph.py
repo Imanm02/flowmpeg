@@ -2,7 +2,7 @@ from typing import cast
 
 import pytest
 
-from flowmpeg import GraphError, input
+from flowmpeg import GraphError, OutputSpec, Plan, input
 from flowmpeg.model import (
     Expression,
     FilterNode,
@@ -41,6 +41,19 @@ def test_filter_nodes_reject_unknown_runtime_values() -> None:
             (stream,),
             (StreamKind.VIDEO,),
             args=(cast(FilterValue, object()),),
+        )
+
+
+def test_hand_built_filters_reject_optional_inputs() -> None:
+    source = InputNode(NodeKey(30), "silent.mp4")
+    optional_audio = StreamRef(source.key, 0, StreamKind.AUDIO, optional=True)
+
+    with pytest.raises(GraphError, match="cannot feed filters"):
+        FilterNode(
+            NodeKey(31),
+            "volume",
+            (optional_audio,),
+            (StreamKind.AUDIO,),
         )
 
 
@@ -153,3 +166,29 @@ def test_graph_rejects_cycles() -> None:
 
     with pytest.raises(GraphError, match="cycles"):
         MediaGraph(filters=(first, second)).validate()
+
+
+def test_graph_rejects_malformed_node_members() -> None:
+    graph = MediaGraph(inputs=(cast(InputNode, object()),))
+
+    with pytest.raises(GraphError, match="must be input nodes"):
+        graph.validate()
+
+
+def test_output_spec_rejects_malformed_stream_members() -> None:
+    with pytest.raises(GraphError, match="must be stream references"):
+        OutputSpec("out.mp4", (cast(StreamRef, object()),))
+
+
+def test_filter_outputs_cannot_be_optional() -> None:
+    filtered = input("movie.mp4").video().filter("scale", 640, -2)
+    optional_output = StreamRef(
+        filtered.ref.node,
+        filtered.ref.pad,
+        filtered.ref.kind,
+        optional=True,
+    )
+    spec = OutputSpec("out.mp4", (optional_output,))
+
+    with pytest.raises(GraphError, match="direct input mappings"):
+        Plan(filtered.graph, (spec,))

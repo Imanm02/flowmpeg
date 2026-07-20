@@ -28,12 +28,14 @@ class OutputSpec:
     args: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
-        if not self.destination:
+        if not isinstance(self.destination, str) or not self.destination:
             raise GraphError("Output destinations cannot be empty")
         if self.destination.startswith("-"):
             raise GraphError("Output destinations cannot start with a dash")
         if not self.streams:
             raise GraphError("Outputs require at least one stream")
+        if not all(isinstance(value, StreamRef) for value in self.streams):
+            raise GraphError("Output streams must be stream references")
         if not all(isinstance(value, str) for value in self.args):
             raise GraphError("Output arguments must be strings")
 
@@ -86,6 +88,14 @@ class Plan:
     def validate(self) -> None:
         """Check graph links and output declarations without running FFmpeg."""
 
+        if not isinstance(self.graph, MediaGraph):
+            raise GraphError("Plans require a media graph")
+        if not all(isinstance(value, OutputSpec) for value in self.outputs):
+            raise GraphError("Plan outputs must be output specifications")
+        if not all(isinstance(value, str) for value in self.global_args):
+            raise GraphError("Global arguments must be strings")
+        if not isinstance(self.overwrite_enabled, bool):
+            raise GraphError("Overwrite state must be Boolean")
         self.graph.validate()
         if not self.outputs:
             raise GraphError("Plans require at least one output")
@@ -107,6 +117,8 @@ class Plan:
             for stream in output_spec.streams:
                 if stream.node in input_keys:
                     continue
+                if stream.optional:
+                    raise GraphError("Only direct input mappings can be optional")
                 filter_node = filter_by_key.get(stream.node)
                 if filter_node is None:
                     raise GraphError("An output maps an unknown stream")

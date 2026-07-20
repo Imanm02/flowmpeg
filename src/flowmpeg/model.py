@@ -128,6 +128,8 @@ class FilterNode:
             raise GraphError("Filters require at least one input")
         if not all(isinstance(value, StreamRef) for value in self.inputs):
             raise GraphError("Filter inputs must be stream references")
+        if any(value.optional for value in self.inputs):
+            raise GraphError("Optional input streams cannot feed filters")
         if not self.output_kinds:
             raise GraphError("Filters require at least one output")
         if not all(isinstance(value, StreamKind) for value in self.output_kinds):
@@ -156,6 +158,9 @@ class MediaGraph:
         filters: dict[NodeKey, FilterNode] = {}
 
         for graph in graphs:
+            if not isinstance(graph, MediaGraph):
+                raise GraphError("Graph merges require media graphs")
+            graph.validate()
             for input_node in graph.inputs:
                 previous_input = inputs.setdefault(input_node.key, input_node)
                 if previous_input != input_node:
@@ -178,6 +183,11 @@ class MediaGraph:
 
     def validate(self) -> None:
         """Raise GraphError when node identities or links are invalid."""
+
+        if not all(isinstance(node, InputNode) for node in self.inputs):
+            raise GraphError("Graph inputs must be input nodes")
+        if not all(isinstance(node, FilterNode) for node in self.filters):
+            raise GraphError("Graph filters must be filter nodes")
 
         input_keys = {node.key for node in self.inputs}
         filter_by_key = {node.key: node for node in self.filters}
