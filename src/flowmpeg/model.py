@@ -62,6 +62,7 @@ class StreamRef:
     node: NodeKey
     pad: int
     kind: StreamKind
+    optional: bool = False
 
     def __post_init__(self) -> None:
         if not isinstance(self.node, NodeKey):
@@ -72,6 +73,8 @@ class StreamRef:
             raise GraphError("Stream indexes cannot be negative")
         if not isinstance(self.kind, StreamKind):
             raise GraphError("Stream references require a known stream kind")
+        if not isinstance(self.optional, bool):
+            raise GraphError("Optional stream state must be Boolean")
 
 
 @dataclass(frozen=True, slots=True)

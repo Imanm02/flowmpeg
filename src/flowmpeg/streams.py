@@ -113,12 +113,12 @@ class MediaInput:
             StreamRef(self.key, index, StreamKind.VIDEO),
         )
 
-    def audio(self, index: int = 0) -> AudioStream:
+    def audio(self, index: int = 0, *, optional: bool = False) -> AudioStream:
         """Select an audio stream by its audio-only index."""
 
         return AudioStream(
             self.graph,
-            StreamRef(self.key, index, StreamKind.AUDIO),
+            StreamRef(self.key, index, StreamKind.AUDIO, optional),
         )
 
     def subtitle(self, index: int = 0) -> SubtitleStream:
@@ -150,6 +150,8 @@ def apply_filter(
 
     if not streams:
         raise GraphError("A filter requires at least one stream")
+    if any(stream.ref.optional for stream in streams):
+        raise GraphError("Optional input streams cannot feed filters")
     if not _filter_name.fullmatch(name):
         raise GraphError(f"Invalid filter name: {name!r}")
 

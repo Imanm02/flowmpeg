@@ -198,7 +198,8 @@ def _map_value(
 ) -> str:
     input_index = input_indexes.get(stream.node)
     if input_index is not None:
-        return f"{input_index}:{_kind_letter[stream.kind]}:{stream.pad}"
+        suffix = "?" if stream.optional else ""
+        return f"{input_index}:{_kind_letter[stream.kind]}:{stream.pad}{suffix}"
     try:
         return f"[{labels[stream]}]"
     except KeyError as error:

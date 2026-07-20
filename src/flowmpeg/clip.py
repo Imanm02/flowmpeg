@@ -134,15 +134,18 @@ def media(
     *args: str,
     video: bool = True,
     audio: bool = True,
+    optional_audio: bool = False,
 ) -> Clip:
     """Create a paired clip from selected streams of one input."""
 
     if not video and not audio:
         raise GraphError("Media inputs require video or audio")
+    if optional_audio and not audio:
+        raise GraphError("Optional audio requires audio selection")
     source_input = input(source, *args)
     return Clip(
         source_input.video() if video else None,
-        source_input.audio() if audio else None,
+        source_input.audio(optional=optional_audio) if audio else None,
     )
 
 

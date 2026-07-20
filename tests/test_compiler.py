@@ -45,6 +45,21 @@ def test_direct_streams_compile_with_scoped_arguments() -> None:
     )
 
 
+def test_optional_input_audio_compiles_to_optional_map() -> None:
+    source = input("silent.mp4")
+    plan = output(source.video(), source.audio(optional=True), to="copy.mp4")
+
+    argv = plan.raw_argv()
+    assert ("-map", "0:a:0?") in tuple(zip(argv, argv[1:], strict=False))
+
+
+def test_optional_input_streams_cannot_feed_filters() -> None:
+    audio = input("maybe-silent.mp4").audio(optional=True)
+
+    with pytest.raises(GraphError, match="cannot feed filters"):
+        audio.filter("volume", volume=0.5)
+
+
 def test_filter_graph_uses_deterministic_typed_labels() -> None:
     video = input("movie.mp4").video().filter("scale", 1280, -2)
     plan = output(video, to="scaled.mp4")
