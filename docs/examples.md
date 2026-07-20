@@ -31,6 +31,7 @@ Try the generated files with these one-liners:
 
 ```console
 flowmpeg probe demo-media/sample.mp4
+flowmpeg audit demo-media/sample.mp4 --expect av
 flowmpeg cut demo-media/sample.mp4 --duration 1 -o demo-media/clip.mp4
 flowmpeg webm demo-media/sample.mp4 -o demo-media/sample.webm
 flowmpeg waveform demo-media/voice.wav -o demo-media/waveform.png

@@ -667,6 +667,48 @@ def test_probe_raw_json(
     assert data["format"]["filename"] == "https://<redacted>@example.com/movie.mp4"
 
 
+def test_audit_human_report_applies_expectation(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    monkeypatch.setattr(cli, "probe", lambda *args, **kwargs: _media_info())
+
+    assert cli.main(["audit", "movie.mp4", "--expect", "av"]) == 0
+    output = capsys.readouterr().out
+    assert "Media audit: pass" in output
+    assert "Streams: 1 video, 1 audio, 0 subtitle" in output
+    assert "Video: 1920x1080" in output
+    assert "Audio: 48000 Hz, 2 channel(s)" in output
+    assert "AUD214: Video frame rate is unavailable" in output
+
+
+def test_audit_json_warning_policy_controls_exit_code(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    monkeypatch.setattr(cli, "probe", lambda *args, **kwargs: _media_info())
+
+    assert (
+        cli.main(
+            [
+                "check-media",
+                "movie.mp4",
+                "--expect",
+                "av",
+                "--fail-on",
+                "warning",
+                "--json",
+            ]
+        )
+        == 9
+    )
+    data = json.loads(capsys.readouterr().out)
+    assert data["schema_version"] == 1
+    assert data["passed"] is False
+    assert data["fail_on"] == "warning"
+    assert data["findings"][0]["code"] == "AUD214"
+
+
 def test_probe_error_returns_five(
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],

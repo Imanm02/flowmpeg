@@ -44,6 +44,26 @@ flowmpeg explain-error FMG612
 | `FMG630` | Network input failed | URL, credentials, connection, protocol support |
 | `FMG700` | Job timed out | `--timeout` value and media duration |
 
+## Media audit findings
+
+Audit findings describe probed media, so they use `AUD` instead of `FMG`.
+They appear in both the terminal report and JSON output.
+
+| Code | Severity | Meaning |
+|---|---|---|
+| `AUD001` | error | No media streams were found |
+| `AUD101` | error | A required video stream is missing |
+| `AUD102` | error | A required audio stream is missing |
+| `AUD201` | warning | Container details are unavailable |
+| `AUD202` | warning | Duration is missing or nonpositive |
+| `AUD211` | warning | The first video codec is unknown |
+| `AUD212` | warning | Video dimensions are incomplete |
+| `AUD213` | warning | Video width or height is odd |
+| `AUD214` | warning | Video frame rate is unavailable |
+| `AUD221` | warning | The first audio codec is unknown |
+| `AUD222` | warning | Audio sample rate is unavailable |
+| `AUD223` | warning | Audio channel count is unavailable |
+
 ## Process exit codes
 
 | Code | Meaning |
@@ -57,6 +77,7 @@ flowmpeg explain-error FMG612
 | 6 | FFmpeg returned an error |
 | 7 | The FFmpeg job reached its timeout |
 | 8 | A package manager command failed |
+| 9 | A media audit did not meet its selected policy |
 | 130 | The command was interrupted |
 
 CMD exposes the last program's exit code as `%ERRORLEVEL%`:

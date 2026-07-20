@@ -1040,6 +1040,40 @@ Use a custom executable or timeout when needed:
 flowmpeg probe movie.mp4 --ffprobe "C:\Tools\ffmpeg\bin\ffprobe.exe" --timeout 10
 ```
 
+## Audit media against an expected shape
+
+Require both video and audio, then report missing or suspicious fields:
+
+```console
+flowmpeg audit movie.mp4 --expect av
+```
+
+The report summarizes duration, stream counts, dimensions, frame rate, sample
+rate, and channels. Findings have stable `AUD` codes. Errors include a missing
+required stream. Warnings include missing probe fields and odd video
+dimensions that may fail with common encoders.
+
+Use a stricter threshold in a release script:
+
+```console
+flowmpeg check-media delivery.mp4 --expect av --fail-on warning --json
+```
+
+`--fail-on error` is the default. `warning` fails on any finding, and `never`
+always returns success after a valid probe. A failed audit policy returns exit
+code 9. JSON includes the selected policy, `passed`, a summary object, and the
+finding list.
+
+The same checks are available in Python:
+
+```python
+from flowmpeg import audit_media, probe
+
+result = audit_media(probe("delivery.mp4"), expect="av")
+if not result.passes("warning"):
+    print(result.findings)
+```
+
 ## Diagnose an installation
 
 Start with the read-only setup check:
@@ -1125,6 +1159,7 @@ flowmpeg thumb "C:\Media\گفتگو.mp4" --at 5 -o "C:\Media\تصویر.jpg"
 | 6 | FFmpeg exited with an error |
 | 7 | The FFmpeg job reached its timeout |
 | 8 | A package manager command failed |
+| 9 | A media audit did not meet its selected policy |
 | 130 | The command was interrupted |
 
 Argparse also uses code 2 for missing flags and invalid choices.

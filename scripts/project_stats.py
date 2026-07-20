@@ -14,6 +14,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
 from flowmpeg import shortcuts  # noqa: E402
+from flowmpeg.audit import AUDIT_CODES  # noqa: E402
 from flowmpeg.catalog import (  # noqa: E402
     CATEGORIES,
     COMMAND_CATALOG,
@@ -114,6 +115,7 @@ def render() -> str:
         f"| Python shortcut functions | {shortcut_functions} | `shortcuts.__all__` |",
         f"| One-line terminal examples | {len(_EXAMPLES)} | CLI example catalog |",
         f"| Stable error identifiers | {len(_ERROR_GUIDE)} | CLI error guide |",
+        f"| Stable audit findings | {len(AUDIT_CODES)} | Media audit |",
         f"| Doctor feature groups | {len(_FEATURE_REQUIREMENTS)} | Doctor requirements |",
         f"| Test function definitions | {tests} | `tests/test_*.py` |",
         f"| FFmpeg integration tests | {integration} | Pytest markers |",

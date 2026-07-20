@@ -116,10 +116,18 @@ def test_python_documentation_examples_build(
         height=1080,
         average_frame_rate=None,
     )
+    audio = SimpleNamespace(codec_name="aac", sample_rate=48_000, channels=2)
     info = SimpleNamespace(
         duration=60.0,
+        format=SimpleNamespace(
+            format_long_name="QuickTime / MOV",
+            format_name="mov,mp4",
+            size=1_000,
+        ),
+        streams=(video, audio),
         video_streams=(video,),
-        audio_streams=(SimpleNamespace(codec_name="aac"),),
+        audio_streams=(audio,),
+        subtitle_streams=(),
     )
 
     monkeypatch.setattr(Plan, "run", skip_run)

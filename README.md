@@ -41,13 +41,18 @@ capability report:
 flowmpeg doctor
 flowmpeg doctor --command cut
 flowmpeg doctor --smoke-test
+flowmpeg audit input.mp4 --expect av
 ```
 
 The second check accepts the `cut` shortcut and verifies the default encoders,
 muxer, and filters used by canonical `trim`. It returns exit code 3 when that
 exact path is unavailable.
+
 The smoke test creates a temporary 16 by 16 video, encodes one frame, probes
 the result, then removes it.
+
+The audit checks a media file against an expected stream shape and reports
+stable finding codes for scripts.
 
 ## One-line terminal jobs
 

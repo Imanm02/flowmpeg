@@ -31,6 +31,26 @@ command probes both files each time. JSON output includes the original values,
 changed values, byte delta, percentage size change, and duration delta. That
 makes it suitable for a release check or a batch report.
 
+## Media audit scorecard
+
+`audit` turns probe fields into a pass or fail decision without hiding the
+measured shape:
+
+```console
+flowmpeg audit delivery.mp4 --expect av --fail-on warning
+```
+
+| Area | Example value | Finding rule |
+|---|---:|---|
+| Required streams | 1 video, 1 audio | Missing expected video is `AUD101`; missing audio is `AUD102` |
+| Dimensions | 1920x1080 | Odd width or height is warning `AUD213` |
+| Frame rate | 30 fps | Missing or zero frame rate is warning `AUD214` |
+| Sample rate | 48000 Hz | Missing or zero sample rate is warning `AUD222` |
+| Channels | 2 | Missing or zero channel count is warning `AUD223` |
+
+Use `--fail-on error` when warnings should remain visible but should not stop a
+job. Use `--json` when another program needs the summary and finding list.
+
 ## Copy, encode, or filter
 
 These are different kinds of work. Copying keeps encoded packet data and is

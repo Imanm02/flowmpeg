@@ -96,11 +96,12 @@ Exact needs are checked by `flowmpeg doctor --command NAME`.
 |---|---|---|---|---|---|---|
 | `strip-metadata` | `clean-metadata` | media | media | `archive`, `copy`, `privacy` | none | `muxer:matroska` |
 
-## Inspect (4)
+## Inspect (5)
 
 | Command | Aliases | Input | Output | Tags | Doctor group | Exact needs |
 |---|---|---|---|---|---|---|
 | `probe` | none | media | report | `inspect`, `archive` | none | none |
+| `audit-media` | `audit`, `check-media` | media | report | `inspect` | none | none |
 | `compare` | none | two media files | report | `inspect` | none | none |
 | `doctor` | none | none | report | `inspect` | none | none |
 | `setup` | `install-tools` | none | report | `inspect` | none | none |

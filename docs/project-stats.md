@@ -9,17 +9,18 @@ source change.
 
 | Measure | Count | Source |
 |---|---:|---|
-| Canonical terminal commands | 63 | `COMMAND_CATALOG` |
-| Command aliases | 59 | `COMMAND_CATALOG` |
+| Canonical terminal commands | 64 | `COMMAND_CATALOG` |
+| Command aliases | 61 | `COMMAND_CATALOG` |
 | Python shortcut functions | 55 | `shortcuts.__all__` |
-| One-line terminal examples | 64 | CLI example catalog |
+| One-line terminal examples | 65 | CLI example catalog |
 | Stable error identifiers | 16 | CLI error guide |
+| Stable audit findings | 12 | Media audit |
 | Doctor feature groups | 13 | Doctor requirements |
-| Test function definitions | 315 | `tests/test_*.py` |
-| FFmpeg integration tests | 27 | Pytest markers |
+| Test function definitions | 322 | `tests/test_*.py` |
+| FFmpeg integration tests | 28 | Pytest markers |
 | Documentation pages | 15 | `docs/*.md` |
-| Documented command lines | 325 | Markdown code lines |
-| Completed roadmap items | 90 | `ROADMAP.md` |
+| Documented command lines | 329 | Markdown code lines |
+| Completed roadmap items | 91 | `ROADMAP.md` |
 | Open roadmap items | 0 | `ROADMAP.md` |
 
 ## Category matrix
@@ -36,7 +37,7 @@ counts distinct canonical commands with at least one built-in example.
 | images | 6 | 7 | 6 | 6/6 (100%) | 6 | `######` |
 | subtitles | 4 | 5 | 4 | 4/4 (100%) | 4 | `####` |
 | metadata | 1 | 1 | 1 | 1/1 (100%) | 1 | `#` |
-| inspect | 4 | 1 | 4 | 4/4 (100%) | 0 | `####` |
+| inspect | 5 | 3 | 5 | 5/5 (100%) | 0 | `#####` |
 | help | 4 | 0 | 4 | 4/4 (100%) | 0 | `####` |
 
 ## Use-case coverage
@@ -51,7 +52,7 @@ The bar uses one `#` per canonical command carrying the tag.
 | creator | 39 | 40 | `#######################################` |
 | delivery | 17 | 18 | `#################` |
 | discover | 4 | 4 | `####` |
-| inspect | 4 | 4 | `####` |
+| inspect | 5 | 5 | `#####` |
 | podcast | 13 | 13 | `#############` |
 | privacy | 4 | 4 | `####` |
 | silent-input | 30 | 31 | `##############################` |

@@ -17,6 +17,7 @@ from dataclasses import asdict, dataclass, replace
 from typing import TextIO, cast
 
 from flowmpeg import __version__, shortcuts
+from flowmpeg.audit import AuditExpectation, AuditThreshold, MediaAudit, audit_media
 from flowmpeg.catalog import CATEGORIES, COMMAND_CATALOG, TAGS, command_spec
 from flowmpeg.comparison import MediaComparison, MediaSummary, compare_media
 from flowmpeg.diagnostics import display_argv, redact_text
@@ -154,6 +155,7 @@ _BASE_EXAMPLES = (
     _Example("images", "flowmpeg timelapse frames/frame-%04d.png -o timelapse.mp4"),
     _Example("composition", "flowmpeg audiogram episode.wav cover.jpg -o episode.mp4"),
     _Example("inspect", "flowmpeg probe input.mp4"),
+    _Example("inspect", "flowmpeg audit input.mp4 --expect av"),
     _Example("inspect", "flowmpeg compare original.mp4 smaller.mp4"),
     _Example("inspect", "flowmpeg doctor"),
     _Example("inspect", "flowmpeg setup"),
@@ -500,6 +502,7 @@ def build_parser() -> argparse.ArgumentParser:
     _add_strip_metadata(commands)
     _add_tag_audio(commands)
     _add_probe(commands)
+    _add_audit(commands)
     _add_compare(commands)
     _add_doctor(commands)
     _add_setup(commands)
@@ -1829,6 +1832,34 @@ def _add_probe(commands: argparse._SubParsersAction[argparse.ArgumentParser]) ->
     parser.set_defaults(handler=_run_probe)
 
 
+def _add_audit(commands: argparse._SubParsersAction[argparse.ArgumentParser]) -> None:
+    parser = commands.add_parser(
+        "audit-media",
+        aliases=["audit", "check-media"],
+        help="Check media shape against an expected policy.",
+        description="Check media shape against an expected policy.",
+        allow_abbrev=False,
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+    _source(parser)
+    parser.add_argument(
+        "--expect",
+        choices=("any", "video", "audio", "av"),
+        default="any",
+        help="Required stream shape",
+    )
+    parser.add_argument(
+        "--fail-on",
+        choices=("never", "error", "warning"),
+        default="error",
+        help="Finding severity that returns exit code 9",
+    )
+    parser.add_argument("--ffprobe", default="ffprobe", help="FFprobe executable")
+    parser.add_argument("--timeout", type=_positive_float)
+    parser.add_argument("--json", action="store_true", help="Print audit JSON")
+    parser.set_defaults(handler=_run_audit)
+
+
 def _add_compare(commands: argparse._SubParsersAction[argparse.ArgumentParser]) -> None:
     parser = commands.add_parser(
         "compare",
@@ -2052,6 +2083,29 @@ def _run_probe(args: argparse.Namespace) -> int:
     else:
         print(redact_text(_format_media_info(info)))
     return 0
+
+
+def _run_audit(args: argparse.Namespace) -> int:
+    source = cast(str, args.source)
+    info = probe(
+        source,
+        ffprobe=cast(str, args.ffprobe),
+        timeout=cast(float | None, args.timeout),
+    )
+    expectation = cast(AuditExpectation, args.expect)
+    fail_on = cast(AuditThreshold, args.fail_on)
+    result = audit_media(info, expect=expectation)
+    passed = result.passes(fail_on)
+    if cast(bool, args.json):
+        data = asdict(result)
+        data["schema_version"] = _JSON_SCHEMA_VERSION
+        data["source"] = source
+        data["passed"] = passed
+        data["fail_on"] = fail_on
+        print(json.dumps(_redact_json(data), indent=2, sort_keys=True))
+    else:
+        print(_format_audit(result, source=source, fail_on=fail_on))
+    return 0 if passed else 9
 
 
 def _run_compare(args: argparse.Namespace) -> int:
@@ -2422,6 +2476,54 @@ def _format_media_info(info: MediaInfo) -> str:
             lines.append(f"  subtitle #{stream.index}: {codec}")
         else:
             lines.append(f"  {stream.codec_type} #{stream.index}: {codec}")
+    return "\n".join(lines)
+
+
+def _format_audit(
+    result: MediaAudit,
+    *,
+    source: str,
+    fail_on: AuditThreshold,
+) -> str:
+    summary = result.summary
+    status = "pass" if result.passes(fail_on) else "fail"
+    lines = [
+        f"Media audit: {status}",
+        f"Source: {redact_text(source)}",
+        f"Expectation: {result.expectation}",
+        f"Failure threshold: {fail_on}",
+        f"Container: {summary.container or 'unknown'}",
+        f"Duration: {_seconds(summary.duration)}",
+        f"Size: {_bytes(summary.size)}",
+        (
+            "Streams: "
+            f"{summary.video_streams} video, "
+            f"{summary.audio_streams} audio, "
+            f"{summary.subtitle_streams} subtitle"
+        ),
+    ]
+    if summary.video_streams:
+        dimensions = _dimensions(summary.width, summary.height)
+        frame_rate = (
+            "unknown" if summary.frame_rate is None else f"{summary.frame_rate:g} fps"
+        )
+        lines.append(f"Video: {dimensions}, {frame_rate}")
+    if summary.audio_streams:
+        sample_rate = (
+            "unknown" if summary.sample_rate is None else f"{summary.sample_rate} Hz"
+        )
+        channels = (
+            "unknown" if summary.channels is None else f"{summary.channels} channel(s)"
+        )
+        lines.append(f"Audio: {sample_rate}, {channels}")
+    lines.append("Findings:")
+    if result.findings:
+        lines.extend(
+            f"  [{item.severity.upper()}] {item.code}: {item.message}"
+            for item in result.findings
+        )
+    else:
+        lines.append("  none")
     return "\n".join(lines)
 
 

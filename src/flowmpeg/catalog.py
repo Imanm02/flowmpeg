@@ -455,6 +455,14 @@ _BASE_COMMAND_CATALOG = (
         output_kind="report",
     ),
     CommandSpec(
+        "audit-media",
+        "inspect",
+        "Check media shape against a policy",
+        ("audit", "check-media"),
+        input_kind="media",
+        output_kind="report",
+    ),
+    CommandSpec(
         "compare",
         "inspect",
         "Compare media values before and after a job",

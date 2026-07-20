@@ -93,6 +93,7 @@ only a discussion or test placeholder.
 - [x] Add VP9 and Opus WebM delivery shortcuts with explicit quality controls.
 - [x] Support Opus output across extraction and filtered audio shortcuts.
 - [x] Normalize mismatched video and audio formats before joining clips.
+- [x] Add policy-based media audits with stable findings and JSON output.
 - [x] Split doctor requirements by the exact encoders and muxers each command
   needs.
 - [x] Infer progress duration for start and end trims.

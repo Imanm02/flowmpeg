@@ -1,6 +1,13 @@
 """Build inspectable FFmpeg media jobs."""
 
 from flowmpeg import shortcuts
+from flowmpeg.audit import (
+    AUDIT_CODES,
+    AuditFinding,
+    AuditSummary,
+    MediaAudit,
+    audit_media,
+)
 from flowmpeg.clip import Clip, concat_clips, media, replace_audio
 from flowmpeg.comparison import (
     MediaComparison,
@@ -67,6 +74,9 @@ __version__ = "0.1.0"
 __all__ = [
     "AudioStream",
     "AudioStreamInfo",
+    "AUDIT_CODES",
+    "AuditFinding",
+    "AuditSummary",
     "BinaryNotFoundError",
     "BinaryUnusableError",
     "Clip",
@@ -80,6 +90,7 @@ __all__ = [
     "MediaGraph",
     "MediaInput",
     "MediaInfo",
+    "MediaAudit",
     "MediaComparison",
     "MediaSummary",
     "OutputExistsError",
@@ -97,6 +108,7 @@ __all__ = [
     "VideoStreamInfo",
     "__version__",
     "apply_filter",
+    "audit_media",
     "change_audio_speed",
     "change_video_speed",
     "compare_media",

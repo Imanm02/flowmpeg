@@ -50,6 +50,7 @@ one edit now          -> flowmpeg cut ...
 one edit in Python    -> ff.trim(...)
 custom stream graph   -> input(...), filter(...), output(...)
 inspect media first   -> flowmpeg probe ...
+check media shape     -> flowmpeg audit ...
 check local support   -> flowmpeg doctor
 ```
 
@@ -71,7 +72,7 @@ building one does not start FFmpeg.
 | Images | `thumb`, `gif`, `sheet`, `waveform` | `thumbnail`, `make_gif`, `contact_sheet` |
 | Subtitles | `subtitles`, `captions`, `strip-subtitles` | subtitle shortcut functions |
 | Metadata | `clean-metadata`, `tag` | `strip_metadata`, `tag_audio` |
-| Inspection | `probe`, `doctor`, `errors` | `probe`, typed errors, plan inspection |
+| Inspection | `probe`, `audit`, `doctor`, `errors` | `probe`, `audit_media`, typed errors |
 
 The command catalog is also available as JSON for shell completion, editor
 tools, or documentation checks:
