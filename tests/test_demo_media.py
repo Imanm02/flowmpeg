@@ -54,6 +54,7 @@ def test_demo_media_script_generates_example_inputs(tmp_path: Path) -> None:
     sheet = tmp_path / "sheet.jpg"
     blend = tmp_path / "blend.wav"
     clean = tmp_path / "clean.mp4"
+    sequence = tmp_path / "sequence.mp4"
     assert cli.main(["probe", str(video)]) == 0
     video_info = probe(video)
     assert video_info.format is not None
@@ -247,6 +248,22 @@ def test_demo_media_script_generates_example_inputs(tmp_path: Path) -> None:
         )
         == 0
     )
+    assert (
+        cli.main(
+            [
+                "timelapse",
+                str(tmp_path / "frame-%03d.png"),
+                "--fps",
+                "2",
+                "--start-number",
+                "1",
+                "--no-progress",
+                "-o",
+                str(sequence),
+            ]
+        )
+        == 0
+    )
 
     for target in (
         clip,
@@ -261,6 +278,7 @@ def test_demo_media_script_generates_example_inputs(tmp_path: Path) -> None:
         sheet,
         blend,
         clean,
+        sequence,
     ):
         assert target.stat().st_size > 0
     assert len(probe(captioned).subtitle_streams) == 1
@@ -296,3 +314,8 @@ def test_demo_media_script_generates_example_inputs(tmp_path: Path) -> None:
     assert blend_info.duration == pytest.approx(3.5, abs=0.2)
     assert len(blend_info.audio_streams) == 1
     assert blend_info.video_streams == ()
+    sequence_info = probe(sequence)
+    sequence_video = sequence_info.video_streams[0]
+    assert (sequence_video.width, sequence_video.height) == (1920, 1080)
+    assert sequence_info.duration == pytest.approx(2.0, abs=0.2)
+    assert sequence_info.audio_streams == ()
