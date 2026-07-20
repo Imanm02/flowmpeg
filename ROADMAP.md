@@ -105,7 +105,7 @@ only a discussion or test placeholder.
 - [x] Add a before-and-after media comparison command with JSON output.
 - [x] Expand demo media with a second clip, silent video, logo, music, and image
   sequence inputs.
-- [ ] Run join, grid, watermark, social, GIF, contact sheet, crossfade, and
+- [x] Run join, grid, watermark, social, GIF, contact sheet, crossfade, and
   metadata cleanup in the demo lab.
 - [x] Document that exit code 3 also covers an unmet doctor requirement.
 - [x] Add an encode, copy, and filter behavior matrix.

@@ -53,6 +53,7 @@ def test_demo_media_script_generates_example_inputs(tmp_path: Path) -> None:
     preview = tmp_path / "preview.gif"
     sheet = tmp_path / "sheet.jpg"
     blend = tmp_path / "blend.wav"
+    clean = tmp_path / "clean.mp4"
     assert cli.main(["probe", str(video)]) == 0
     video_info = probe(video)
     assert video_info.format is not None
@@ -177,6 +178,18 @@ def test_demo_media_script_generates_example_inputs(tmp_path: Path) -> None:
     assert (
         cli.main(
             [
+                "clean-metadata",
+                str(branded),
+                "--no-progress",
+                "-o",
+                str(clean),
+            ]
+        )
+        == 0
+    )
+    assert (
+        cli.main(
+            [
                 "gif",
                 str(video),
                 "--full-length",
@@ -247,6 +260,7 @@ def test_demo_media_script_generates_example_inputs(tmp_path: Path) -> None:
         preview,
         sheet,
         blend,
+        clean,
     ):
         assert target.stat().st_size > 0
     assert len(probe(captioned).subtitle_streams) == 1
@@ -261,6 +275,13 @@ def test_demo_media_script_generates_example_inputs(tmp_path: Path) -> None:
     branded_video = branded_info.video_streams[0]
     assert (branded_video.width, branded_video.height) == (320, 180)
     assert len(branded_info.audio_streams) == 1
+    assert branded_info.format is not None
+    assert dict(branded_info.format.tags)["title"] == "Flowmpeg demo source"
+    clean_info = probe(clean)
+    assert clean_info.format is not None
+    assert "title" not in dict(clean_info.format.tags)
+    assert len(clean_info.video_streams) == 1
+    assert len(clean_info.audio_streams) == 1
     square_info = probe(square)
     square_video = square_info.video_streams[0]
     assert (square_video.width, square_video.height) == (1080, 1080)
