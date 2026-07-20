@@ -10,9 +10,11 @@ import shlex
 import subprocess
 import sys
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
+import flowmpeg
 from flowmpeg import cli, shortcuts
 from flowmpeg.catalog import COMMAND_CATALOG
 from flowmpeg.cli import build_parser
@@ -37,6 +39,11 @@ def _code_cases() -> list[tuple[str, str]]:
 
 
 _CODE_CASES = _code_cases()
+_BUILD_PATHS = tuple(
+    path
+    for path in _MARKDOWN_FILES
+    if _PYTHON_BLOCK.search(path.read_text(encoding="utf-8"))
+)
 
 
 @pytest.mark.parametrize(
@@ -78,19 +85,35 @@ def _github_anchor(heading: str) -> str:
     return re.sub(r"\s+", "-", heading)
 
 
-@pytest.mark.parametrize(
-    "filename",
-    ["shortcuts.md", "workflows.md", "playbooks.md"],
-)
-def test_python_guide_examples_build(
+@pytest.mark.parametrize("path", _BUILD_PATHS, ids=lambda path: path.name)
+def test_python_documentation_examples_build(
     monkeypatch: pytest.MonkeyPatch,
-    filename: str,
+    path: Path,
 ) -> None:
-    def skip_run(self: Plan, **kwargs: object) -> None:
-        return None
+    def skip_run(self: Plan, **kwargs: object) -> object:
+        del kwargs
+        return SimpleNamespace(
+            returncode=0,
+            elapsed=0.0,
+            stderr="",
+            last_progress=None,
+            outputs=tuple(output.destination for output in self.outputs),
+        )
+
+    video = SimpleNamespace(
+        codec_name="h264",
+        width=1920,
+        height=1080,
+        average_frame_rate=None,
+    )
+    info = SimpleNamespace(
+        duration=60.0,
+        video_streams=(video,),
+        audio_streams=(SimpleNamespace(codec_name="aac"),),
+    )
 
     monkeypatch.setattr(Plan, "run", skip_run)
-    path = _ROOT / "docs" / filename
+    monkeypatch.setattr(flowmpeg, "probe", lambda *args, **kwargs: info)
     text = path.read_text(encoding="utf-8")
     namespace: dict[str, object] = {"ff": shortcuts}
     for match in _PYTHON_BLOCK.finditer(text):
