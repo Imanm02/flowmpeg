@@ -50,10 +50,25 @@ def generate(
     ffprobe_path = _resolve_tool(ffprobe)
     directory.mkdir(parents=True, exist_ok=True)
     video = directory / "sample.mp4"
+    second_video = directory / "second.mp4"
+    silent_video = directory / "silent.mp4"
     voice = directory / "voice.wav"
+    music = directory / "music.wav"
     cover = directory / "cover.jpg"
+    logo = directory / "logo.png"
     captions = directory / "captions.srt"
-    targets = (video, voice, cover, captions)
+    frames = tuple(directory / f"frame-{index:03}.png" for index in range(1, 5))
+    targets = (
+        video,
+        second_video,
+        silent_video,
+        voice,
+        music,
+        cover,
+        logo,
+        captions,
+        *frames,
+    )
     existing = [path.name for path in targets if path.exists()]
     if existing and not overwrite:
         names = ", ".join(existing)
@@ -96,8 +111,69 @@ def generate(
             "-f",
             "lavfi",
             "-i",
+            "smptebars=size=320x180:rate=24:duration=2",
+            "-f",
+            "lavfi",
+            "-i",
+            "sine=frequency=660:sample_rate=48000:duration=2",
+            "-c:v",
+            "libx264",
+            "-pix_fmt",
+            "yuv420p",
+            "-c:a",
+            "aac",
+            "-shortest",
+            str(second_video),
+        ),
+        timeout,
+    )
+    _run(
+        (
+            ffmpeg_path,
+            "-hide_banner",
+            "-loglevel",
+            "error",
+            replace,
+            "-f",
+            "lavfi",
+            "-i",
+            "testsrc=size=320x180:rate=24:duration=2",
+            "-an",
+            "-c:v",
+            "libx264",
+            "-pix_fmt",
+            "yuv420p",
+            str(silent_video),
+        ),
+        timeout,
+    )
+    _run(
+        (
+            ffmpeg_path,
+            "-hide_banner",
+            "-loglevel",
+            "error",
+            replace,
+            "-f",
+            "lavfi",
+            "-i",
             "sine=frequency=220:sample_rate=48000:duration=2",
             str(voice),
+        ),
+        timeout,
+    )
+    _run(
+        (
+            ffmpeg_path,
+            "-hide_banner",
+            "-loglevel",
+            "error",
+            replace,
+            "-f",
+            "lavfi",
+            "-i",
+            "sine=frequency=330:sample_rate=48000:duration=2",
+            str(music),
         ),
         timeout,
     )
@@ -117,6 +193,45 @@ def generate(
             "-q:v",
             "2",
             str(cover),
+        ),
+        timeout,
+    )
+    _run(
+        (
+            ffmpeg_path,
+            "-hide_banner",
+            "-loglevel",
+            "error",
+            replace,
+            "-f",
+            "lavfi",
+            "-i",
+            (
+                "color=c=black@0.0:s=96x96:d=0.1,format=rgba,"
+                "drawbox=x=8:y=8:w=80:h=80:color=0x38bdf8@0.85:t=fill"
+            ),
+            "-frames:v",
+            "1",
+            str(logo),
+        ),
+        timeout,
+    )
+    _run(
+        (
+            ffmpeg_path,
+            "-hide_banner",
+            "-loglevel",
+            "error",
+            replace,
+            "-f",
+            "lavfi",
+            "-i",
+            "testsrc2=size=320x180:rate=2:duration=2",
+            "-frames:v",
+            "4",
+            "-start_number",
+            "1",
+            str(directory / "frame-%03d.png"),
         ),
         timeout,
     )

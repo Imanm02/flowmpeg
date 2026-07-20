@@ -28,11 +28,18 @@ def test_demo_media_script_generates_example_inputs(tmp_path: Path) -> None:
 
     assert completed.returncode == 0, completed.stderr
     assert (tmp_path / "sample.mp4").stat().st_size > 0
+    assert (tmp_path / "second.mp4").stat().st_size > 0
+    assert (tmp_path / "silent.mp4").stat().st_size > 0
     assert (tmp_path / "voice.wav").stat().st_size > 0
+    assert (tmp_path / "music.wav").stat().st_size > 0
     assert (tmp_path / "cover.jpg").stat().st_size > 0
+    assert (tmp_path / "logo.png").stat().st_size > 0
+    for index in range(1, 5):
+        assert (tmp_path / f"frame-{index:03}.png").stat().st_size > 0
     assert "Flowmpeg demo caption" in (tmp_path / "captions.srt").read_text(
         encoding="utf-8"
     )
+    assert probe(tmp_path / "silent.mp4").audio_streams == ()
 
     video = tmp_path / "sample.mp4"
     clip = tmp_path / "clip.mp4"
