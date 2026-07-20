@@ -147,8 +147,6 @@ def run(
     stderr = redact_text(stderr_tail.text())
     if returncode != 0:
         message = f"FFmpeg exited with code {returncode}"
-        if stderr.strip():
-            message += f": {stderr.strip()}"
         raise ExecutionError(
             message,
             returncode=returncode,

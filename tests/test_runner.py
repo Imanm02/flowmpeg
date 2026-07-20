@@ -131,6 +131,7 @@ def test_runner_raises_structured_execution_error(tmp_path: Path) -> None:
     with pytest.raises(ExecutionError) as captured:
         plan.run(ffmpeg=ffmpeg, timeout=10)
 
+    assert str(captured.value) == f"FFmpeg exited with code {captured.value.returncode}"
     assert captured.value.returncode != 0
     assert "missing_flowmpeg_codec" in captured.value.stderr
     assert captured.value.command.startswith(ffmpeg)
