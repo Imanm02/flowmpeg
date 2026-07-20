@@ -89,6 +89,7 @@ only a discussion or test placeholder.
 - [x] Stop the full doctor smoke-test process tree when a stage times out.
 - [x] Keep Windows process-group flags valid under POSIX type checking.
 - [x] Accept shortcut aliases in exact doctor command checks.
+- [x] Add a one-line command that burns external subtitles into video frames.
 - [x] Split doctor requirements by the exact encoders and muxers each command
   needs.
 - [x] Infer progress duration for start and end trims.
@@ -133,8 +134,8 @@ only a discussion or test placeholder.
 - Fixed-region blur does not track a moving face, plate, or screen area.
 - Compression quality settings do not guarantee a smaller file than every
   possible input. Measure the result before choosing a delivery setting.
-- Subtitle addition creates a selectable MP4 text track. It does not burn text
-  into video frames.
+- `add-subtitles` creates a selectable MP4 text track. `burn-subtitles` renders
+  external text into video frames through FFmpeg's libass-backed filter.
 - Metadata removal copies selected first streams. It does not claim to remove
   every private byte from every container format.
 - Reverse video and reverse audio filters buffer decoded media in memory.

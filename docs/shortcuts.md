@@ -1164,6 +1164,22 @@ ff.add_subtitles(
 The subtitle stream is encoded as `mov_text` in MP4. It is not burned into the
 video picture.
 
+### Burn subtitles into the picture
+
+```python
+ff.burn_subtitles(
+    "lesson.mp4",
+    "captions.srt",
+    "open-captioned.mp4",
+    font_name="Arial",
+    font_size=28,
+).run()
+```
+
+This uses FFmpeg's `subtitles` filter, so the installed FFmpeg build needs
+libass support. The result has visible text in its video frames and no
+selectable subtitle track from this operation.
+
 ### Remove subtitle tracks
 
 ```python
@@ -1371,6 +1387,7 @@ ff.trim("input.mp4", "clip.mp4", start=5, duration=20).run(
 | `crossfade_audio` | Joined audio file | Transitions between two inputs |
 | `extract_subtitles` | SRT, WebVTT, or ASS | Maps and encodes one text subtitle track |
 | `add_subtitles` | MP4 with selectable text | Adds one `mov_text` subtitle stream |
+| `burn_subtitles` | MP4 with visible text | Renders an external subtitle track into video frames |
 | `remove_subtitles` | MP4 without subtitles | Selects first video and optional first audio |
 | `image_sequence_video` | MP4 from numbered images | Sets input frame rate and fits a canvas |
 | `podcast_audiogram` | Cover video with waveform | Loops an image until audio ends |

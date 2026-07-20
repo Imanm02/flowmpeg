@@ -114,6 +114,7 @@ __all__ = [
     "blurred_background",
     "blur_region",
     "boomerang",
+    "burn_subtitles",
     "change_speed",
     "compress_audio",
     "compress_video",
@@ -1721,6 +1722,50 @@ def add_subtitles(
     return _set_overwrite(output(*streams, to=to, args=args), overwrite)
 
 
+def burn_subtitles(
+    source: Pathish,
+    subtitle_source: Pathish,
+    to: Pathish,
+    *,
+    track: int = 0,
+    font_name: str | None = None,
+    font_size: int | None = None,
+    include_audio: bool = True,
+    preset: VideoPreset = "web",
+    overwrite: bool = False,
+) -> Plan:
+    """Render one external subtitle track into every video frame."""
+
+    _nonnegative_integer("track", track)
+    if font_size is not None and (
+        isinstance(font_size, bool)
+        or not isinstance(font_size, int)
+        or not 1 <= font_size <= 200
+    ):
+        raise GraphError("Subtitle font size must be between 1 and 200")
+    style: list[str] = []
+    if font_name is not None:
+        _nonempty_text("font_name", font_name)
+        if any(character in font_name for character in ",=\r\n"):
+            raise GraphError("Subtitle font name contains unsupported punctuation")
+        style.append(f"FontName={font_name}")
+    if font_size is not None:
+        style.append(f"FontSize={font_size}")
+    subtitle_path = _subtitle_filter_path(subtitle_source)
+    clip = _media_with_optional_audio(source, include_audio)
+    options: dict[str, str | int] = {"filename": subtitle_path, "si": track}
+    if style:
+        options["force_style"] = ",".join(style)
+    video = _require_video(clip).filter("subtitles", **options)
+    return _web_plan(
+        Clip(video, clip.audio),
+        to,
+        (source, subtitle_source),
+        preset,
+        overwrite,
+    )
+
+
 def remove_subtitles(
     source: Pathish,
     to: Pathish,
@@ -2116,6 +2161,18 @@ def _path_text(label: str, value: Pathish) -> str:
     if text.startswith("-"):
         raise GraphError(f"{label} path cannot start with a dash")
     return text
+
+
+def _subtitle_filter_path(value: Pathish) -> str:
+    text = _path_text("Subtitle", value)
+    if os.name == "nt" or re.match(r"^[A-Za-z]:[\\/]", text) or text.startswith("\\\\"):
+        text = text.replace("\\", "/")
+    escaped: list[str] = []
+    for character in text:
+        if character in "\\':,;[]":
+            escaped.append("\\")
+        escaped.append(character)
+    return "".join(escaped)
 
 
 def _set_overwrite(plan: Plan, overwrite: bool) -> Plan:

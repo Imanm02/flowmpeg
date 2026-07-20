@@ -139,6 +139,10 @@ _BASE_EXAMPLES = (
     _Example("video", "flowmpeg social input.mp4 --target vertical -o vertical.mp4"),
     _Example("audio", "flowmpeg voice recording.wav -o finished.wav"),
     _Example("subtitles", "flowmpeg captions movie.mp4 subtitles.srt -o captioned.mp4"),
+    _Example(
+        "subtitles",
+        "flowmpeg burn-captions movie.mp4 subtitles.srt -o open-captioned.mp4",
+    ),
     _Example("subtitles", "flowmpeg subtitles film.mkv -o captions.srt"),
     _Example("subtitles", "flowmpeg strip-subtitles film.mkv -o clean.mp4"),
     _Example("metadata", "flowmpeg clean-metadata camera.mkv -o share.mkv"),
@@ -294,6 +298,7 @@ _FEATURE_REQUIREMENTS = {
         "encoder:mov_text",
         "encoder:srt",
         "encoder:webvtt",
+        "filter:subtitles",
         "muxer:mp4",
     ),
     "audiogram": (
@@ -469,6 +474,7 @@ def build_parser() -> argparse.ArgumentParser:
     _add_crossfade_audio(commands)
     _add_extract_subtitles(commands)
     _add_add_subtitles(commands)
+    _add_burn_subtitles(commands)
     _add_remove_subtitles(commands)
     _add_image_sequence(commands)
     _add_podcast_audiogram(commands)
@@ -1626,6 +1632,26 @@ def _add_add_subtitles(
     _source(parser)
     _source(parser, "subtitle_source")
     parser.add_argument("--language", default="eng")
+    _audio_toggle(parser)
+    _output(parser)
+
+
+def _add_burn_subtitles(
+    commands: argparse._SubParsersAction[argparse.ArgumentParser],
+) -> None:
+    parser = _command(
+        commands,
+        "burn-subtitles",
+        "Render subtitles into every video frame.",
+        shortcuts.burn_subtitles,
+        ("source", "subtitle_source"),
+        aliases=("burn-captions", "hardcode-subtitles"),
+    )
+    _source(parser)
+    _source(parser, "subtitle_source")
+    parser.add_argument("--track", type=_nonnegative_int, default=0)
+    parser.add_argument("--font-name")
+    parser.add_argument("--font-size", type=_positive_int)
     _audio_toggle(parser)
     _output(parser)
 

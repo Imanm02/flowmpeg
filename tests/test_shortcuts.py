@@ -35,6 +35,7 @@ def test_shortcuts_namespace_is_public() -> None:
         "blur_region",
         "blurred_background",
         "boomerang",
+        "burn_subtitles",
         "change_speed",
         "compress_audio",
         "compress_video",
@@ -808,6 +809,13 @@ def test_subtitle_shortcuts_map_selected_streams() -> None:
         language="fra",
     )
     removed = shortcuts.remove_subtitles("movie.mkv", "plain.mp4")
+    burned = shortcuts.burn_subtitles(
+        "movie.mp4",
+        "captions.srt",
+        "open-captioned.mp4",
+        font_name="Arial",
+        font_size=28,
+    )
 
     assert extracted.raw_argv()[6:8] == ("-map", "0:s:1")
     assert extracted.raw_argv()[-3:-1] == ("-c:s", "webvtt")
@@ -816,6 +824,21 @@ def test_subtitle_shortcuts_map_selected_streams() -> None:
         added.raw_argv().index("-c:s") : added.raw_argv().index("-c:s") + 2
     ] == ("-c:s", "mov_text")
     assert "0:s:0" not in removed.raw_argv()
+    assert burned.filter_graph() == (
+        "[0:v:0]subtitles=filename=captions.srt:si=0:"
+        "force_style=FontName=Arial\\,FontSize=28[v0]"
+    )
+    assert "0:a:0?" in burned.raw_argv()
+
+
+def test_burn_subtitles_escapes_windows_filter_paths() -> None:
+    plan = shortcuts.burn_subtitles(
+        "movie.mp4",
+        r"C:\Media Files\captions.srt",
+        "captioned.mp4",
+    )
+
+    assert "filename=C\\\\\\:/Media Files/captions.srt" in (plan.filter_graph() or "")
 
 
 def test_image_sequence_uses_input_frame_rate() -> None:
@@ -1050,6 +1073,18 @@ def test_shortcuts_accept_path_objects_and_overwrite() -> None:
             "captions.srt",
             "out.mp4",
             language="english",
+        ),
+        lambda: shortcuts.burn_subtitles(
+            "in.mp4",
+            "captions.srt",
+            "out.mp4",
+            font_size=0,
+        ),
+        lambda: shortcuts.burn_subtitles(
+            "in.mp4",
+            "captions.srt",
+            "out.mp4",
+            font_name="Arial,FontSize=80",
         ),
         lambda: shortcuts.image_sequence_video("frames/*.png", "out.mp4"),
         lambda: shortcuts.podcast_audiogram(
@@ -1534,6 +1569,7 @@ def test_subtitle_and_metadata_shortcuts_run(
     captioned = source.parent / "captioned.mp4"
     extracted = source.parent / "extracted.srt"
     stripped = source.parent / "stripped.mp4"
+    burned = source.parent / "burned.mp4"
     captions.write_text(
         "1\n00:00:00,000 --> 00:00:00,500\nExample caption\n",
         encoding="utf-8",
@@ -1551,10 +1587,16 @@ def test_subtitle_and_metadata_shortcuts_run(
         ffmpeg=ffmpeg,
         timeout=10,
     )
+    shortcuts.burn_subtitles(source, captions, burned, font_size=28).run(
+        ffmpeg=ffmpeg,
+        timeout=10,
+    )
 
     assert probe(captioned).subtitle_streams
     assert "Example caption" in extracted.read_text(encoding="utf-8")
     assert not probe(stripped).subtitle_streams
+    assert probe(burned).video_streams
+    assert not probe(burned).subtitle_streams
 
 
 @pytest.mark.integration

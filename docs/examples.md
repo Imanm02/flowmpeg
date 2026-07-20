@@ -34,6 +34,7 @@ flowmpeg probe demo-media/sample.mp4
 flowmpeg cut demo-media/sample.mp4 --duration 1 -o demo-media/clip.mp4
 flowmpeg waveform demo-media/voice.wav -o demo-media/waveform.png
 flowmpeg captions demo-media/sample.mp4 demo-media/captions.srt -o demo-media/captioned.mp4
+flowmpeg burn-captions demo-media/sample.mp4 demo-media/captions.srt -o demo-media/open-captioned.mp4
 flowmpeg audiogram demo-media/voice.wav demo-media/cover.jpg -o demo-media/audiogram.mp4
 flowmpeg join demo-media/sample.mp4 demo-media/second.mp4 -o demo-media/joined.mp4
 flowmpeg mark demo-media/sample.mp4 demo-media/logo.png -o demo-media/branded.mp4
@@ -99,6 +100,7 @@ Paths can also be `pathlib.Path` objects.
 | A finished voice recording | `raw-episode.wav` | `episode.wav` |
 | Two tracks with a crossfade | Two WAV files | `program.wav` |
 | Selectable MP4 subtitles | MP4 and SRT | `lesson-captioned.mp4` |
+| Captions visible in every player | MP4 and SRT | `lesson-open.mp4` |
 | A numbered-frame animation | PNG sequence | `animation.mp4` |
 | A podcast audiogram | WAV and cover image | `audiogram.mp4` |
 

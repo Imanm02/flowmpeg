@@ -57,6 +57,7 @@ flowmpeg scale input.mp4 --width 1280 -o small.mp4
 flowmpeg audio input.mp4 -o audio.mp3
 flowmpeg pip input.mp4 camera.mp4 -o with-camera.mp4
 flowmpeg waveform audio.mp3 -o waveform.png
+flowmpeg burn-captions lesson.mp4 captions.srt -o lesson-open.mp4
 flowmpeg social input.mp4 --target vertical -o vertical.mp4
 flowmpeg voice recording.wav -o finished.wav
 flowmpeg captions movie.mp4 subtitles.srt -o captioned.mp4

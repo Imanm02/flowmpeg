@@ -470,6 +470,16 @@ ff.add_subtitles(
 The subtitles are stored as `mov_text`. They are not burned into the picture,
 so a player can turn them on or off.
 
+For captions that stay visible in every player, render the same file into the
+video frames:
+
+```console
+flowmpeg burn-captions lesson.mp4 captions.srt --font-size 28 -o lesson-open.mp4
+```
+
+This needs FFmpeg's libass-backed `subtitles` filter. The resulting text is
+part of the picture and cannot be disabled during playback.
+
 ### 23. Remove subtitle tracks
 
 **Input:** `screening.mkv`.

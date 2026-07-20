@@ -137,6 +137,7 @@ The table below is a compact editing index for scanning this longer guide.
 | Crossfade two audio files | `crossfade-audio` | `crossfade` |
 | Extract a subtitle track | `extract-subtitles` | `subtitles` |
 | Add selectable subtitles | `add-subtitles` | `captions` |
+| Burn subtitles into video | `burn-subtitles` | `burn-captions`, `hardcode-subtitles` |
 | Remove subtitle tracks | `remove-subtitles` | `strip-subtitles` |
 | Encode numbered images | `image-sequence-video` | `timelapse`, `image-sequence` |
 | Make a podcast audiogram | `podcast-audiogram` | `audiogram` |
@@ -843,16 +844,19 @@ Both inputs must be longer than the crossfade. The supported curves are
 
 ## Subtitle and metadata jobs
 
-### Extract, add, or remove subtitles
+### Extract, add, burn, or remove subtitles
 
 ```console
 flowmpeg subtitles film.mkv --track 0 -o captions.srt
 flowmpeg captions film.mp4 captions.srt --language eng -o captioned.mp4
+flowmpeg burn-captions film.mp4 captions.srt --font-size 28 -o open-captioned.mp4
 flowmpeg strip-subtitles film.mkv -o plain.mp4
 ```
 
 Extraction supports SRT, WebVTT, and ASS text outputs. Addition creates a
-selectable `mov_text` track in MP4. It does not burn text into video frames.
+selectable `mov_text` track in MP4. `burn-captions` renders text into the video
+frames through FFmpeg's `subtitles` filter and needs an FFmpeg build with
+libass support. `--font-name` and `--font-size` set two ASS style fields.
 
 ### Remove metadata or tag audio
 

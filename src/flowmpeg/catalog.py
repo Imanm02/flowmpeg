@@ -409,6 +409,15 @@ _BASE_COMMAND_CATALOG = (
         capability_group="subtitles",
     ),
     CommandSpec(
+        "burn-subtitles",
+        "subtitles",
+        "Render subtitles into video frames",
+        ("burn-captions", "hardcode-subtitles"),
+        input_kind="video and subtitle",
+        output_kind="video",
+        capability_group="subtitles",
+    ),
+    CommandSpec(
         "remove-subtitles",
         "subtitles",
         "Create an MP4 without subtitles",
@@ -545,6 +554,7 @@ _COMMAND_TAGS = {
     "image-sequence-video": ("silent-input",),
     "extract-subtitles": ("archive", "copy"),
     "add-subtitles": ("delivery",),
+    "burn-subtitles": ("delivery", "silent-input"),
     "remove-subtitles": ("copy", "privacy"),
     "strip-metadata": ("copy", "privacy"),
     "probe": ("archive",),
@@ -729,6 +739,7 @@ _COMMAND_REQUIREMENTS = {
     ),
     "extract-subtitles": ("encoder:srt", "muxer:srt"),
     "add-subtitles": _requirements(*_MP4, "encoder:mov_text"),
+    "burn-subtitles": _requirements(*_MP4, "filter:subtitles"),
     "remove-subtitles": _MP4,
     "strip-metadata": ("muxer:matroska",),
 }

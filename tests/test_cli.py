@@ -108,6 +108,7 @@ from flowmpeg.runner import RunResult
         ["crossfade-audio", "one.wav", "two.wav", "-o", "out.wav"],
         ["extract-subtitles", "in.mkv", "-o", "out.srt"],
         ["add-subtitles", "in.mp4", "captions.srt", "-o", "out.mp4"],
+        ["burn-subtitles", "in.mp4", "captions.srt", "-o", "out.mp4"],
         ["remove-subtitles", "in.mkv", "-o", "out.mp4"],
         ["image-sequence-video", "frame-%04d.png", "-o", "out.mp4"],
         ["podcast-audiogram", "in.wav", "cover.jpg", "-o", "out.mp4"],
@@ -168,6 +169,7 @@ def test_every_media_command_builds_a_dry_run(
         ["mono", "in.wav", "-o", "out.wav"],
         ["crossfade", "one.wav", "two.wav", "-o", "out.wav"],
         ["captions", "in.mp4", "captions.srt", "-o", "out.mp4"],
+        ["burn-captions", "in.mp4", "captions.srt", "-o", "out.mp4"],
         ["timelapse", "frame-%04d.png", "-o", "out.mp4"],
         ["audiogram", "in.wav", "cover.jpg", "-o", "out.mp4"],
         ["clean-metadata", "in.mkv", "-o", "out.mkv"],
@@ -1754,6 +1756,7 @@ def test_commands_json_exposes_discovery_fields(
     assert {item["name"] for item in data} == {
         "extract-subtitles",
         "add-subtitles",
+        "burn-subtitles",
         "remove-subtitles",
     }
     assert data[0]["category"] == "subtitles"

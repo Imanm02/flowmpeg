@@ -24,11 +24,13 @@ flowchart LR
     G --> A["Audio transition"]
     G --> M["Metadata-safe copy"]
     G --> S["Image sequence"]
+    G --> C["Open captions"]
     V --> P["Probe or compare"]
     D --> P
     A --> P
     M --> P
     S --> P
+    C --> P
 ```
 
 ## Video composition
@@ -67,6 +69,20 @@ flowmpeg crossfade demo-media/voice.wav demo-media/music.wav --duration 0.5 --co
 
 Both inputs are two seconds long, so `blend.wav` is about 3.5 seconds long.
 
+## Open captions
+
+Render the generated subtitle cue into the sample video:
+
+```console
+flowmpeg burn-captions demo-media/sample.mp4 demo-media/captions.srt --font-size 28 --no-progress -o demo-output/open-captioned.mp4
+```
+
+The caption is part of the output picture. Check its local requirements first:
+
+```console
+flowmpeg doctor --command burn-captions
+```
+
 ## Metadata-safe copy
 
 Remove container metadata and chapters from the branded result. The source
@@ -101,6 +117,7 @@ flowmpeg probe demo-output/sequence.mp4 --json
 | `preview.gif` | 240 pixels wide | Animation contains the full source timeline |
 | `sheet.jpg` | Two columns by two rows | Four distinct moments appear |
 | `blend.wav` | About 3.5 seconds | The tones overlap for half a second |
+| `open-captioned.mp4` | 320 by 180 | Caption text appears in the video frames |
 | `clean.mp4` | Same stream kinds as branded input | Container metadata is absent |
 | `sequence.mp4` | About 2 seconds | Four frames play at 2 frames per second |
 

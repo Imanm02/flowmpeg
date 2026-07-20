@@ -79,12 +79,13 @@ Exact needs are checked by `flowmpeg doctor --command NAME`.
 | `contact-sheet` | `sheet` | media | image | `creator`, `archive`, `silent-input` | `analysis-images` | `encoder:mjpeg`, `filter:fps`, `filter:pad`, `filter:scale`, `filter:setsar`, `filter:tile`, `muxer:image2` |
 | `image-sequence-video` | `timelapse`, `image-sequence` | image sequence | video | `creator`, `silent-input` | `web-video` | `encoder:libx264`, `filter:pad`, `filter:scale`, `filter:setsar`, `muxer:mp4` |
 
-## Subtitles (3)
+## Subtitles (4)
 
 | Command | Aliases | Input | Output | Tags | Doctor group | Exact needs |
 |---|---|---|---|---|---|---|
 | `extract-subtitles` | `subtitles` | media | subtitle | `accessibility`, `archive`, `copy` | `subtitles` | `encoder:srt`, `muxer:srt` |
 | `add-subtitles` | `captions` | media | video | `accessibility`, `delivery` | `subtitles` | `encoder:aac`, `encoder:libx264`, `encoder:mov_text`, `muxer:mp4` |
+| `burn-subtitles` | `burn-captions`, `hardcode-subtitles` | video and subtitle | video | `accessibility`, `delivery`, `silent-input` | `subtitles` | `encoder:aac`, `encoder:libx264`, `filter:subtitles`, `muxer:mp4` |
 | `remove-subtitles` | `strip-subtitles` | media | video | `accessibility`, `copy`, `privacy` | `web-video` | `encoder:aac`, `encoder:libx264`, `muxer:mp4` |
 
 ## Metadata (1)
