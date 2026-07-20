@@ -111,4 +111,5 @@ only a discussion or test placeholder.
 - FFmpeg-specific fixes need a real-media integration test when practical.
 - Documentation command examples must use registered commands.
 - New public commands must declare their category and capability needs.
-- Commits must pass formatting, lint, typing, tests, and the content scan.
+- Commits must pass formatting, lint, typing, tests, and
+  `python scripts/content_scan.py`.

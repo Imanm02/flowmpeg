@@ -239,6 +239,7 @@ python -m pip install -e ".[dev]"
 python -m ruff check .
 python -m ruff format --check .
 python -m mypy src tests examples
+python scripts/content_scan.py
 python -m pytest
 ```
 

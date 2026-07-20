@@ -21,6 +21,7 @@ compilation, and parsing run without either binary.
 python -m ruff check .
 python -m ruff format --check .
 python -m mypy src tests examples
+python scripts/content_scan.py
 python -m pytest
 python -m pip wheel . --no-deps --wheel-dir dist
 ```
