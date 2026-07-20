@@ -84,3 +84,43 @@ flowmpeg audio input.mkv --track 1 -o second-track.mp3
 The human probe view prints absolute stream numbers for reference. The typed
 Python result also separates `video_streams`, `audio_streams`, and
 `subtitle_streams`, which makes audio-only indexing explicit.
+
+## Social frame sizes and fill modes
+
+The `social` command names fixed even dimensions. This makes the output size
+predictable before FFmpeg reads the input.
+
+| Target | Width | Height | Ratio | Common placement |
+|---|---:|---:|---:|---|
+| `vertical` | 1080 | 1920 | 9:16 | Full-screen phone video |
+| `portrait` | 1080 | 1350 | 4:5 | Tall feed post |
+| `square` | 1080 | 1080 | 1:1 | Square feed post |
+| `landscape` | 1920 | 1080 | 16:9 | Standard wide video |
+
+```text
+vertical      portrait       square        landscape
++-------+     +---------+    +---------+   +---------------+
+|       |     |         |    |         |   |               |
+|       |     |         |    |         |   |               |
+|       |     |         |    |         |   +---------------+
+|       |     +---------+    +---------+
++-------+
+```
+
+The fill mode decides what happens when the input and output ratios differ.
+
+| Fill | Keeps the full source frame | Adds a generated background | Crops source edges | Main control |
+|---|:---:|:---:|:---:|---|
+| `fit` | Yes | Solid color | No | `--color` |
+| `blur` | Yes | Blurred source copy | Background only | `--blur` |
+| `crop` | No | No | Yes | Centered crop |
+
+```console
+flowmpeg social wide.mp4 --target vertical --fill fit --color black -o fit.mp4
+flowmpeg social wide.mp4 --target vertical --fill blur --blur 24 -o blur.mp4
+flowmpeg social wide.mp4 --target vertical --fill crop -o crop.mp4
+```
+
+Use `fit` when every source pixel must remain visible. Use `crop` when filling
+the frame matters more than its outer edges. `blur` keeps the full foreground
+and fills unused space with a scaled, blurred copy.

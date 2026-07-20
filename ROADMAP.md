@@ -69,7 +69,7 @@ only a discussion or test placeholder.
 - [ ] Build safe graph examples without starting FFmpeg.
 - [x] Add an encode, copy, and filter behavior matrix.
 - [x] Add a stream retention and track-selection matrix.
-- [ ] Add a social frame dimension and fill-mode comparison.
+- [x] Add a social frame dimension and fill-mode comparison.
 - [ ] Add a plan lifecycle and failure-path diagram.
 - [ ] Add a podcast voice-chain diagram.
 - [ ] Add a fixed-region privacy blur coordinate diagram.
