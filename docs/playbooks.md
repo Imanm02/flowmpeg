@@ -1,4 +1,4 @@
-# Four media playbooks
+# Five media playbooks
 
 These playbooks connect several one-line jobs into a deliverable. Every stage
 uses a new path so the original and each useful intermediate remain protected.
@@ -210,6 +210,50 @@ ff.social_video("deliver/demo.mp4", "deliver/demo-vertical.mp4", target="vertica
 ff.social_video("deliver/demo.mp4", "deliver/demo-square.mp4", target="square", fill="fit").run()
 ```
 
+## Privacy-safe meeting export
+
+### Inputs and results
+
+| File | Role |
+|---|---|
+| `meeting.mp4` | Original meeting recording |
+| `work/meeting-muted.mp4` | Copy with one private sentence muted |
+| `work/meeting-blurred.mp4` | Copy with a fixed screen area blurred |
+| `deliver/meeting-share.mp4` | Final copy without mapped metadata or chapters |
+
+Check the audio and fixed-region filter groups, then inspect the source before
+choosing time and pixel coordinates:
+
+```console
+flowmpeg doctor --require audio-processing
+flowmpeg doctor --require creator-video
+flowmpeg probe meeting.mp4
+```
+
+Build each review point and compare the final file with the original:
+
+```console
+flowmpeg silence-section meeting.mp4 --start 73.2 --end 81.5 -o work/meeting-muted.mp4
+flowmpeg privacy-blur work/meeting-muted.mp4 --x 1320 --y 80 --width 520 --height 300 -o work/meeting-blurred.mp4
+flowmpeg clean-metadata work/meeting-blurred.mp4 -o deliver/meeting-share.mp4
+flowmpeg probe deliver/meeting-share.mp4 --json
+flowmpeg compare meeting.mp4 deliver/meeting-share.mp4
+```
+
+The blur stays at one rectangle. Preview a short section when the hidden
+window moves. Metadata removal copies selected streams, so it is not a claim
+that every private byte has been removed from every possible container.
+
+The Python sequence uses the same protected intermediate files:
+
+```python
+from flowmpeg import shortcuts as ff
+
+ff.mute_section("meeting.mp4", "work/meeting-muted.mp4", start=73.2, end=81.5).run()
+ff.blur_region("work/meeting-muted.mp4", "work/meeting-blurred.mp4", x=1320, y=80, width=520, height=300).run()
+ff.strip_metadata("work/meeting-blurred.mp4", "deliver/meeting-share.mp4").run()
+```
+
 ## File flow at a glance
 
 ```mermaid
@@ -226,6 +270,7 @@ flowchart LR
 | Podcast | Tagged M4A | 1 | Tags and audiogram duration |
 | Tape review | Progressive MP4 | 2 | Field handling and sampled frames |
 | Product demo | Landscape MP4 | 3 | Audio source and social framing |
+| Meeting export | Metadata-cleaned MP4 | 2 | Muted range and fixed blur area |
 
 Use `--dry-run --explain` on any editing stage to inspect its inputs, filters,
 stream maps, and output without starting FFmpeg.
