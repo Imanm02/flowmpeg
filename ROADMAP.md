@@ -84,7 +84,7 @@ only a discussion or test placeholder.
 - [x] Add a generated demo-media script based on FFmpeg test sources.
 - [x] Add an education workflow from trim through selectable captions.
 - [x] Add a podcast workflow from voice cleanup through tags and audiogram.
-- [x] Add an archive workflow with deinterlacing and review images.
+- [x] Add a tape review workflow with deinterlacing and review images.
 - [x] Add a creator workflow for product demos and derived previews.
 
 ## Current limits

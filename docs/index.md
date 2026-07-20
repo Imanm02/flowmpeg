@@ -10,7 +10,7 @@ flowmpeg setup
 flowmpeg doctor
 ```
 
-Then search what is installed:
+Then browse Flowmpeg's command and example catalogs:
 
 ```console
 flowmpeg commands

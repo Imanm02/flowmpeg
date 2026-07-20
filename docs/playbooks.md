@@ -11,6 +11,18 @@ source files -> work intermediates -> deliver files -> final probe
 Flowmpeg does not create parent directories. It also does not remove
 intermediate files after a run.
 
+Doctor feature groups are broad preflight checks, not per-command proofs. A
+group may test formats that one stage does not use, and it may omit part of a
+specific filter graph. After the preflight, inspect one representative stage
+with `--dry-run --explain` and run a short source before committing to a long
+job.
+
+These staged examples encode video at several boundaries. That makes restart
+and inspection points clear, but it takes more time and can add generation
+loss. For a quality-sensitive final path, combine the stages in one graph and
+use the [encoding behavior matrix](visual-guide.md#encode-copy-and-filter-behavior)
+to identify each encode boundary.
+
 ## Lesson with selectable captions
 
 ### Inputs and results
@@ -22,7 +34,7 @@ intermediate files after a run.
 | `captions.srt` | Captions timed from the start of the trimmed lesson |
 | `deliver/lesson-captioned.mp4` | H.264 lesson with AAC audio and selectable text |
 
-Check the three feature groups used by the sequence:
+Run three broad preflight checks for the sequence:
 
 ```console
 flowmpeg doctor --require web-video
@@ -40,10 +52,11 @@ flowmpeg captions work/lesson-branded.mp4 captions.srt --language eng -o deliver
 flowmpeg probe deliver/lesson-captioned.mp4 --json
 ```
 
-The last probe should report one video stream, one audio stream, and one
-subtitle stream. A player may require captions to be enabled because the text
-track is selectable. If the camera recording is silent, add `--no-audio` to
-the cut, mark, and captions commands.
+With normal camera audio, the last probe should report one video stream, one
+audio stream, and one subtitle stream. A silent source processed with
+`--no-audio` should report video and subtitle streams only. A player may
+require captions to be enabled because the text track is selectable. Add
+`--no-audio` to the cut, mark, and captions commands for that silent branch.
 
 The same edit stages in Python are:
 
@@ -66,7 +79,7 @@ ff.add_subtitles("work/lesson-branded.mp4", "captions.srt", "deliver/lesson-capt
 | `deliver/episode.m4a` | Leveled AAC audio with tags |
 | `deliver/episode-audiogram.mp4` | Cover video with an animated waveform |
 
-Check the required groups:
+Run broad preflight checks for the audio stages:
 
 ```console
 flowmpeg doctor --require voice-cleanup
@@ -108,10 +121,10 @@ preservation file; an H.264 output is not presented here as an archive master.
 |---|---|
 | `tape-capture.mpg` | Captured source |
 | `deliver/tape-progressive.mp4` | Deinterlaced review video |
-| `deliver/tape-sheet.jpg` | Fifteen-frame visual index |
+| `deliver/tape-sheet.jpg` | Fifteen-cell visual index |
 | `deliver/tape-cover.jpg` | One frame for a catalog record |
 
-Check video and review-image support:
+Run broad preflight checks for video and review-image support:
 
 ```console
 flowmpeg doctor --require creator-video
@@ -128,9 +141,10 @@ flowmpeg thumb deliver/tape-progressive.mp4 --at 30 --width 1280 -o deliver/tape
 flowmpeg probe deliver/tape-progressive.mp4 --json
 ```
 
-The sheet samples one frame every two minutes. Change `--interval` after
-checking the recording duration. Deinterlacing should only be applied when the
-source is actually interlaced.
+The sheet has 15 cells and samples up to 15 frames, one every two minutes. A
+short recording can leave cells empty. Change `--interval` after checking the
+duration. Deinterlacing should only be applied when the source is actually
+interlaced.
 
 Python calls for the three outputs are:
 
@@ -156,7 +170,7 @@ ff.thumbnail("deliver/tape-progressive.mp4", "deliver/tape-cover.jpg", at=30, wi
 | `deliver/demo-vertical.mp4` | Vertical social copy |
 | `deliver/demo-square.mp4` | Square social copy |
 
-Check composition, GIF, and web-video groups:
+Run broad preflight checks for composition, GIF, and web-video work:
 
 ```console
 flowmpeg doctor --require composition
@@ -174,6 +188,9 @@ flowmpeg mark work/demo-cut.mp4 logo.png --position top-left --width 140 -o deli
 flowmpeg gif deliver/demo.mp4 --start 5 --duration 4 --width 480 --fps 10 -o deliver/demo.gif
 flowmpeg social deliver/demo.mp4 --target vertical --fill blur -o deliver/demo-vertical.mp4
 flowmpeg social deliver/demo.mp4 --target square --fill fit -o deliver/demo-square.mp4
+flowmpeg probe deliver/demo.mp4 --json
+flowmpeg probe deliver/demo-vertical.mp4 --json
+flowmpeg probe deliver/demo-square.mp4 --json
 ```
 
 The picture-in-picture job keeps audio from `screen.mp4`; camera audio is not

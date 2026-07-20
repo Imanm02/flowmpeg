@@ -163,8 +163,8 @@ print(result.elapsed)
 
 ## Podcast voice chain
 
-`voice` is a fixed one-pass chain for spoken audio. Each stage has a separate
-job, so the order matters.
+`voice` is one FFmpeg job with a fixed chain for spoken audio. Each filter step
+has a separate purpose, so the order matters.
 
 ```mermaid
 flowchart LR
@@ -234,4 +234,6 @@ flowmpeg privacy-blur driveway.mp4 --x 820 --y 700 --width 260 --height 90 --rad
 
 The rectangle must fit inside the source frame. This shortcut does not track a
 moving face, plate, or screen. Split a moving subject into shorter sections
-with different coordinates, or use a tracking tool before Flowmpeg.
+with different coordinates, or use a tracking tool before Flowmpeg. Review the
+entire output before treating it as a privacy edit because motion between
+coordinate changes can expose the subject.
