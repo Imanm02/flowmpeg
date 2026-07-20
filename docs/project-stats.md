@@ -9,18 +9,18 @@ source change.
 
 | Measure | Count | Source |
 |---|---:|---|
-| Canonical terminal commands | 68 | `COMMAND_CATALOG` |
-| Command aliases | 68 | `COMMAND_CATALOG` |
+| Canonical terminal commands | 69 | `COMMAND_CATALOG` |
+| Command aliases | 70 | `COMMAND_CATALOG` |
 | Python shortcut functions | 59 | `shortcuts.__all__` |
-| One-line terminal examples | 69 | CLI example catalog |
+| One-line terminal examples | 70 | CLI example catalog |
 | Stable error identifiers | 16 | CLI error guide |
 | Stable audit findings | 12 | Media audit |
 | Doctor feature groups | 14 | Doctor requirements |
-| Test function definitions | 327 | `tests/test_*.py` |
-| FFmpeg integration tests | 29 | Pytest markers |
+| Test function definitions | 333 | `tests/test_*.py` |
+| FFmpeg integration tests | 30 | Pytest markers |
 | Documentation pages | 15 | `docs/*.md` |
-| Documented command lines | 337 | Markdown code lines |
-| Completed roadmap items | 95 | `ROADMAP.md` |
+| Documented command lines | 342 | Markdown code lines |
+| Completed roadmap items | 96 | `ROADMAP.md` |
 | Open roadmap items | 0 | `ROADMAP.md` |
 
 ## Category matrix
@@ -37,7 +37,7 @@ counts distinct canonical commands with at least one built-in example.
 | images | 6 | 7 | 6 | 6/6 (100%) | 6 | `######` |
 | subtitles | 4 | 5 | 4 | 4/4 (100%) | 4 | `####` |
 | metadata | 3 | 4 | 3 | 3/3 (100%) | 2 | `###` |
-| inspect | 5 | 3 | 5 | 5/5 (100%) | 0 | `#####` |
+| inspect | 6 | 5 | 6 | 6/6 (100%) | 0 | `######` |
 | help | 4 | 0 | 4 | 4/4 (100%) | 0 | `####` |
 
 ## Use-case coverage
@@ -47,12 +47,12 @@ The bar uses one `#` per canonical command carrying the tag.
 | Tag | Commands | Examples | Bar |
 |---|---:|---:|---|
 | accessibility | 4 | 4 | `####` |
-| archive | 12 | 12 | `############` |
+| archive | 13 | 13 | `#############` |
 | copy | 7 | 7 | `#######` |
 | creator | 40 | 41 | `########################################` |
 | delivery | 19 | 20 | `###################` |
 | discover | 4 | 4 | `####` |
-| inspect | 5 | 5 | `#####` |
+| inspect | 6 | 6 | `######` |
 | podcast | 14 | 14 | `##############` |
 | privacy | 4 | 4 | `####` |
 | silent-input | 31 | 32 | `###############################` |

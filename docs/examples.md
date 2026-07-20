@@ -32,6 +32,7 @@ Try the generated files with these one-liners:
 ```console
 flowmpeg probe demo-media/sample.mp4
 flowmpeg audit demo-media/sample.mp4 --expect av
+flowmpeg loudness demo-media/voice.wav
 flowmpeg cut demo-media/sample.mp4 --duration 1 -o demo-media/clip.mp4
 flowmpeg webm demo-media/sample.mp4 -o demo-media/sample.webm
 flowmpeg hevc demo-media/sample.mp4 -o demo-media/sample-hevc.mp4
@@ -94,6 +95,7 @@ Paths can also be `pathlib.Path` objects.
 | A silent video | `interview.mp4` | `silent.mp4` |
 | An MP3 from a video | `interview.mp4` | `voice.mp3` |
 | Standard-rate mono audio | `field.wav` | `field-standard.wav` |
+| A loudness measurement report | `episode.wav` | Terminal text or JSON |
 | A video with a logo | `interview.mp4`, `logo.png` | `branded.mp4` |
 | A video with background music | `interview.mp4`, `music.mp3` | `with-music.mp4` |
 | One podcast mix | Two WAV files | `podcast.wav` |

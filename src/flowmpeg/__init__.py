@@ -26,6 +26,7 @@ from flowmpeg.errors import (
     OutputExistsError,
     ProbeError,
 )
+from flowmpeg.loudness import LoudnessMeasurement, measure_loudness
 from flowmpeg.model import Expression, MediaGraph, StreamKind, expr
 from flowmpeg.plan import OutputSpec, Plan, output
 from flowmpeg.probe import (
@@ -87,6 +88,7 @@ __all__ = [
     "FormatInfo",
     "GraphError",
     "JobTimeoutError",
+    "LoudnessMeasurement",
     "MediaGraph",
     "MediaInput",
     "MediaInfo",
@@ -121,6 +123,7 @@ __all__ = [
     "fade_audio",
     "input",
     "media",
+    "measure_loudness",
     "mix_audio",
     "normalize_loudness",
     "overlay_video",

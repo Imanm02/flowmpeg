@@ -32,6 +32,7 @@ from flowmpeg.errors import (
     OutputExistsError,
     ProbeError,
 )
+from flowmpeg.loudness import LoudnessMeasurement, measure_loudness
 from flowmpeg.plan import Plan
 from flowmpeg.probe import (
     AudioStreamInfo,
@@ -167,6 +168,7 @@ _BASE_EXAMPLES = (
     _Example("inspect", "flowmpeg probe input.mp4"),
     _Example("inspect", "flowmpeg audit input.mp4 --expect av"),
     _Example("inspect", "flowmpeg compare original.mp4 smaller.mp4"),
+    _Example("inspect", "flowmpeg loudness episode.wav"),
     _Example("inspect", "flowmpeg doctor"),
     _Example("inspect", "flowmpeg setup"),
     _Example("help", "flowmpeg errors"),
@@ -523,6 +525,7 @@ def build_parser() -> argparse.ArgumentParser:
     _add_probe(commands)
     _add_audit(commands)
     _add_compare(commands)
+    _add_loudness(commands)
     _add_doctor(commands)
     _add_setup(commands)
     _add_errors(commands)
@@ -2003,6 +2006,28 @@ def _add_compare(commands: argparse._SubParsersAction[argparse.ArgumentParser]) 
     parser.set_defaults(handler=_run_compare)
 
 
+def _add_loudness(
+    commands: argparse._SubParsersAction[argparse.ArgumentParser],
+) -> None:
+    parser = commands.add_parser(
+        "analyze-loudness",
+        aliases=["loudness", "measure-loudness"],
+        help="Measure EBU R128 audio loudness.",
+        description="Measure one audio track without writing a media file.",
+        allow_abbrev=False,
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+    _source(parser)
+    parser.add_argument("--track", type=_nonnegative_int, default=0)
+    parser.add_argument("--target-integrated", type=_finite_float, default=-16.0)
+    parser.add_argument("--target-peak", type=_finite_float, default=-1.5)
+    parser.add_argument("--target-range", type=_finite_float, default=11.0)
+    parser.add_argument("--ffmpeg", default="ffmpeg", help="FFmpeg executable")
+    parser.add_argument("--timeout", type=_positive_float)
+    parser.add_argument("--json", action="store_true", help="Print loudness JSON")
+    parser.set_defaults(handler=_run_loudness)
+
+
 def _add_doctor(commands: argparse._SubParsersAction[argparse.ArgumentParser]) -> None:
     parser = commands.add_parser(
         "doctor",
@@ -2248,6 +2273,25 @@ def _run_compare(args: argparse.Namespace) -> int:
         print(json.dumps(_redact_json(data), indent=2, sort_keys=True))
     else:
         print(redact_text(_format_comparison(result)))
+    return 0
+
+
+def _run_loudness(args: argparse.Namespace) -> int:
+    result = measure_loudness(
+        cast(str, args.source),
+        track=cast(int, args.track),
+        target_integrated=cast(float, args.target_integrated),
+        target_peak=cast(float, args.target_peak),
+        target_range=cast(float, args.target_range),
+        ffmpeg=cast(str, args.ffmpeg),
+        timeout=cast(float | None, args.timeout),
+    )
+    if cast(bool, args.json):
+        data = asdict(result)
+        data["schema_version"] = _JSON_SCHEMA_VERSION
+        print(json.dumps(_redact_json(data), indent=2, sort_keys=True))
+    else:
+        print(redact_text(_format_loudness(result)))
     return 0
 
 
@@ -2701,6 +2745,29 @@ def _format_comparison(result: MediaComparison) -> str:
     ]
     lines.extend(" | ".join(row) for row in rows)
     return "\n".join(lines)
+
+
+def _format_loudness(result: LoudnessMeasurement) -> str:
+    def metric(value: float | None, unit: str) -> str:
+        return "not measured" if value is None else f"{value:g} {unit}"
+
+    return "\n".join(
+        (
+            f"Source: {result.source}",
+            f"Audio track: {result.track}",
+            f"Integrated: {metric(result.integrated_lufs, 'LUFS')}",
+            f"True peak: {metric(result.true_peak_dbfs, 'dBFS')}",
+            f"Loudness range: {metric(result.loudness_range_lu, 'LU')}",
+            f"Threshold: {metric(result.threshold_lufs, 'LUFS')}",
+            f"Target offset: {metric(result.target_offset_lu, 'LU')}",
+            (
+                "Target: "
+                f"{result.target_integrated_lufs:g} LUFS, "
+                f"{result.target_true_peak_dbfs:g} dBFS, "
+                f"{result.target_loudness_range_lu:g} LU range"
+            ),
+        )
+    )
 
 
 def _detect_installer() -> _Installer | None:

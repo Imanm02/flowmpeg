@@ -500,6 +500,15 @@ _BASE_COMMAND_CATALOG = (
         output_kind="report",
     ),
     CommandSpec(
+        "analyze-loudness",
+        "inspect",
+        "Measure EBU R128 audio loudness",
+        ("loudness", "measure-loudness"),
+        input_kind="audio",
+        output_kind="report",
+        capability_group="audio-processing",
+    ),
+    CommandSpec(
         "doctor",
         "inspect",
         "Check tools and media capabilities",
@@ -615,6 +624,7 @@ _COMMAND_TAGS = {
     "strip-metadata": ("copy", "privacy"),
     "remux": ("archive", "copy", "delivery"),
     "probe": ("archive",),
+    "analyze-loudness": ("archive",),
     "tag-media": ("archive", "copy"),
 }
 
@@ -825,6 +835,7 @@ _COMMAND_REQUIREMENTS = {
     "strip-metadata": ("muxer:matroska",),
     "remux": ("muxer:matroska",),
     "tag-media": ("muxer:mp4",),
+    "analyze-loudness": ("filter:loudnorm",),
 }
 
 COMMAND_CATALOG = tuple(

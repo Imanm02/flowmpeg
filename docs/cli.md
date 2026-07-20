@@ -1105,6 +1105,42 @@ if not result.passes("warning"):
     print(result.findings)
 ```
 
+## Measure audio loudness
+
+Measure the first audio track without writing an output file:
+
+```console
+flowmpeg loudness episode.wav
+```
+
+A representative result is:
+
+```text
+Source: episode.wav
+Audio track: 0
+Integrated: -18.4 LUFS
+True peak: -2.1 dBFS
+Loudness range: 3.2 LU
+Threshold: -28.5 LUFS
+Target offset: 0.1 LU
+Target: -16 LUFS, -1.5 dBFS, 11 LU range
+```
+
+Set another normalization target or select a different audio track:
+
+```console
+flowmpeg measure-loudness film.mkv --track 1 --target-integrated -23 --target-peak -2 --json
+```
+
+The Python call returns the same typed fields:
+
+```python
+from flowmpeg import measure_loudness
+
+reading = measure_loudness("episode.wav", timeout=30)
+print(reading.integrated_lufs)
+```
+
 ## Diagnose an installation
 
 Start with the read-only setup check:

@@ -100,13 +100,14 @@ Exact needs are checked by `flowmpeg doctor --command NAME`.
 | `remux` | `rewrap`, `copy-container` | media | media | `archive`, `copy`, `delivery` | none | `muxer:matroska` |
 | `tag-media` | `label-media` | media | media | `archive`, `copy` | none | `muxer:mp4` |
 
-## Inspect (5)
+## Inspect (6)
 
 | Command | Aliases | Input | Output | Tags | Doctor group | Exact needs |
 |---|---|---|---|---|---|---|
 | `probe` | none | media | report | `inspect`, `archive` | none | none |
 | `audit-media` | `audit`, `check-media` | media | report | `inspect` | none | none |
 | `compare` | none | two media files | report | `inspect` | none | none |
+| `analyze-loudness` | `loudness`, `measure-loudness` | audio | report | `inspect`, `archive` | `audio-processing` | `filter:loudnorm` |
 | `doctor` | none | none | report | `inspect` | none | none |
 | `setup` | `install-tools` | none | report | `inspect` | none | none |
 

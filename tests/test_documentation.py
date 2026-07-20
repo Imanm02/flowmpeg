@@ -132,6 +132,11 @@ def test_python_documentation_examples_build(
 
     monkeypatch.setattr(Plan, "run", skip_run)
     monkeypatch.setattr(flowmpeg, "probe", lambda *args, **kwargs: info)
+    monkeypatch.setattr(
+        flowmpeg,
+        "measure_loudness",
+        lambda *args, **kwargs: SimpleNamespace(integrated_lufs=-18.4),
+    )
     text = path.read_text(encoding="utf-8")
     namespace: dict[str, object] = {"ff": shortcuts}
     for match in _PYTHON_BLOCK.finditer(text):

@@ -25,6 +25,7 @@ from flowmpeg.errors import (
     OutputExistsError,
     ProbeError,
 )
+from flowmpeg.loudness import LoudnessMeasurement
 from flowmpeg.plan import Plan
 from flowmpeg.probe import (
     AudioStreamInfo,
@@ -758,6 +759,34 @@ def test_compare_json_reports_source_values(
     assert report["size_delta"] == -400
     assert report["before"]["video_codec"] == "h264"
     assert report["after"]["width"] == 1280
+
+
+def test_loudness_prints_measured_values(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    monkeypatch.setattr(cli, "measure_loudness", lambda *args, **kwargs: _loudness())
+
+    assert cli.main(["loudness", "episode.wav"]) == 0
+    output = capsys.readouterr().out
+
+    assert "Integrated: -18.4 LUFS" in output
+    assert "True peak: -2.1 dBFS" in output
+    assert "Target: -16 LUFS" in output
+
+
+def test_loudness_json_has_schema_version(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    monkeypatch.setattr(cli, "measure_loudness", lambda *args, **kwargs: _loudness())
+
+    assert cli.main(["measure-loudness", "episode.wav", "--json"]) == 0
+    report = json.loads(capsys.readouterr().out)
+
+    assert report["schema_version"] == 1
+    assert report["integrated_lufs"] == -18.4
+    assert report["target_true_peak_dbfs"] == -1.5
 
 
 def test_doctor_json_reports_ready(
@@ -2002,3 +2031,18 @@ def _comparison() -> MediaComparison:
         0,
     )
     return MediaComparison(before, after, -400, -40.0, -0.5)
+
+
+def _loudness() -> LoudnessMeasurement:
+    return LoudnessMeasurement(
+        source="episode.wav",
+        track=0,
+        integrated_lufs=-18.4,
+        true_peak_dbfs=-2.1,
+        loudness_range_lu=3.2,
+        threshold_lufs=-28.5,
+        target_offset_lu=0.1,
+        target_integrated_lufs=-16,
+        target_true_peak_dbfs=-1.5,
+        target_loudness_range_lu=11,
+    )

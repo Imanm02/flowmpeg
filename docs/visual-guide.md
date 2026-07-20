@@ -133,6 +133,26 @@ flowmpeg probe input.mkv
 flowmpeg audio input.mkv --track 1 -o second-track.mp3
 ```
 
+## Read a loudness report
+
+The default target is -16 LUFS. The measured value and target offset show how
+the selected track relates to that target.
+
+```text
+quieter                                                louder
+-30 LUFS        -23 LUFS        -16 LUFS        -9 LUFS       0 LUFS
+                                  ^
+                             default target
+```
+
+True peak is reported separately in dBFS. Loudness range is reported in LU, so
+it describes variation rather than the average level.
+
+```console
+flowmpeg loudness episode.wav
+flowmpeg loudness broadcast.wav --target-integrated -23 --json
+```
+
 The human probe view prints absolute stream numbers for reference. The typed
 Python result also separates `video_streams`, `audio_streams`, and
 `subtitle_streams`, which makes audio-only indexing explicit.

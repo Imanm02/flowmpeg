@@ -42,6 +42,7 @@ flowmpeg doctor
 flowmpeg doctor --command cut
 flowmpeg doctor --smoke-test
 flowmpeg audit input.mp4 --expect av
+flowmpeg loudness episode.wav
 ```
 
 The second check accepts the `cut` shortcut and verifies the default encoders,
@@ -53,6 +54,9 @@ the result, then removes it.
 
 The audit checks a media file against an expected stream shape and reports
 stable finding codes for scripts.
+
+The loudness command measures integrated LUFS, true peak, loudness range, and
+the offset from a chosen normalization target without writing an output file.
 
 ## One-line terminal jobs
 
