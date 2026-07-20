@@ -1363,6 +1363,20 @@ The first video and optional first audio streams are copied. Set
 `include_subtitles=True` to copy the selected subtitle stream too. The input
 and output extensions must match.
 
+### Change the container without re-encoding
+
+```python
+ff.remux_media(
+    "camera.mp4",
+    "camera.mkv",
+    include_subtitles=True,
+).run()
+```
+
+The shortcut copies one selected video, optional audio, and optional subtitle
+stream. MKV, MP4, MOV, and WebM outputs are accepted. The destination container
+still needs to support the copied codecs.
+
 The [workflow guide](workflows.md) pairs these calls with installed terminal
 commands and explains the expected output of each job.
 
@@ -1489,6 +1503,7 @@ ff.trim("input.mp4", "clip.mp4", start=5, duration=20).run(
 | `image_sequence_video` | MP4 from numbered images | Sets input frame rate and fits a canvas |
 | `podcast_audiogram` | Cover video with waveform | Loops an image until audio ends |
 | `strip_metadata` | Copy without metadata | Copies selected first streams |
+| `remux_media` | New media container | Copies selected streams without encoding |
 | `tag_media` | Tagged media copy | Copies selected streams and adds container fields |
 | `tag_audio` | Tagged audio copy | Copies one track and adds supplied fields |
 

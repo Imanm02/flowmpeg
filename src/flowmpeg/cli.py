@@ -157,6 +157,7 @@ _BASE_EXAMPLES = (
     _Example("subtitles", "flowmpeg subtitles film.mkv -o captions.srt"),
     _Example("subtitles", "flowmpeg strip-subtitles film.mkv -o clean.mp4"),
     _Example("metadata", "flowmpeg clean-metadata camera.mkv -o share.mkv"),
+    _Example("metadata", "flowmpeg remux camera.mp4 -o camera.mkv"),
     _Example(
         "metadata",
         'flowmpeg tag-media camera.mp4 --title "Camera master" -o tagged.mp4',
@@ -516,6 +517,7 @@ def build_parser() -> argparse.ArgumentParser:
     _add_image_sequence(commands)
     _add_podcast_audiogram(commands)
     _add_strip_metadata(commands)
+    _add_remux(commands)
     _add_tag_media(commands)
     _add_tag_audio(commands)
     _add_probe(commands)
@@ -1859,6 +1861,32 @@ def _add_strip_metadata(
     _source(parser)
     _audio_toggle(parser)
     parser.add_argument("--subtitles", dest="include_subtitles", action="store_true")
+    _output(parser)
+
+
+def _add_remux(
+    commands: argparse._SubParsersAction[argparse.ArgumentParser],
+) -> None:
+    parser = _command(
+        commands,
+        "remux",
+        "Copy selected streams into another container.",
+        shortcuts.remux_media,
+        ("source",),
+        aliases=("rewrap", "copy-container"),
+    )
+    _source(parser)
+    parser.add_argument("--video-track", type=_nonnegative_int, default=0)
+    parser.add_argument("--audio-track", type=_nonnegative_int, default=0)
+    parser.add_argument("--subtitle-track", type=_nonnegative_int, default=0)
+    _audio_toggle(parser)
+    parser.add_argument(
+        "--subtitles",
+        dest="include_subtitles",
+        action=argparse.BooleanOptionalAction,
+        default=False,
+        help="Copy one subtitle track",
+    )
     _output(parser)
 
 

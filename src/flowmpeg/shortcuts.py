@@ -147,6 +147,7 @@ __all__ = [
     "reframe",
     "remove_audio",
     "remove_subtitles",
+    "remux_media",
     "resample_audio",
     "replace_audio",
     "resize",
@@ -2113,6 +2114,40 @@ def strip_metadata(
         to=to,
         args=("-map_metadata", "-1", "-map_chapters", "-1", "-c", "copy"),
     )
+    return _set_overwrite(plan, overwrite)
+
+
+def remux_media(
+    source: Pathish,
+    to: Pathish,
+    *,
+    video_track: int = 0,
+    audio_track: int = 0,
+    subtitle_track: int = 0,
+    include_audio: bool = True,
+    include_subtitles: bool = False,
+    overwrite: bool = False,
+) -> Plan:
+    """Copy selected streams into another media container."""
+
+    _nonnegative_integer("video_track", video_track)
+    _nonnegative_integer("audio_track", audio_track)
+    _nonnegative_integer("subtitle_track", subtitle_track)
+    include_audio = _require_boolean("include_audio", include_audio)
+    include_subtitles = _require_boolean("include_subtitles", include_subtitles)
+    _require_suffix(
+        to,
+        frozenset({".mkv", ".mov", ".mp4", ".webm"}),
+        "Remux output",
+    )
+    _validate_paths((source,), to)
+    source_input = input(source)
+    streams: list[Stream] = [source_input.video(video_track)]
+    if include_audio:
+        streams.append(source_input.audio(audio_track, optional=True))
+    if include_subtitles:
+        streams.append(source_input.subtitle(subtitle_track))
+    plan = output(*streams, to=to, args=("-c", "copy"))
     return _set_overwrite(plan, overwrite)
 
 

@@ -464,6 +464,13 @@ _BASE_COMMAND_CATALOG = (
         output_kind="media",
     ),
     CommandSpec(
+        "remux",
+        "metadata",
+        "Copy streams into another container",
+        ("rewrap", "copy-container"),
+        output_kind="media",
+    ),
+    CommandSpec(
         "tag-media",
         "metadata",
         "Copy media and set container tags",
@@ -606,6 +613,7 @@ _COMMAND_TAGS = {
     "burn-subtitles": ("delivery", "silent-input"),
     "remove-subtitles": ("copy", "privacy"),
     "strip-metadata": ("copy", "privacy"),
+    "remux": ("archive", "copy", "delivery"),
     "probe": ("archive",),
     "tag-media": ("archive", "copy"),
 }
@@ -815,6 +823,7 @@ _COMMAND_REQUIREMENTS = {
     "burn-subtitles": _requirements(*_MP4, "filter:subtitles"),
     "remove-subtitles": _MP4,
     "strip-metadata": ("muxer:matroska",),
+    "remux": ("muxer:matroska",),
     "tag-media": ("muxer:mp4",),
 }
 

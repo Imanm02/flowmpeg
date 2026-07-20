@@ -146,6 +146,7 @@ The table below is a compact editing index for scanning this longer guide.
 | Encode numbered images | `image-sequence-video` | `timelapse`, `image-sequence` |
 | Make a podcast audiogram | `podcast-audiogram` | `audiogram` |
 | Remove metadata | `strip-metadata` | `clean-metadata` |
+| Change a media container | `remux` | `rewrap`, `copy-container` |
 | Tag a media file | `tag-media` | `label-media` |
 | Tag an audio file | `tag-audio` | `tag` |
 
@@ -916,6 +917,7 @@ libass support. `--font-name` and `--font-size` set two ASS style fields.
 
 ```console
 flowmpeg clean-metadata camera.mkv -o share.mkv
+flowmpeg remux camera.mp4 -o archive.mkv
 flowmpeg label-media camera.mp4 --title "Camera master" --comment "Approved copy" -o tagged.mp4
 flowmpeg tag episode.m4a --title "Episode 12" --artist "Example Host" -o tagged.m4a
 ```
@@ -924,7 +926,11 @@ flowmpeg tag episode.m4a --title "Episode 12" --artist "Example Host" -o tagged.
 packets. It changes container tags without re-encoding. Keep the input and
 output extension the same so the copied streams stay in the same container.
 
-Both commands copy selected streams, so input and output extensions must match.
+`remux` copies the selected packets into MKV, MP4, MOV, or WebM. It does not
+change codecs, so the destination container must support the selected streams.
+MKV is a useful first choice when the input codecs are mixed or unknown.
+
+Metadata removal and tagging require matching input and output extensions.
 Metadata removal selects the first video, optional first audio, and optional
 first subtitle stream.
 

@@ -41,6 +41,7 @@ flowmpeg resample demo-media/voice.wav --sample-rate 48000 --layout mono -o demo
 flowmpeg captions demo-media/sample.mp4 demo-media/captions.srt -o demo-media/captioned.mp4
 flowmpeg burn-captions demo-media/sample.mp4 demo-media/captions.srt -o demo-media/open-captioned.mp4
 flowmpeg label-media demo-media/sample.mp4 --title "Camera master" -o demo-media/tagged.mp4
+flowmpeg remux demo-media/sample.mp4 -o demo-media/archive.mkv
 flowmpeg audiogram demo-media/voice.wav demo-media/cover.jpg -o demo-media/audiogram.mp4
 flowmpeg join demo-media/sample.mp4 demo-media/second.mp4 -o demo-media/joined.mp4
 flowmpeg join-any phone.mp4 camera.mp4 --width 1280 --height 720 -o joined.mp4
@@ -115,6 +116,7 @@ Paths can also be `pathlib.Path` objects.
 | A numbered-frame animation | PNG sequence | `animation.mp4` |
 | A podcast audiogram | WAV and cover image | `audiogram.mp4` |
 | A tagged media copy | `camera.mp4` | `camera-tagged.mp4` |
+| The same streams in MKV | `camera.mp4` | `camera.mkv` |
 
 ## 1. Inspect a plan before running it
 

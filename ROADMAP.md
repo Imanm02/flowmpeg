@@ -132,6 +132,7 @@ only a discussion or test placeholder.
 - [x] Add stream-copy metadata tagging for mixed media files.
 - [x] Add an HEVC MP4 shortcut with exact doctor checks.
 - [x] Add sample-rate and channel-layout audio conversion.
+- [x] Add selective stream-copy container remuxing.
 
 ## Current limits
 

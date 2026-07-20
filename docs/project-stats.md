@@ -9,18 +9,18 @@ source change.
 
 | Measure | Count | Source |
 |---|---:|---|
-| Canonical terminal commands | 67 | `COMMAND_CATALOG` |
-| Command aliases | 66 | `COMMAND_CATALOG` |
-| Python shortcut functions | 58 | `shortcuts.__all__` |
-| One-line terminal examples | 68 | CLI example catalog |
+| Canonical terminal commands | 68 | `COMMAND_CATALOG` |
+| Command aliases | 68 | `COMMAND_CATALOG` |
+| Python shortcut functions | 59 | `shortcuts.__all__` |
+| One-line terminal examples | 69 | CLI example catalog |
 | Stable error identifiers | 16 | CLI error guide |
 | Stable audit findings | 12 | Media audit |
 | Doctor feature groups | 14 | Doctor requirements |
-| Test function definitions | 326 | `tests/test_*.py` |
+| Test function definitions | 327 | `tests/test_*.py` |
 | FFmpeg integration tests | 29 | Pytest markers |
 | Documentation pages | 15 | `docs/*.md` |
-| Documented command lines | 335 | Markdown code lines |
-| Completed roadmap items | 94 | `ROADMAP.md` |
+| Documented command lines | 337 | Markdown code lines |
+| Completed roadmap items | 95 | `ROADMAP.md` |
 | Open roadmap items | 0 | `ROADMAP.md` |
 
 ## Category matrix
@@ -36,7 +36,7 @@ counts distinct canonical commands with at least one built-in example.
 | effects | 5 | 4 | 5 | 5/5 (100%) | 5 | `#####` |
 | images | 6 | 7 | 6 | 6/6 (100%) | 6 | `######` |
 | subtitles | 4 | 5 | 4 | 4/4 (100%) | 4 | `####` |
-| metadata | 2 | 2 | 2 | 2/2 (100%) | 2 | `##` |
+| metadata | 3 | 4 | 3 | 3/3 (100%) | 2 | `###` |
 | inspect | 5 | 3 | 5 | 5/5 (100%) | 0 | `#####` |
 | help | 4 | 0 | 4 | 4/4 (100%) | 0 | `####` |
 
@@ -47,10 +47,10 @@ The bar uses one `#` per canonical command carrying the tag.
 | Tag | Commands | Examples | Bar |
 |---|---:|---:|---|
 | accessibility | 4 | 4 | `####` |
-| archive | 11 | 11 | `###########` |
-| copy | 6 | 6 | `######` |
+| archive | 12 | 12 | `############` |
+| copy | 7 | 7 | `#######` |
 | creator | 40 | 41 | `########################################` |
-| delivery | 18 | 19 | `##################` |
+| delivery | 19 | 20 | `###################` |
 | discover | 4 | 4 | `####` |
 | inspect | 5 | 5 | `#####` |
 | podcast | 14 | 14 | `##############` |

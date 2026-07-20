@@ -123,6 +123,7 @@ subtitle-only index 0   S0
 | `strip-subtitles input.mkv -o out.mp4` | Keep | Keep | Drop | Drop | Re-encodes the first pair |
 | `clean-metadata input.mkv -o out.mkv` | Keep | Keep | Drop | Drop | Copies selected packets |
 | `clean-metadata input.mkv --subtitles -o out.mkv` | Keep | Keep | Drop | Keep | Copies the first subtitle too |
+| `remux input.mp4 -o out.mkv` | Keep | Keep | Drop | Drop | Copies selected packets into MKV |
 | `label-media input.mp4 --title Copy -o out.mp4` | Keep | Keep | Drop | Drop | Copies packets and adds container tags |
 
 Probe before selecting a secondary track:

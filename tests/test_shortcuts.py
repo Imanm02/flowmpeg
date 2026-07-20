@@ -66,6 +66,7 @@ def test_shortcuts_namespace_is_public() -> None:
         "reframe",
         "remove_audio",
         "remove_subtitles",
+        "remux_media",
         "resample_audio",
         "replace_audio",
         "resize",
@@ -1005,6 +1006,20 @@ def test_tag_media_copies_tracks_and_sets_container_fields() -> None:
     )
 
 
+def test_remux_media_copies_selected_streams() -> None:
+    plan = shortcuts.remux_media(
+        "source.mp4",
+        "archive.mkv",
+        include_subtitles=True,
+    )
+    argv = plan.raw_argv()
+
+    assert "0:v:0" in argv
+    assert "0:a:0?" in argv
+    assert "0:s:0" in argv
+    assert ("-c", "copy") in tuple(zip(argv, argv[1:], strict=False))
+
+
 def test_shortcuts_accept_path_objects_and_overwrite() -> None:
     plan = shortcuts.resize(
         Path("folder/input.mp4"),
@@ -1250,6 +1265,8 @@ def test_shortcuts_accept_path_objects_and_overwrite() -> None:
             "out.wav",
             layout=cast(shortcuts.AudioLayout, "surround"),
         ),
+        lambda: shortcuts.remux_media("in.mp4", "out.avi"),
+        lambda: shortcuts.remux_media("in.mp4", "in.mp4"),
     ],
 )
 def test_shortcuts_reject_invalid_requests(build: Callable[[], object]) -> None:
@@ -1819,6 +1836,7 @@ def test_subtitle_and_metadata_shortcuts_run(
     stripped = source.parent / "stripped.mp4"
     burned = source.parent / "burned.mp4"
     tagged = source.parent / "tagged.mp4"
+    remuxed = source.parent / "remuxed.mkv"
     captions.write_text(
         "1\n00:00:00,000 --> 00:00:00,500\nExample caption\n",
         encoding="utf-8",
@@ -1849,6 +1867,7 @@ def test_subtitle_and_metadata_shortcuts_run(
         ffmpeg=ffmpeg,
         timeout=10,
     )
+    shortcuts.remux_media(source, remuxed).run(ffmpeg=ffmpeg, timeout=10)
 
     assert probe(captioned).subtitle_streams
     assert "Example caption" in extracted.read_text(encoding="utf-8")
@@ -1860,6 +1879,15 @@ def test_subtitle_and_metadata_shortcuts_run(
     assert dict(tagged_info.format.tags)["title"] == "Camera master"
     assert tagged_info.video_streams
     assert tagged_info.audio_streams
+    remuxed_info = probe(remuxed)
+    assert (
+        remuxed_info.video_streams[0].codec_name
+        == probe(source).video_streams[0].codec_name
+    )
+    assert (
+        remuxed_info.audio_streams[0].codec_name
+        == probe(source).audio_streams[0].codec_name
+    )
 
 
 @pytest.mark.integration
