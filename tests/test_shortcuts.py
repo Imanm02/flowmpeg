@@ -15,40 +15,71 @@ def test_shortcuts_namespace_is_public() -> None:
     assert set(shortcuts.__all__) == {
         "AudioCodec",
         "AudioReplacementCodec",
+        "CrossfadeCurve",
+        "DeinterlaceMode",
+        "EncoderPreset",
+        "FlipDirection",
         "NamedPosition",
         "Pathish",
         "ReplacementDuration",
+        "SocialFill",
+        "SocialTarget",
         "SpectrumColor",
         "SpectrumMode",
         "VideoPreset",
         "WaveformScale",
         "add_music",
+        "add_subtitles",
+        "adjust_colors",
+        "blur_region",
         "blurred_background",
+        "boomerang",
         "change_speed",
+        "compress_audio",
+        "compress_video",
         "contact_sheet",
         "crop",
+        "deinterlace",
+        "denoise_audio",
         "duck_music",
         "extract_audio",
+        "extract_subtitles",
         "fade_edges",
         "fit_canvas",
+        "flip_video",
+        "freeze_end",
         "grid",
+        "image_sequence_video",
         "join_matching",
         "make_gif",
         "mix_audio_files",
+        "mono_audio",
+        "mute_section",
         "normalize_loudness",
         "picture_in_picture",
+        "podcast_audiogram",
+        "podcast_voice",
+        "reframe",
         "remove_audio",
+        "remove_subtitles",
         "replace_audio",
         "resize",
         "reverse_clip",
         "rotate",
+        "set_frame_rate",
+        "sharpen",
+        "social_video",
         "spectrum_image",
         "still_image_video",
+        "strip_metadata",
+        "tag_audio",
         "thumbnail",
         "transcode",
         "trim",
+        "trim_silence",
         "watermark",
         "waveform_image",
+        "crossfade_audio",
     }
 
 
@@ -563,6 +594,210 @@ def test_reverse_clip_is_trimmed_before_buffering() -> None:
     assert graph.index("atrim=start=3:end=8") < graph.index("areverse")
 
 
+def test_compress_video_exposes_size_controls() -> None:
+    plan = shortcuts.compress_video(
+        "source.mov",
+        "small.mp4",
+        crf=30,
+        encoder_preset="slow",
+        max_width=1280,
+        audio_bitrate="96k",
+    )
+
+    graph = plan.filter_graph()
+    assert graph == "[0:v:0]scale=w=min(iw\\,1280):h=-2[v0]"
+    argv = plan.raw_argv()
+    assert argv[argv.index("-crf") : argv.index("-crf") + 2] == ("-crf", "30")
+    assert argv[
+        argv.index("-preset") : argv.index("-preset") + 2
+    ] == ("-preset", "slow")
+    assert argv[
+        argv.index("-b:a") : argv.index("-b:a") + 2
+    ] == ("-b:a", "96k")
+
+
+def test_reframe_and_social_targets_build_expected_frames() -> None:
+    reframed = shortcuts.reframe(
+        "wide.mp4",
+        "vertical.mp4",
+        width=720,
+        height=1280,
+    )
+    square = shortcuts.social_video(
+        "wide.mp4",
+        "square.mp4",
+        target="square",
+        fill="fit",
+    )
+
+    assert "force_original_aspect_ratio=increase" in (reframed.filter_graph() or "")
+    assert "crop=w=720:h=1280" in (reframed.filter_graph() or "")
+    assert "pad=w=1080:h=1080" in (square.filter_graph() or "")
+
+
+def test_video_correction_shortcuts_build_filters() -> None:
+    plans = {
+        "fps=fps=24": shortcuts.set_frame_rate("in.mp4", "fps.mp4", fps=24),
+        "bwdif=mode=send_frame": shortcuts.deinterlace("in.mp4", "deint.mp4"),
+        "hflip": shortcuts.flip_video("in.mp4", "flip.mp4"),
+        "eq=brightness=0.1:contrast=1.2:saturation=0.9:gamma=1.1": (
+            shortcuts.adjust_colors(
+                "in.mp4",
+                "color.mp4",
+                brightness=0.1,
+                contrast=1.2,
+                saturation=0.9,
+                gamma=1.1,
+            )
+        ),
+        "unsharp=luma_msize_x=5:luma_msize_y=5:luma_amount=1": (
+            shortcuts.sharpen("in.mp4", "sharp.mp4")
+        ),
+    }
+
+    for expected, plan in plans.items():
+        assert expected in (plan.filter_graph() or "")
+
+
+def test_time_and_region_video_shortcuts_build_bounded_graphs() -> None:
+    frozen = shortcuts.freeze_end("in.mp4", "frozen.mp4", seconds=3)
+    muted = shortcuts.mute_section("in.mp4", "muted.mp4", start=2, end=4)
+    blurred = shortcuts.blur_region(
+        "in.mp4",
+        "blurred.mp4",
+        x=10,
+        y=20,
+        width=100,
+        height=50,
+    )
+    bounced = shortcuts.boomerang("in.mp4", "bounce.mp4", duration=4)
+
+    assert "tpad=stop_mode=clone:stop_duration=3" in (frozen.filter_graph() or "")
+    assert "apad=pad_dur=3" in (frozen.filter_graph() or "")
+    assert "enable=between(t\\,2\\,4)" in (muted.filter_graph() or "")
+    assert "crop=w=100:h=50:x=10:y=20" in (blurred.filter_graph() or "")
+    assert "boxblur=luma_radius=12:luma_power=2:chroma_radius=12" in (
+        blurred.filter_graph() or ""
+    )
+    assert "reverse" in (bounced.filter_graph() or "")
+    assert "concat=n=2:v=1:a=1" in (bounced.filter_graph() or "")
+
+
+def test_audio_cleanup_shortcuts_build_expected_chains() -> None:
+    denoised = shortcuts.denoise_audio("voice.wav", "clean.wav")
+    compressed = shortcuts.compress_audio("voice.wav", "level.wav")
+    podcast = shortcuts.podcast_voice("voice.wav", "podcast.wav")
+    trimmed = shortcuts.trim_silence("voice.wav", "trimmed.wav")
+    mono = shortcuts.mono_audio("voice.wav", "mono.wav")
+
+    assert "afftdn=nr=12:nf=-50" in (denoised.filter_graph() or "")
+    assert "acompressor=threshold=0.125:ratio=3" in (
+        compressed.filter_graph() or ""
+    )
+    podcast_graph = podcast.filter_graph() or ""
+    assert "highpass=f=80" in podcast_graph
+    assert "lowpass=f=12000" in podcast_graph
+    assert "loudnorm=I=-16:LRA=11:TP=-1.5" in podcast_graph
+    assert (trimmed.filter_graph() or "").count("silenceremove=") == 2
+    assert "aformat=channel_layouts=mono" in (mono.filter_graph() or "")
+
+
+def test_crossfade_audio_maps_two_inputs() -> None:
+    plan = shortcuts.crossfade_audio(
+        "first.wav",
+        "second.wav",
+        "joined.wav",
+        duration=2,
+        curve="qsin",
+    )
+
+    assert plan.filter_graph() == (
+        "[0:a:0][1:a:0]acrossfade=d=2:c1=qsin:c2=qsin[a0]"
+    )
+    assert plan.raw_argv().count("-i") == 2
+
+
+def test_subtitle_shortcuts_map_selected_streams() -> None:
+    extracted = shortcuts.extract_subtitles("movie.mkv", "captions.vtt", track=1)
+    added = shortcuts.add_subtitles(
+        "movie.mp4",
+        "captions.srt",
+        "captioned.mp4",
+        language="fra",
+    )
+    removed = shortcuts.remove_subtitles("movie.mkv", "plain.mp4")
+
+    assert extracted.raw_argv()[6:8] == ("-map", "0:s:1")
+    assert extracted.raw_argv()[-3:-1] == ("-c:s", "webvtt")
+    assert "1:s:0" in added.raw_argv()
+    assert added.raw_argv()[
+        added.raw_argv().index("-c:s") : added.raw_argv().index("-c:s") + 2
+    ] == ("-c:s", "mov_text")
+    assert "0:s:0" not in removed.raw_argv()
+
+
+def test_image_sequence_uses_input_frame_rate() -> None:
+    plan = shortcuts.image_sequence_video(
+        "frames/frame-%04d.png",
+        "timelapse.mp4",
+        fps=24,
+        start_number=10,
+        width=1280,
+        height=720,
+    )
+
+    assert plan.raw_argv()[4:10] == (
+        "-framerate",
+        "24",
+        "-start_number",
+        "10",
+        "-i",
+        "frames/frame-%04d.png",
+    )
+    assert "pad=w=1280:h=720" in (plan.filter_graph() or "")
+
+
+def test_podcast_audiogram_keeps_audio_and_draws_wave() -> None:
+    plan = shortcuts.podcast_audiogram(
+        "episode.wav",
+        "cover.png",
+        "episode.mp4",
+        width=1280,
+        height=720,
+        wave_width=1000,
+        wave_height=160,
+    )
+
+    graph = plan.filter_graph() or ""
+    assert "asplit=outputs=2" in graph
+    assert "showwaves=s=1000x160:mode=line:colors=white:rate=25" in graph
+    assert "colorkey=color=black:similarity=0.01:blend=0.1" in graph
+    assert plan.raw_argv()[-3:] == ("-tune", "stillimage", "episode.mp4")
+
+
+def test_metadata_shortcuts_copy_selected_streams() -> None:
+    stripped = shortcuts.strip_metadata("source.mkv", "clean.mkv")
+    tagged = shortcuts.tag_audio(
+        "source.m4a",
+        "tagged.m4a",
+        title="Episode 1",
+        artist="Example Host",
+    )
+
+    assert stripped.raw_argv()[-7:-1] == (
+        "-map_metadata",
+        "-1",
+        "-map_chapters",
+        "-1",
+        "-c",
+        "copy",
+    )
+    assert ("-metadata", "title=Episode 1") in tuple(
+        zip(tagged.raw_argv(), tagged.raw_argv()[1:], strict=False)
+    )
+    assert "0:v:0" not in tagged.raw_argv()
+
+
 def test_shortcuts_accept_path_objects_and_overwrite() -> None:
     plan = shortcuts.resize(
         Path("folder/input.mp4"),
@@ -644,6 +879,105 @@ def test_shortcuts_accept_path_objects_and_overwrite() -> None:
             "voice.wav",
             "wave.png",
             scale_mode=cast(shortcuts.WaveformScale, "unknown"),
+        ),
+        lambda: shortcuts.compress_video("in.mov", "out.mp4", crf=52),
+        lambda: shortcuts.compress_video(
+            "in.mov",
+            "out.mp4",
+            encoder_preset=cast(shortcuts.EncoderPreset, "quick"),
+        ),
+        lambda: shortcuts.social_video(
+            "in.mp4",
+            "out.mp4",
+            target=cast(shortcuts.SocialTarget, "story"),
+        ),
+        lambda: shortcuts.social_video(
+            "in.mp4",
+            "out.mp4",
+            fill=cast(shortcuts.SocialFill, "stretch"),
+        ),
+        lambda: shortcuts.set_frame_rate("in.mp4", "out.mp4", fps=0),
+        lambda: shortcuts.deinterlace(
+            "in.mp4",
+            "out.mp4",
+            mode=cast(shortcuts.DeinterlaceMode, "auto"),
+        ),
+        lambda: shortcuts.flip_video(
+            "in.mp4",
+            "out.mp4",
+            direction=cast(shortcuts.FlipDirection, "diagonal"),
+        ),
+        lambda: shortcuts.adjust_colors(
+            "in.mp4",
+            "out.mp4",
+            brightness=2,
+        ),
+        lambda: shortcuts.sharpen("in.mp4", "out.mp4", matrix_size=4),
+        lambda: shortcuts.freeze_end("in.mp4", "out.mp4", seconds=61),
+        lambda: shortcuts.mute_section(
+            "in.mp4",
+            "out.mp4",
+            start=4,
+            end=2,
+        ),
+        lambda: shortcuts.blur_region(
+            "in.mp4",
+            "out.mp4",
+            x=-1,
+            y=0,
+            width=100,
+            height=100,
+        ),
+        lambda: shortcuts.boomerang("in.mp4", "out.mp4", duration=16),
+        lambda: shortcuts.denoise_audio(
+            "in.wav",
+            "out.wav",
+            codec="copy",
+        ),
+        lambda: shortcuts.compress_audio(
+            "in.wav",
+            "out.wav",
+            ratio=21,
+        ),
+        lambda: shortcuts.podcast_voice(
+            "in.wav",
+            "out.wav",
+            highpass=3_000,
+            lowpass=2_000,
+        ),
+        lambda: shortcuts.trim_silence(
+            "in.wav",
+            "out.wav",
+            threshold_db=-100,
+        ),
+        lambda: shortcuts.crossfade_audio(
+            "one.wav",
+            "two.wav",
+            "out.wav",
+            curve=cast(shortcuts.CrossfadeCurve, "linear"),
+        ),
+        lambda: shortcuts.extract_subtitles("in.mkv", "out.txt"),
+        lambda: shortcuts.add_subtitles(
+            "in.mp4",
+            "captions.srt",
+            "out.mp4",
+            language="english",
+        ),
+        lambda: shortcuts.image_sequence_video("frames/*.png", "out.mp4"),
+        lambda: shortcuts.podcast_audiogram(
+            "voice.wav",
+            "cover.png",
+            "out.mp4",
+            width=640,
+            height=360,
+            wave_width=800,
+        ),
+        lambda: shortcuts.strip_metadata("in.mkv", "out.mp4"),
+        lambda: shortcuts.tag_audio("in.m4a", "out.m4a"),
+        lambda: shortcuts.tag_audio(
+            "in.m4a",
+            "out.m4a",
+            title="\x00",
         ),
     ],
 )
@@ -915,3 +1249,179 @@ def test_duck_and_reverse_shortcuts_run(
     assert probe(ducked).audio_streams
     reversed_info = probe(reversed_target)
     assert reversed_info.duration == pytest.approx(0.4, abs=0.2)
+
+
+@pytest.mark.integration
+def test_new_video_shortcuts_run(
+    shortcut_media: tuple[str, Path, Path, Path],
+) -> None:
+    ffmpeg, source, _, _ = shortcut_media
+    compressed = source.parent / "compressed.mp4"
+    reframed = source.parent / "reframed.mp4"
+    corrected = source.parent / "corrected.mp4"
+    private = source.parent / "private.mp4"
+
+    shortcuts.compress_video(source, compressed, max_width=48).run(
+        ffmpeg=ffmpeg,
+        timeout=10,
+    )
+    shortcuts.reframe(source, reframed, width=48, height=64).run(
+        ffmpeg=ffmpeg,
+        timeout=10,
+    )
+    correction = shortcuts.adjust_colors(
+        source,
+        corrected,
+        brightness=0.05,
+        saturation=0.8,
+    )
+    correction.run(ffmpeg=ffmpeg, timeout=10)
+    shortcuts.blur_region(
+        source,
+        private,
+        x=4,
+        y=4,
+        width=16,
+        height=16,
+        radius=8,
+    ).run(ffmpeg=ffmpeg, timeout=10)
+
+    assert probe(compressed).video_streams[0].width == 48
+    reframed_video = probe(reframed).video_streams[0]
+    assert (reframed_video.width, reframed_video.height) == (48, 64)
+    assert probe(corrected).video_streams
+    assert probe(private).video_streams
+
+
+@pytest.mark.integration
+def test_new_timeline_shortcuts_run(
+    shortcut_media: tuple[str, Path, Path, Path],
+) -> None:
+    ffmpeg, source, _, _ = shortcut_media
+    frozen = source.parent / "frozen.mp4"
+    muted = source.parent / "muted.mp4"
+    bounced = source.parent / "bounced.mp4"
+
+    shortcuts.freeze_end(source, frozen, seconds=0.2).run(
+        ffmpeg=ffmpeg,
+        timeout=10,
+    )
+    shortcuts.mute_section(source, muted, start=0.1, end=0.3).run(
+        ffmpeg=ffmpeg,
+        timeout=10,
+    )
+    shortcuts.boomerang(source, bounced, duration=0.2).run(
+        ffmpeg=ffmpeg,
+        timeout=10,
+    )
+
+    assert probe(frozen).duration == pytest.approx(0.8, abs=0.2)
+    assert probe(muted).audio_streams
+    assert probe(bounced).duration == pytest.approx(0.4, abs=0.2)
+
+
+@pytest.mark.integration
+def test_new_audio_shortcuts_run(
+    shortcut_media: tuple[str, Path, Path, Path],
+) -> None:
+    ffmpeg, source, voice, _ = shortcut_media
+    denoised = source.parent / "denoised.wav"
+    podcast = source.parent / "podcast.wav"
+    mono = source.parent / "mono.wav"
+    crossfaded = source.parent / "crossfaded.wav"
+
+    shortcuts.denoise_audio(voice, denoised).run(ffmpeg=ffmpeg, timeout=10)
+    shortcuts.podcast_voice(voice, podcast).run(ffmpeg=ffmpeg, timeout=10)
+    shortcuts.mono_audio(voice, mono).run(ffmpeg=ffmpeg, timeout=10)
+    shortcuts.crossfade_audio(
+        voice,
+        voice,
+        crossfaded,
+        duration=0.05,
+    ).run(ffmpeg=ffmpeg, timeout=10)
+
+    assert probe(denoised).audio_streams
+    assert probe(podcast).audio_streams
+    assert probe(mono).audio_streams[0].channels == 1
+    assert probe(crossfaded).duration == pytest.approx(0.35, abs=0.1)
+
+
+@pytest.mark.integration
+def test_subtitle_and_metadata_shortcuts_run(
+    shortcut_media: tuple[str, Path, Path, Path],
+) -> None:
+    ffmpeg, source, _, _ = shortcut_media
+    captions = source.parent / "captions.srt"
+    captioned = source.parent / "captioned.mp4"
+    extracted = source.parent / "extracted.srt"
+    stripped = source.parent / "stripped.mp4"
+    captions.write_text(
+        "1\n00:00:00,000 --> 00:00:00,500\nExample caption\n",
+        encoding="utf-8",
+    )
+
+    shortcuts.add_subtitles(source, captions, captioned).run(
+        ffmpeg=ffmpeg,
+        timeout=10,
+    )
+    shortcuts.extract_subtitles(captioned, extracted).run(
+        ffmpeg=ffmpeg,
+        timeout=10,
+    )
+    shortcuts.strip_metadata(captioned, stripped).run(
+        ffmpeg=ffmpeg,
+        timeout=10,
+    )
+
+    assert probe(captioned).subtitle_streams
+    assert "Example caption" in extracted.read_text(encoding="utf-8")
+    assert not probe(stripped).subtitle_streams
+
+
+@pytest.mark.integration
+def test_sequence_and_audiogram_shortcuts_run(
+    shortcut_media: tuple[str, Path, Path, Path],
+) -> None:
+    ffmpeg, source, voice, logo = shortcut_media
+    frame_pattern = source.parent / "sequence-%02d.png"
+    sequence = source.parent / "sequence.mp4"
+    audiogram = source.parent / "audiogram.mp4"
+    subprocess.run(
+        (
+            ffmpeg,
+            "-hide_banner",
+            "-loglevel",
+            "error",
+            "-y",
+            "-f",
+            "lavfi",
+            "-i",
+            "testsrc=size=32x24:rate=5:duration=0.6",
+            str(frame_pattern),
+        ),
+        check=True,
+    )
+
+    shortcuts.image_sequence_video(
+        frame_pattern,
+        sequence,
+        fps=5,
+        width=64,
+        height=48,
+    ).run(ffmpeg=ffmpeg, timeout=10)
+    shortcuts.podcast_audiogram(
+        voice,
+        logo,
+        audiogram,
+        width=64,
+        height=48,
+        wave_width=48,
+        wave_height=12,
+        frame_rate=10,
+    ).run(ffmpeg=ffmpeg, timeout=10)
+
+    sequence_video = probe(sequence).video_streams[0]
+    assert (sequence_video.width, sequence_video.height) == (64, 48)
+    audiogram_info = probe(audiogram)
+    assert audiogram_info.video_streams
+    assert audiogram_info.audio_streams

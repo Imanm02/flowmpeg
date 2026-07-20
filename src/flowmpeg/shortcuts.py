@@ -33,10 +33,26 @@ from flowmpeg.recipes.video import (
     stack_video,
     trim_video,
 )
-from flowmpeg.streams import AudioStream, VideoStream, apply_filter, input
+from flowmpeg.streams import AudioStream, Stream, VideoStream, apply_filter, input
 
 Pathish: TypeAlias = str | os.PathLike[str]
 VideoPreset = Literal["web"]
+EncoderPreset = Literal[
+    "ultrafast",
+    "superfast",
+    "veryfast",
+    "faster",
+    "fast",
+    "medium",
+    "slow",
+    "slower",
+    "veryslow",
+]
+FlipDirection = Literal["horizontal", "vertical", "both"]
+DeinterlaceMode = Literal["bwdif", "yadif"]
+SocialTarget = Literal["vertical", "portrait", "square", "landscape"]
+SocialFill = Literal["blur", "crop", "fit"]
+CrossfadeCurve = Literal["tri", "qsin", "exp"]
 AudioCodec = Literal["mp3", "aac", "wav", "flac", "copy"]
 AudioReplacementCodec = Literal["aac", "copy"]
 ReplacementDuration = Literal["video", "shortest"]
@@ -79,40 +95,71 @@ _audio_suffixes: dict[AudioCodec, frozenset[str]] = {
 __all__ = [
     "AudioCodec",
     "AudioReplacementCodec",
+    "CrossfadeCurve",
+    "DeinterlaceMode",
+    "EncoderPreset",
+    "FlipDirection",
     "NamedPosition",
     "Pathish",
     "ReplacementDuration",
+    "SocialFill",
+    "SocialTarget",
     "SpectrumColor",
     "SpectrumMode",
     "VideoPreset",
     "WaveformScale",
     "add_music",
+    "add_subtitles",
+    "adjust_colors",
     "blurred_background",
+    "blur_region",
+    "boomerang",
     "change_speed",
+    "compress_audio",
+    "compress_video",
     "contact_sheet",
     "crop",
     "duck_music",
+    "deinterlace",
+    "denoise_audio",
     "extract_audio",
+    "extract_subtitles",
     "fade_edges",
     "fit_canvas",
+    "flip_video",
+    "freeze_end",
     "grid",
     "join_matching",
+    "image_sequence_video",
     "make_gif",
     "mix_audio_files",
+    "mono_audio",
+    "mute_section",
     "normalize_loudness",
     "picture_in_picture",
+    "podcast_audiogram",
+    "podcast_voice",
+    "reframe",
     "remove_audio",
+    "remove_subtitles",
     "replace_audio",
     "resize",
     "reverse_clip",
     "rotate",
+    "set_frame_rate",
+    "sharpen",
+    "social_video",
     "spectrum_image",
     "still_image_video",
     "thumbnail",
+    "trim_silence",
     "transcode",
     "trim",
+    "strip_metadata",
+    "tag_audio",
     "watermark",
     "waveform_image",
+    "crossfade_audio",
 ]
 
 
@@ -128,6 +175,369 @@ def transcode(
 
     clip = media(source, audio=include_audio)
     return _web_plan(clip, to, (source,), preset, overwrite)
+
+
+def compress_video(
+    source: Pathish,
+    to: Pathish,
+    *,
+    crf: int = 28,
+    encoder_preset: EncoderPreset = "medium",
+    max_width: int | None = None,
+    include_audio: bool = True,
+    audio_bitrate: str = "128k",
+    overwrite: bool = False,
+) -> Plan:
+    """Create a smaller H.264 MP4 with explicit quality controls."""
+
+    if isinstance(crf, bool) or not isinstance(crf, int) or not 0 <= crf <= 51:
+        raise GraphError("CRF must be an integer between 0 and 51")
+    _validate_encoder_preset(encoder_preset)
+    _validate_bitrate(audio_bitrate)
+    clip = media(source, audio=include_audio)
+    video = _require_video(clip)
+    if max_width is not None:
+        _even_positive_integer("max_width", max_width)
+        video = video.filter(
+            "scale",
+            w=expr(f"min(iw,{max_width})"),
+            h=-2,
+        )
+    _require_suffix(to, frozenset({".mp4"}), "Compressed video output")
+    _validate_paths((source,), to)
+    plan = output(
+        video,
+        *(stream for stream in (clip.audio,) if stream is not None),
+        to=to,
+        args=_web_args(
+            has_audio=clip.audio is not None,
+            crf=crf,
+            encoder_preset=encoder_preset,
+            audio_bitrate=audio_bitrate,
+        ),
+    )
+    return _set_overwrite(plan, overwrite)
+
+
+def reframe(
+    source: Pathish,
+    to: Pathish,
+    *,
+    width: int = 1080,
+    height: int = 1920,
+    include_audio: bool = True,
+    preset: VideoPreset = "web",
+    overwrite: bool = False,
+) -> Plan:
+    """Fill a fixed frame by scaling and taking a centered crop."""
+
+    _even_positive_integer("width", width)
+    _even_positive_integer("height", height)
+    clip = media(source, audio=include_audio)
+    video = _require_video(clip).filter(
+        "scale",
+        w=width,
+        h=height,
+        force_original_aspect_ratio="increase",
+    )
+    video = crop_video(video, width=width, height=height).filter("setsar", 1)
+    return _web_plan(Clip(video, clip.audio), to, (source,), preset, overwrite)
+
+
+def social_video(
+    source: Pathish,
+    to: Pathish,
+    *,
+    target: SocialTarget = "vertical",
+    fill: SocialFill = "blur",
+    color: str = "black",
+    blur: float = 20,
+    include_audio: bool = True,
+    preset: VideoPreset = "web",
+    overwrite: bool = False,
+) -> Plan:
+    """Prepare a video for one of four common social frame sizes."""
+
+    sizes = {
+        "vertical": (1080, 1920),
+        "portrait": (1080, 1350),
+        "square": (1080, 1080),
+        "landscape": (1920, 1080),
+    }
+    try:
+        width, height = sizes[target]
+    except KeyError as error:
+        raise GraphError(f"Unknown social target: {target}") from error
+    if fill == "blur":
+        return blurred_background(
+            source,
+            to,
+            width=width,
+            height=height,
+            blur=blur,
+            include_audio=include_audio,
+            preset=preset,
+            overwrite=overwrite,
+        )
+    if fill == "crop":
+        return reframe(
+            source,
+            to,
+            width=width,
+            height=height,
+            include_audio=include_audio,
+            preset=preset,
+            overwrite=overwrite,
+        )
+    if fill == "fit":
+        return fit_canvas(
+            source,
+            to,
+            width=width,
+            height=height,
+            color=color,
+            include_audio=include_audio,
+            preset=preset,
+            overwrite=overwrite,
+        )
+    raise GraphError(f"Unknown social fill: {fill}")
+
+
+def set_frame_rate(
+    source: Pathish,
+    to: Pathish,
+    *,
+    fps: int = 30,
+    include_audio: bool = True,
+    preset: VideoPreset = "web",
+    overwrite: bool = False,
+) -> Plan:
+    """Convert video to a constant output frame rate."""
+
+    if isinstance(fps, bool) or not isinstance(fps, int) or not 1 <= fps <= 120:
+        raise GraphError("Frame rate must be an integer between 1 and 120")
+    clip = media(source, audio=include_audio)
+    video = _require_video(clip).filter("fps", fps=fps)
+    return _web_plan(Clip(video, clip.audio), to, (source,), preset, overwrite)
+
+
+def deinterlace(
+    source: Pathish,
+    to: Pathish,
+    *,
+    mode: DeinterlaceMode = "bwdif",
+    include_audio: bool = True,
+    preset: VideoPreset = "web",
+    overwrite: bool = False,
+) -> Plan:
+    """Deinterlace video with bwdif or yadif."""
+
+    if mode not in {"bwdif", "yadif"}:
+        raise GraphError(f"Unknown deinterlace mode: {mode}")
+    clip = media(source, audio=include_audio)
+    video = _require_video(clip).filter(mode, mode="send_frame", parity="auto")
+    return _web_plan(Clip(video, clip.audio), to, (source,), preset, overwrite)
+
+
+def flip_video(
+    source: Pathish,
+    to: Pathish,
+    *,
+    direction: FlipDirection = "horizontal",
+    include_audio: bool = True,
+    preset: VideoPreset = "web",
+    overwrite: bool = False,
+) -> Plan:
+    """Mirror video on one axis or both axes."""
+
+    clip = media(source, audio=include_audio)
+    video = _require_video(clip)
+    if direction in {"horizontal", "both"}:
+        video = video.filter("hflip")
+    if direction in {"vertical", "both"}:
+        video = video.filter("vflip")
+    if direction not in {"horizontal", "vertical", "both"}:
+        raise GraphError(f"Unknown flip direction: {direction}")
+    return _web_plan(Clip(video, clip.audio), to, (source,), preset, overwrite)
+
+
+def adjust_colors(
+    source: Pathish,
+    to: Pathish,
+    *,
+    brightness: float = 0,
+    contrast: float = 1,
+    saturation: float = 1,
+    gamma: float = 1,
+    include_audio: bool = True,
+    preset: VideoPreset = "web",
+    overwrite: bool = False,
+) -> Plan:
+    """Adjust brightness, contrast, saturation, and gamma together."""
+
+    _bounded_number("brightness", brightness, -1, 1)
+    _bounded_number("contrast", contrast, 0, 2)
+    _bounded_number("saturation", saturation, 0, 3)
+    _bounded_number("gamma", gamma, 0.1, 10)
+    clip = media(source, audio=include_audio)
+    video = _require_video(clip).filter(
+        "eq",
+        brightness=brightness,
+        contrast=contrast,
+        saturation=saturation,
+        gamma=gamma,
+    )
+    return _web_plan(Clip(video, clip.audio), to, (source,), preset, overwrite)
+
+
+def sharpen(
+    source: Pathish,
+    to: Pathish,
+    *,
+    amount: float = 1,
+    matrix_size: int = 5,
+    include_audio: bool = True,
+    preset: VideoPreset = "web",
+    overwrite: bool = False,
+) -> Plan:
+    """Apply a bounded luma sharpening filter."""
+
+    _bounded_number("amount", amount, 0, 5)
+    if (
+        isinstance(matrix_size, bool)
+        or not isinstance(matrix_size, int)
+        or not 3 <= matrix_size <= 23
+        or matrix_size % 2 == 0
+    ):
+        raise GraphError("Sharpen matrix size must be odd and between 3 and 23")
+    clip = media(source, audio=include_audio)
+    video = _require_video(clip).filter(
+        "unsharp",
+        luma_msize_x=matrix_size,
+        luma_msize_y=matrix_size,
+        luma_amount=amount,
+    )
+    return _web_plan(Clip(video, clip.audio), to, (source,), preset, overwrite)
+
+
+def freeze_end(
+    source: Pathish,
+    to: Pathish,
+    *,
+    seconds: float = 2,
+    include_audio: bool = True,
+    preset: VideoPreset = "web",
+    overwrite: bool = False,
+) -> Plan:
+    """Hold the final video frame and pad audio with silence."""
+
+    _bounded_number("seconds", seconds, 0.01, 60)
+    clip = media(source, audio=include_audio)
+    video = _require_video(clip).filter(
+        "tpad",
+        stop_mode="clone",
+        stop_duration=seconds,
+    )
+    audio = clip.audio
+    if audio is not None:
+        audio = audio.filter("apad", pad_dur=seconds)
+    return _web_plan(Clip(video, audio), to, (source,), preset, overwrite)
+
+
+def mute_section(
+    source: Pathish,
+    to: Pathish,
+    *,
+    start: float,
+    end: float,
+    preset: VideoPreset = "web",
+    overwrite: bool = False,
+) -> Plan:
+    """Mute one time range while leaving the rest of the audio intact."""
+
+    _nonnegative_number("start", start)
+    _positive_number("end", end)
+    if end <= start:
+        raise GraphError("Muted section end must be greater than start")
+    clip = media(source)
+    audio = _require_audio(clip).filter(
+        "volume",
+        volume=0,
+        enable=expr(f"between(t,{start:g},{end:g})"),
+    )
+    return _web_plan(Clip(clip.video, audio), to, (source,), preset, overwrite)
+
+
+def blur_region(
+    source: Pathish,
+    to: Pathish,
+    *,
+    x: int,
+    y: int,
+    width: int,
+    height: int,
+    radius: int = 12,
+    power: int = 2,
+    include_audio: bool = True,
+    preset: VideoPreset = "web",
+    overwrite: bool = False,
+) -> Plan:
+    """Blur one fixed rectangle, such as a face or plate."""
+
+    _nonnegative_integer("x", x)
+    _nonnegative_integer("y", y)
+    _positive_integer("width", width)
+    _positive_integer("height", height)
+    _bounded_integer("radius", radius, 1, 100)
+    _bounded_integer("power", power, 0, 6)
+    if radius > min(width, height) // 2:
+        raise GraphError("Blur radius cannot exceed half the smaller region side")
+    clip = media(source, audio=include_audio)
+    base, region_source = _require_video(clip).split()
+    region = crop_video(region_source, width=width, height=height, x=x, y=y)
+    region = region.filter(
+        "boxblur",
+        luma_radius=radius,
+        luma_power=power,
+        chroma_radius=min(radius, max(1, min(width, height) // 4)),
+        chroma_power=power,
+    )
+    video = overlay_video(base, region, x=x, y=y, shortest=True)
+    return _web_plan(Clip(video, clip.audio), to, (source,), preset, overwrite)
+
+
+def boomerang(
+    source: Pathish,
+    to: Pathish,
+    *,
+    duration: float,
+    start: float = 0,
+    include_audio: bool = True,
+    preset: VideoPreset = "web",
+    overwrite: bool = False,
+) -> Plan:
+    """Play a bounded clip forward and then backward."""
+
+    _positive_number("duration", duration)
+    _nonnegative_number("start", start)
+    if duration > 15:
+        raise GraphError("Boomerang duration cannot exceed 15 seconds")
+    clip = media(source, audio=include_audio).trim(
+        start=start,
+        end=start + duration,
+    )
+    forward_video, reverse_video = _require_video(clip).split()
+    reverse_video = reverse_video.filter("reverse")
+    if clip.audio is None:
+        joined = concat_clips(Clip(forward_video), Clip(reverse_video))
+    else:
+        forward_audio, reverse_audio = clip.audio.split()
+        reverse_audio = reverse_audio.filter("areverse")
+        joined = concat_clips(
+            Clip(forward_video, forward_audio),
+            Clip(reverse_video, reverse_audio),
+        )
+    return _web_plan(joined, to, (source,), preset, overwrite)
 
 
 def trim(
@@ -1000,6 +1410,416 @@ def reverse_clip(
     return _web_plan(Clip(video, audio), to, (source,), preset, overwrite)
 
 
+def denoise_audio(
+    source: Pathish,
+    to: Pathish,
+    *,
+    track: int = 0,
+    reduction: float = 12,
+    noise_floor: float = -50,
+    codec: AudioCodec = "wav",
+    bitrate: str | None = None,
+    overwrite: bool = False,
+) -> Plan:
+    """Reduce steady background noise on one audio track."""
+
+    _nonnegative_integer("track", track)
+    _bounded_number("reduction", reduction, 0.01, 97)
+    _bounded_number("noise_floor", noise_floor, -80, -20)
+    audio = input(source).audio(track).filter(
+        "afftdn",
+        nr=reduction,
+        nf=noise_floor,
+    )
+    return _audio_plan(audio, to, (source,), codec, bitrate, overwrite)
+
+
+def compress_audio(
+    source: Pathish,
+    to: Pathish,
+    *,
+    track: int = 0,
+    threshold: float = 0.125,
+    ratio: float = 3,
+    attack: float = 20,
+    release: float = 250,
+    makeup: float = 1,
+    codec: AudioCodec = "wav",
+    bitrate: str | None = None,
+    overwrite: bool = False,
+) -> Plan:
+    """Even out level changes with an audio compressor."""
+
+    _nonnegative_integer("track", track)
+    _bounded_number("threshold", threshold, 0.000_975_63, 1)
+    _bounded_number("ratio", ratio, 1, 20)
+    _bounded_number("attack", attack, 0.01, 2_000)
+    _bounded_number("release", release, 0.01, 9_000)
+    _bounded_number("makeup", makeup, 1, 64)
+    audio = input(source).audio(track).filter(
+        "acompressor",
+        threshold=threshold,
+        ratio=ratio,
+        attack=attack,
+        release=release,
+        makeup=makeup,
+    )
+    return _audio_plan(audio, to, (source,), codec, bitrate, overwrite)
+
+
+def podcast_voice(
+    source: Pathish,
+    to: Pathish,
+    *,
+    track: int = 0,
+    highpass: int = 80,
+    lowpass: int = 12_000,
+    denoise: bool = True,
+    compress: bool = True,
+    integrated: float = -16,
+    codec: AudioCodec = "wav",
+    bitrate: str | None = None,
+    overwrite: bool = False,
+) -> Plan:
+    """Build a speech chain with filters that can be turned off."""
+
+    _nonnegative_integer("track", track)
+    _bounded_integer("highpass", highpass, 20, 2_000)
+    _bounded_integer("lowpass", lowpass, 2_000, 22_000)
+    if highpass >= lowpass:
+        raise GraphError("Voice high-pass must be lower than low-pass")
+    _require_boolean("denoise", denoise)
+    _require_boolean("compress", compress)
+    _bounded_number("integrated", integrated, -70, -5)
+    audio = input(source).audio(track).filter("highpass", f=highpass)
+    audio = audio.filter("lowpass", f=lowpass)
+    if denoise:
+        audio = audio.filter("afftdn", nr=12, nf=-50)
+    if compress:
+        audio = audio.filter(
+            "acompressor",
+            threshold=0.125,
+            ratio=3,
+            attack=20,
+            release=250,
+        )
+    audio = audio.filter("loudnorm", I=integrated, LRA=11, TP=-1.5)
+    audio = audio.filter("aresample", 48_000)
+    return _audio_plan(audio, to, (source,), codec, bitrate, overwrite)
+
+
+def trim_silence(
+    source: Pathish,
+    to: Pathish,
+    *,
+    track: int = 0,
+    threshold_db: float = -45,
+    minimum: float = 0.25,
+    codec: AudioCodec = "wav",
+    bitrate: str | None = None,
+    overwrite: bool = False,
+) -> Plan:
+    """Remove silence from both ends while retaining pauses inside."""
+
+    _nonnegative_integer("track", track)
+    _bounded_number("threshold_db", threshold_db, -90, 0)
+    _bounded_number("minimum", minimum, 0.01, 10)
+    options: dict[str, FilterValue] = {
+        "start_periods": 1,
+        "start_duration": minimum,
+        "start_threshold": f"{threshold_db:g}dB",
+    }
+    audio = input(source).audio(track).filter("silenceremove", **options)
+    audio = audio.filter("areverse")
+    audio = audio.filter("silenceremove", **options)
+    audio = audio.filter("areverse")
+    return _audio_plan(audio, to, (source,), codec, bitrate, overwrite)
+
+
+def mono_audio(
+    source: Pathish,
+    to: Pathish,
+    *,
+    track: int = 0,
+    codec: AudioCodec = "wav",
+    bitrate: str | None = None,
+    overwrite: bool = False,
+) -> Plan:
+    """Downmix one selected audio track to mono."""
+
+    _nonnegative_integer("track", track)
+    audio = input(source).audio(track).filter("aformat", channel_layouts="mono")
+    return _audio_plan(audio, to, (source,), codec, bitrate, overwrite)
+
+
+def crossfade_audio(
+    first: Pathish,
+    second: Pathish,
+    to: Pathish,
+    *,
+    duration: float = 1,
+    curve: CrossfadeCurve = "tri",
+    codec: AudioCodec = "wav",
+    bitrate: str | None = None,
+    overwrite: bool = False,
+) -> Plan:
+    """Join two audio files with a crossfade between them."""
+
+    _positive_number("duration", duration)
+    if curve not in {"tri", "qsin", "exp"}:
+        raise GraphError(f"Unknown crossfade curve: {curve}")
+    (audio,) = apply_filter(
+        (input(first).audio(), input(second).audio()),
+        "acrossfade",
+        output_kinds=(StreamKind.AUDIO,),
+        options={"d": duration, "c1": curve, "c2": curve},
+    )
+    assert isinstance(audio, AudioStream)
+    return _audio_plan(audio, to, (first, second), codec, bitrate, overwrite)
+
+
+def extract_subtitles(
+    source: Pathish,
+    to: Pathish,
+    *,
+    track: int = 0,
+    overwrite: bool = False,
+) -> Plan:
+    """Extract one text subtitle track as SRT, WebVTT, or ASS."""
+
+    _nonnegative_integer("track", track)
+    suffix = _require_suffix(
+        to,
+        frozenset({".ass", ".srt", ".vtt"}),
+        "Subtitle output",
+    )
+    codecs = {".ass": "ass", ".srt": "srt", ".vtt": "webvtt"}
+    _validate_paths((source,), to)
+    plan = output(
+        input(source).subtitle(track),
+        to=to,
+        args=("-c:s", codecs[suffix]),
+    )
+    return _set_overwrite(plan, overwrite)
+
+
+def add_subtitles(
+    source: Pathish,
+    subtitle_source: Pathish,
+    to: Pathish,
+    *,
+    language: str = "eng",
+    include_audio: bool = True,
+    preset: VideoPreset = "web",
+    overwrite: bool = False,
+) -> Plan:
+    """Add one selectable text subtitle track to an MP4."""
+
+    if not re.fullmatch(r"[a-z]{3}", language):
+        raise GraphError("Subtitle language must be a three-letter lowercase code")
+    if preset != "web":
+        raise GraphError(f"Unknown video preset: {preset}")
+    _require_suffix(to, frozenset({".mp4"}), "Subtitled video output")
+    _validate_paths((source, subtitle_source), to)
+    source_input = input(source)
+    streams: list[Stream] = [source_input.video()]
+    if include_audio:
+        streams.append(source_input.audio())
+    streams.append(input(subtitle_source).subtitle())
+    args = (*_web_args(has_audio=include_audio), "-c:s", "mov_text")
+    args += ("-metadata:s:s:0", f"language={language}")
+    return _set_overwrite(output(*streams, to=to, args=args), overwrite)
+
+
+def remove_subtitles(
+    source: Pathish,
+    to: Pathish,
+    *,
+    include_audio: bool = True,
+    preset: VideoPreset = "web",
+    overwrite: bool = False,
+) -> Plan:
+    """Create an MP4 with only the first video and optional first audio."""
+
+    clip = media(source, audio=include_audio)
+    return _web_plan(clip, to, (source,), preset, overwrite)
+
+
+def image_sequence_video(
+    pattern: Pathish,
+    to: Pathish,
+    *,
+    fps: int = 30,
+    start_number: int = 1,
+    width: int = 1920,
+    height: int = 1080,
+    color: str = "black",
+    overwrite: bool = False,
+) -> Plan:
+    """Turn a numbered image pattern into a fixed-size MP4."""
+
+    pattern_text = _path_text("Image pattern", pattern)
+    if not re.search(r"%(?:0[1-9][0-9]*)?d", pattern_text):
+        raise GraphError("Image pattern must contain %d or a form such as %04d")
+    if isinstance(fps, bool) or not isinstance(fps, int) or not 1 <= fps <= 120:
+        raise GraphError("Frame rate must be an integer between 1 and 120")
+    _nonnegative_integer("start_number", start_number)
+    _even_positive_integer("width", width)
+    _even_positive_integer("height", height)
+    _nonempty_text("color", color)
+    source_input = input(
+        pattern,
+        "-framerate",
+        str(fps),
+        "-start_number",
+        str(start_number),
+    )
+    video = _fit_canvas_video(
+        source_input.video(),
+        width=width,
+        height=height,
+        color=color,
+    )
+    _require_suffix(to, frozenset({".mp4"}), "Image sequence output")
+    _validate_paths((pattern,), to)
+    plan = output(video, to=to, args=_web_args(has_audio=False))
+    return _set_overwrite(plan, overwrite)
+
+
+def podcast_audiogram(
+    audio_source: Pathish,
+    cover_image: Pathish,
+    to: Pathish,
+    *,
+    track: int = 0,
+    width: int = 1920,
+    height: int = 1080,
+    wave_width: int = 1600,
+    wave_height: int = 240,
+    wave_color: str = "white",
+    frame_rate: int = 25,
+    overwrite: bool = False,
+) -> Plan:
+    """Create a cover video with an animated audio waveform."""
+
+    _nonnegative_integer("track", track)
+    _even_positive_integer("width", width)
+    _even_positive_integer("height", height)
+    _positive_integer("wave_width", wave_width)
+    _positive_integer("wave_height", wave_height)
+    _positive_integer("frame_rate", frame_rate)
+    _nonempty_text("wave_color", wave_color)
+    if wave_width > width or wave_height > height:
+        raise GraphError("Waveform dimensions must fit inside the video frame")
+    picture = input(
+        cover_image,
+        "-loop",
+        "1",
+        "-framerate",
+        str(frame_rate),
+    ).video()
+    picture = _fit_canvas_video(
+        picture,
+        width=width,
+        height=height,
+        color="black",
+    )
+    output_audio, visual_audio = input(audio_source).audio(track).split()
+    wave_options: dict[str, FilterValue] = {
+        "s": f"{wave_width}x{wave_height}",
+        "mode": "line",
+        "colors": wave_color,
+        "rate": frame_rate,
+    }
+    (wave,) = apply_filter(
+        (visual_audio,),
+        "showwaves",
+        output_kinds=(StreamKind.VIDEO,),
+        options=wave_options,
+    )
+    assert isinstance(wave, VideoStream)
+    wave = wave.filter("colorkey", color="black", similarity=0.01, blend=0.1)
+    video = overlay_video(
+        picture,
+        wave,
+        x=expr("(W-w)/2"),
+        y=expr("H-h-80"),
+        shortest=True,
+    )
+    return _web_plan(
+        Clip(video, output_audio),
+        to,
+        (audio_source, cover_image),
+        "web",
+        overwrite,
+        ("-shortest", "-tune", "stillimage"),
+    )
+
+
+def strip_metadata(
+    source: Pathish,
+    to: Pathish,
+    *,
+    include_audio: bool = True,
+    include_subtitles: bool = False,
+    overwrite: bool = False,
+) -> Plan:
+    """Copy selected first streams without metadata or chapters."""
+
+    _require_boolean("include_audio", include_audio)
+    _require_boolean("include_subtitles", include_subtitles)
+    _matching_suffix(source, to, "Metadata copy")
+    _validate_paths((source,), to)
+    source_input = input(source)
+    streams: list[Stream] = [source_input.video()]
+    if include_audio:
+        streams.append(source_input.audio())
+    if include_subtitles:
+        streams.append(source_input.subtitle())
+    plan = output(
+        *streams,
+        to=to,
+        args=("-map_metadata", "-1", "-map_chapters", "-1", "-c", "copy"),
+    )
+    return _set_overwrite(plan, overwrite)
+
+
+def tag_audio(
+    source: Pathish,
+    to: Pathish,
+    *,
+    track: int = 0,
+    title: str | None = None,
+    artist: str | None = None,
+    album: str | None = None,
+    date: str | None = None,
+    genre: str | None = None,
+    overwrite: bool = False,
+) -> Plan:
+    """Copy one audio track and set supplied metadata fields."""
+
+    _nonnegative_integer("track", track)
+    _matching_suffix(source, to, "Tagged audio copy")
+    _validate_paths((source,), to)
+    fields = {
+        "title": title,
+        "artist": artist,
+        "album": album,
+        "date": date,
+        "genre": genre,
+    }
+    selected = [(name, value) for name, value in fields.items() if value is not None]
+    if not selected:
+        raise GraphError("Set at least one audio metadata field")
+    args: list[str] = ["-c:a", "copy"]
+    for name, value in selected:
+        assert value is not None
+        _metadata_value(name, value)
+        args.extend(("-metadata", f"{name}={value}"))
+    plan = output(input(source).audio(track), to=to, args=args)
+    return _set_overwrite(plan, overwrite)
+
+
 def _fit_canvas_video(
     video: VideoStream,
     *,
@@ -1043,6 +1863,21 @@ def _single_image_plan(
     return _set_overwrite(output(video, to=to, args=args), overwrite)
 
 
+def _audio_plan(
+    audio: AudioStream,
+    to: Pathish,
+    sources: Sequence[Pathish],
+    codec: AudioCodec,
+    bitrate: str | None,
+    overwrite: bool,
+) -> Plan:
+    if codec == "copy":
+        raise GraphError("Filtered audio must be encoded")
+    _validate_paths(sources, to)
+    plan = output(audio, to=to, args=_audio_args(to, codec, bitrate))
+    return _set_overwrite(plan, overwrite)
+
+
 def _web_plan(
     clip: Clip,
     to: Pathish,
@@ -1061,6 +1896,45 @@ def _web_plan(
         args=output_args,
         overwrite=_require_boolean("overwrite", overwrite),
     )
+
+
+def _web_args(
+    *,
+    has_audio: bool,
+    crf: int = 20,
+    encoder_preset: EncoderPreset = "medium",
+    audio_bitrate: str = "192k",
+) -> tuple[str, ...]:
+    args = (
+        "-c:v",
+        "libx264",
+        "-crf",
+        str(crf),
+        "-preset",
+        encoder_preset,
+        "-pix_fmt",
+        "yuv420p",
+        "-movflags",
+        "+faststart",
+    )
+    if has_audio:
+        return (*args, "-c:a", "aac", "-b:a", audio_bitrate)
+    return args
+
+
+def _validate_encoder_preset(value: EncoderPreset) -> None:
+    if value not in {
+        "ultrafast",
+        "superfast",
+        "veryfast",
+        "faster",
+        "fast",
+        "medium",
+        "slow",
+        "slower",
+        "veryslow",
+    }:
+        raise GraphError(f"Unknown H.264 encoder preset: {value}")
 
 
 def _audio_args(
@@ -1112,6 +1986,20 @@ def _require_suffix(
         choices = ", ".join(sorted(allowed))
         raise GraphError(f"{label} must use one of: {choices}")
     return suffix
+
+
+def _matching_suffix(source: Pathish, to: Pathish, label: str) -> None:
+    source_suffix = os.path.splitext(_path_text("Input", source))[1].lower()
+    output_suffix = os.path.splitext(_path_text("Output", to))[1].lower()
+    if not source_suffix or source_suffix != output_suffix:
+        raise GraphError(f"{label} input and output must use the same extension")
+
+
+def _metadata_value(name: str, value: str) -> None:
+    if not isinstance(value, str) or not value.strip():
+        raise GraphError(f"{name} metadata cannot be empty")
+    if "\x00" in value:
+        raise GraphError(f"{name} metadata cannot contain a null character")
 
 
 def _validate_paths(sources: Sequence[Pathish], to: Pathish) -> None:
@@ -1188,6 +2076,15 @@ def _volume_if_needed(stream: AudioStream, factor: float) -> AudioStream:
 def _positive_integer(name: str, value: int) -> None:
     if isinstance(value, bool) or not isinstance(value, int) or value <= 0:
         raise GraphError(f"{name} must be a positive integer")
+
+
+def _bounded_integer(name: str, value: int, minimum: int, maximum: int) -> None:
+    if (
+        isinstance(value, bool)
+        or not isinstance(value, int)
+        or not minimum <= value <= maximum
+    ):
+        raise GraphError(f"{name} must be between {minimum} and {maximum}")
 
 
 def _even_positive_integer(name: str, value: int) -> None:
