@@ -51,6 +51,7 @@ def test_demo_media_script_generates_example_inputs(tmp_path: Path) -> None:
     branded = tmp_path / "branded.mp4"
     square = tmp_path / "square.mp4"
     preview = tmp_path / "preview.gif"
+    sheet = tmp_path / "sheet.jpg"
     assert cli.main(["probe", str(video)]) == 0
     assert (
         cli.main(
@@ -186,6 +187,32 @@ def test_demo_media_script_generates_example_inputs(tmp_path: Path) -> None:
         )
         == 0
     )
+    assert (
+        cli.main(
+            [
+                "contact-sheet",
+                str(video),
+                "--columns",
+                "2",
+                "--rows",
+                "2",
+                "--interval",
+                "0.5",
+                "--cell-width",
+                "160",
+                "--cell-height",
+                "90",
+                "--padding",
+                "0",
+                "--margin",
+                "0",
+                "--no-progress",
+                "-o",
+                str(sheet),
+            ]
+        )
+        == 0
+    )
 
     for target in (
         clip,
@@ -197,6 +224,7 @@ def test_demo_media_script_generates_example_inputs(tmp_path: Path) -> None:
         branded,
         square,
         preview,
+        sheet,
     ):
         assert target.stat().st_size > 0
     assert len(probe(captioned).subtitle_streams) == 1
@@ -219,3 +247,5 @@ def test_demo_media_script_generates_example_inputs(tmp_path: Path) -> None:
     assert preview_info.video_streams[0].width == 240
     assert preview_info.audio_streams == ()
     assert preview_info.duration == pytest.approx(2.0, abs=0.2)
+    sheet_video = probe(sheet).video_streams[0]
+    assert (sheet_video.width, sheet_video.height) == (320, 180)
