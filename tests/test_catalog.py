@@ -49,7 +49,9 @@ def test_editing_commands_list_exact_requirements() -> None:
 
     assert editing
     assert all(spec.requirements for spec in editing)
-    assert command_spec("trim").requirements == (
+    trim = command_spec("trim")
+    assert trim is not None
+    assert trim.requirements == (
         "encoder:aac",
         "encoder:libx264",
         "filter:asetpts",

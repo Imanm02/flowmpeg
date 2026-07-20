@@ -972,7 +972,7 @@ def test_smoke_report_encodes_then_probes(
         calls.append(argv)
         return next(results)
 
-    monkeypatch.setattr(cli.subprocess, "run", run)
+    monkeypatch.setattr(cli, "_run_captured_process", run)
 
     report = cli._smoke_report("custom-ffmpeg", "custom-ffprobe", 2)
 
@@ -990,13 +990,38 @@ def test_smoke_report_bounds_encode_time(
         del args, kwargs
         raise subprocess.TimeoutExpired("ffmpeg", 2)
 
-    monkeypatch.setattr(cli.subprocess, "run", run)
+    monkeypatch.setattr(cli, "_run_captured_process", run)
 
     report = cli._smoke_report("ffmpeg", "ffprobe", 2)
 
     assert report["ok"] is False
     assert report["status"] == "encode-timeout"
     assert report["reason"] == "Encode exceeded 2 seconds"
+
+
+def test_captured_process_stops_tree_on_timeout(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    class Process:
+        returncode = None
+
+        def communicate(self, *, timeout: float) -> tuple[str, str]:
+            raise subprocess.TimeoutExpired("ffmpeg", timeout)
+
+    process = Process()
+    stopped: list[tuple[object, float]] = []
+    monkeypatch.setattr(subprocess, "Popen", lambda *args, **kwargs: process)
+
+    def stop(item: object, grace: float) -> bool:
+        stopped.append((item, grace))
+        return True
+
+    monkeypatch.setattr(cli, "stop_process_tree", stop)
+
+    with pytest.raises(subprocess.TimeoutExpired):
+        cli._run_captured_process(("ffmpeg", "-version"), timeout=3)
+
+    assert stopped == [(process, 2.0)]
 
 
 @pytest.mark.integration

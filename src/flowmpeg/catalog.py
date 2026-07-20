@@ -570,9 +570,7 @@ _COMMAND_REQUIREMENTS = {
     "resize": _requirements(*_MP4, "filter:scale"),
     "remove-audio": ("muxer:mp4",),
     "compress-video": _requirements(*_MP4, "filter:scale"),
-    "reframe": _requirements(
-        *_MP4, "filter:crop", "filter:scale", "filter:setsar"
-    ),
+    "reframe": _requirements(*_MP4, "filter:crop", "filter:scale", "filter:setsar"),
     "social-video": _requirements(
         *_MP4,
         "filter:crop",
@@ -603,14 +601,10 @@ _COMMAND_REQUIREMENTS = {
         "filter:split",
         "filter:trim",
     ),
-    "replace-audio": _requirements(
-        "encoder:aac", "filter:apad", "muxer:mp4"
-    ),
+    "replace-audio": _requirements("encoder:aac", "filter:apad", "muxer:mp4"),
     "extract-audio": ("encoder:libmp3lame", "muxer:mp3"),
     "mix-audio": _requirements(*_WAV, "filter:amix"),
-    "normalize-loudness": _requirements(
-        *_WAV, "filter:aresample", "filter:loudnorm"
-    ),
+    "normalize-loudness": _requirements(*_WAV, "filter:aresample", "filter:loudnorm"),
     "denoise-audio": _requirements(*_WAV, "filter:afftdn"),
     "compress-audio": _requirements(*_WAV, "filter:acompressor"),
     "podcast-voice": _requirements(
@@ -647,9 +641,7 @@ _COMMAND_REQUIREMENTS = {
     "grid": _requirements(
         "encoder:libx264", "filter:scale", "filter:xstack", "muxer:mp4"
     ),
-    "fit-canvas": _requirements(
-        *_MP4, "filter:pad", "filter:scale", "filter:setsar"
-    ),
+    "fit-canvas": _requirements(*_MP4, "filter:pad", "filter:scale", "filter:setsar"),
     "picture-in-picture": _requirements(
         *_MP4, "filter:overlay", "filter:scale", "filter:setpts"
     ),
@@ -736,9 +728,7 @@ _COMMAND_REQUIREMENTS = {
         "muxer:mp4",
     ),
     "extract-subtitles": ("encoder:srt", "muxer:srt"),
-    "add-subtitles": _requirements(
-        *_MP4, "encoder:mov_text"
-    ),
+    "add-subtitles": _requirements(*_MP4, "encoder:mov_text"),
     "remove-subtitles": _MP4,
     "strip-metadata": ("muxer:matroska",),
 }

@@ -2606,7 +2606,7 @@ def _smoke_report(
     with tempfile.TemporaryDirectory(prefix="flowmpeg-doctor-") as directory:
         output = os.path.join(directory, "smoke.mkv")
         try:
-            encoded = subprocess.run(
+            encoded = _run_captured_process(
                 (
                     ffmpeg,
                     "-hide_banner",
@@ -2626,13 +2626,7 @@ def _smoke_report(
                     "matroska",
                     output,
                 ),
-                capture_output=True,
-                text=True,
-                encoding="utf-8",
-                errors="replace",
                 timeout=timeout,
-                check=False,
-                shell=False,
             )
         except subprocess.TimeoutExpired:
             return {
@@ -2657,7 +2651,7 @@ def _smoke_report(
             }
 
         try:
-            inspected = subprocess.run(
+            inspected = _run_captured_process(
                 (
                     ffprobe,
                     "-v",
@@ -2670,13 +2664,7 @@ def _smoke_report(
                     "json",
                     output,
                 ),
-                capture_output=True,
-                text=True,
-                encoding="utf-8",
-                errors="replace",
                 timeout=timeout,
-                check=False,
-                shell=False,
             )
         except subprocess.TimeoutExpired:
             return {
@@ -2720,6 +2708,31 @@ def _smoke_report(
             "reason": None,
             "video": video,
         }
+
+
+def _run_captured_process(
+    argv: tuple[str, ...],
+    *,
+    timeout: float,
+) -> subprocess.CompletedProcess[str]:
+    process = subprocess.Popen(
+        argv,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        shell=False,
+        **popen_group_options(),
+    )
+    try:
+        stdout, stderr = process.communicate(timeout=timeout)
+    except subprocess.TimeoutExpired:
+        stop_process_tree(process, min(timeout, 2.0))
+        raise
+    if process.returncode is None:
+        raise OSError("Process ended without a return code")
+    return subprocess.CompletedProcess(argv, process.returncode, stdout, stderr)
 
 
 def _feature_report(

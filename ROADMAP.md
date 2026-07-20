@@ -86,6 +86,7 @@ only a discussion or test placeholder.
   group.
 - [x] Add an optional doctor smoke test that encodes and probes a tiny generated
   input.
+- [x] Stop the full doctor smoke-test process tree when a stage times out.
 - [x] Split doctor requirements by the exact encoders and muxers each command
   needs.
 - [x] Infer progress duration for start and end trims.
