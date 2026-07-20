@@ -17,7 +17,7 @@ decoded frames or samples, so its stream must be encoded again.
 | `audio` | Dropped | Encode or copy by selected codec | No | Save one audio-only track index |
 | `join` | Encode | Encode | `concat` | Join matching decoded formats |
 | `clean-metadata` | Packet copy | Packet copy | No | Drop mapped metadata and chapters |
-| `captions` | Packet copy | Packet copy | No | Add a selectable MP4 text track |
+| `captions` | H.264 encode | AAC encode | No | Add an encoded MP4 text track |
 | `resize` | H.264 encode | AAC encode | `scale` | Change frame dimensions |
 | `voice` | Dropped | Encode | Voice filters | Prepare spoken audio |
 
@@ -177,7 +177,8 @@ flowchart LR
     F -->|"Yes"| G["acompressor, reduce level range"]
     F -->|"No"| H["loudnorm, target minus 16 LUFS"]
     G --> H
-    H --> I["Encoded audio output"]
+    H --> I["aresample, set 48 kHz"]
+    I --> J["Encoded audio output"]
 ```
 
 | Stage | Default control | What a larger value changes |
@@ -186,7 +187,7 @@ flowchart LR
 | Low-pass | 12000 Hz | A larger cutoff keeps more high-frequency content |
 | Noise reduction | 12 dB | Applies stronger steady-noise reduction |
 | Compressor ratio | 3:1 | Pushes loud sections closer to quieter sections |
-| Loudness target | -16 LUFS | Fixed delivery target in this shortcut |
+| Loudness target | -16 LUFS | Default target, set another with `--integrated` |
 
 ```console
 flowmpeg voice raw.wav -o finished.wav
@@ -224,7 +225,7 @@ The rectangle stays at that position for the whole output.
 | `y` | pixels | 0 or greater | Top edge of the region |
 | `width` | pixels | Positive | Region width |
 | `height` | pixels | Positive | Region height |
-| `radius` | pixels | 1 through 100 | Blur strength and spread |
+| `radius` | pixels | 1 through 100, at most half the shorter side | Blur strength and spread |
 
 ```console
 flowmpeg probe driveway.mp4

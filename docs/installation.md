@@ -32,8 +32,8 @@ Run the full capability check after both tools are found:
 flowmpeg doctor
 ```
 
-`doctor` checks the filters, encoders, and muxers used by Flowmpeg. Use JSON in
-scripts:
+`doctor` checks a selected set of filters, encoders, and muxers used by common
+Flowmpeg jobs. Use JSON in scripts:
 
 ```console
 flowmpeg doctor --json

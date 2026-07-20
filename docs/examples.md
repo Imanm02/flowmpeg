@@ -3,9 +3,12 @@
 ## Create small inputs for these examples
 
 The repository includes a generator based on FFmpeg test sources. It creates a
-two-second video with audio, a WAV tone, a cover image, and an SRT file:
+two-second video with audio, a WAV tone, a cover image, and an SRT file. Run it
+from a cloned repository checkout:
 
 ```console
+git clone https://github.com/Imanm02/flowmpeg.git
+cd flowmpeg
 python scripts/make_demo_media.py demo-media
 ```
 

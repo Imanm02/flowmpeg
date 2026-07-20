@@ -50,7 +50,7 @@ COMMAND_CATALOG = (
     CommandSpec(
         "compress-video",
         "video",
-        "Encode a smaller H.264 MP4",
+        "Encode an H.264 delivery MP4",
         ("compress", "smaller"),
         capability_group="web-video",
     ),
@@ -223,7 +223,7 @@ COMMAND_CATALOG = (
         "audio",
         "Lower music under speech",
         ("duck",),
-        output_kind="audio",
+        output_kind="video",
         capability_group="audio-processing",
     ),
     CommandSpec(
@@ -409,9 +409,10 @@ COMMAND_CATALOG = (
     CommandSpec(
         "remove-subtitles",
         "subtitles",
-        "Copy media without subtitles",
+        "Create an MP4 without subtitles",
         ("strip-subtitles",),
-        output_kind="media",
+        output_kind="video",
+        capability_group="web-video",
     ),
     CommandSpec(
         "strip-metadata",

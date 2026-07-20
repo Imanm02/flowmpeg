@@ -32,7 +32,7 @@ missing, it prints the supported package manager command. Installation only
 runs with `flowmpeg setup --install` and confirmation. See the
 [installation guide](installation.md) for each supported system.
 
-`doctor` checks both executables and the required filters and output
+`doctor` checks both executables and a selected set of filters and output
 capabilities, then groups the results by the kind of job they support.
 
 The module form runs the same program:
