@@ -107,7 +107,56 @@ def test_process_cleanup_does_not_mask_a_job_error() -> None:
 
     process = cast(subprocess.Popen[str], BrokenProcess())
 
-    _stop_process(process, 0.0)
+    assert _stop_process(process, 0.0) is False
+
+
+def test_process_cleanup_kills_after_poll_failure() -> None:
+    class PollFailure:
+        def __init__(self) -> None:
+            self.killed = False
+
+        def poll(self) -> int | None:
+            raise OSError("poll failed")
+
+        def kill(self) -> None:
+            self.killed = True
+
+        def wait(self, timeout: float | None = None) -> int:
+            del timeout
+            return -9
+
+    value = PollFailure()
+    process = cast(subprocess.Popen[str], value)
+
+    assert _stop_process(process, 0.0) is True
+    assert value.killed
+
+
+def test_process_cleanup_reports_unconfirmed_exit() -> None:
+    class StuckProcess:
+        def __init__(self) -> None:
+            self.killed = False
+
+        def poll(self) -> None:
+            return None
+
+        def terminate(self) -> None:
+            return None
+
+        def kill(self) -> None:
+            self.killed = True
+
+        def wait(self, timeout: float | None = None) -> int:
+            raise subprocess.TimeoutExpired(
+                "ffmpeg",
+                timeout if timeout is not None else 0.0,
+            )
+
+    value = StuckProcess()
+    process = cast(subprocess.Popen[str], value)
+
+    assert _stop_process(process, 0.0) is False
+    assert value.killed
 
 
 @pytest.mark.parametrize("failed_start", [1, 2])

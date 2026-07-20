@@ -6,6 +6,7 @@ import queue
 import subprocess
 import threading
 import time
+import warnings
 from collections import deque
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -121,7 +122,6 @@ def run(
         stderr_started = True
         while process.poll() is None or progress_thread.is_alive():
             if timeout is not None and time.monotonic() - started >= timeout:
-                _stop_process(process, termination_grace)
                 raise JobTimeoutError(f"FFmpeg timed out after {timeout:g} seconds")
             try:
                 event = progress_events.get(timeout=0.05)
@@ -131,7 +131,12 @@ def run(
             if on_progress is not None:
                 on_progress(event)
     except BaseException:
-        _stop_process(process, termination_grace)
+        if not _stop_process(process, termination_grace):
+            warnings.warn(
+                "FFmpeg cleanup could not confirm process exit",
+                RuntimeWarning,
+                stacklevel=2,
+            )
         raise
     finally:
         if progress_started:
@@ -183,33 +188,34 @@ def _read_stderr(stream: TextIO, tail: _TextTail) -> None:
         tail.append(line)
 
 
-def _stop_process(process: subprocess.Popen[str], grace: float) -> None:
+def _stop_process(process: subprocess.Popen[str], grace: float) -> bool:
     try:
         stopped = process.poll() is not None
     except OSError:
-        return
+        return _kill_process(process, grace)
     if stopped:
-        return
+        return True
     try:
         process.terminate()
     except OSError:
-        _kill_process(process, grace)
-        return
+        return _kill_process(process, grace)
     try:
         process.wait(timeout=grace)
+        return True
     except (subprocess.TimeoutExpired, OSError):
-        _kill_process(process, grace)
+        return _kill_process(process, grace)
 
 
-def _kill_process(process: subprocess.Popen[str], grace: float) -> None:
+def _kill_process(process: subprocess.Popen[str], grace: float) -> bool:
     try:
         process.kill()
     except OSError:
-        return
+        return False
     try:
         process.wait(timeout=grace)
+        return True
     except (subprocess.TimeoutExpired, OSError):
-        return
+        return False
 
 
 def _close_pipe(stream: IO[Any]) -> None:
