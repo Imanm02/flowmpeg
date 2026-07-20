@@ -19,6 +19,22 @@ if TYPE_CHECKING:
     from flowmpeg.runner import RunResult
 
 
+_STRUCTURAL_ARGS = frozenset(
+    {
+        "-filter_complex",
+        "-filter_complex_script",
+        "-i",
+        "-map",
+        "-n",
+        "-nostats",
+        "-nostdin",
+        "-progress",
+        "-stats_period",
+        "-y",
+    }
+)
+
+
 @dataclass(frozen=True, slots=True)
 class OutputSpec:
     """Mapped streams and options for one output destination."""
@@ -105,8 +121,14 @@ class Plan:
         if not isinstance(self.overwrite_enabled, bool):
             raise GraphError("Overwrite state must be Boolean")
         self.graph.validate()
+        _reject_structural_args(self.global_args, "Global")
+        for node in self.graph.inputs:
+            _reject_structural_args(node.args, "Input")
         if not self.outputs:
             raise GraphError("Plans require at least one output")
+
+        for output_spec in self.outputs:
+            _reject_structural_args(output_spec.args, "Output")
 
         destinations = [output.destination for output in self.outputs]
         if _contains_alias(destinations):
@@ -240,3 +262,10 @@ def _contains_alias(destinations: list[str]) -> bool:
         for index, destination in enumerate(destinations)
         for other in destinations[index + 1 :]
     )
+
+
+def _reject_structural_args(args: tuple[str, ...], scope: str) -> None:
+    for value in args:
+        option = value.partition("=")[0]
+        if option in _STRUCTURAL_ARGS:
+            raise GraphError(f"{scope} arguments cannot set {option}")

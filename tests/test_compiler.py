@@ -50,6 +50,37 @@ def test_input_arguments_cannot_change_input_order(option: str) -> None:
         input("actual.mp4", option, "extra.mp4")
 
 
+@pytest.mark.parametrize(
+    "option",
+    ["-filter_complex", "-map", "-n", "-progress=pipe:2", "-y"],
+)
+def test_global_arguments_cannot_override_plan_structure(option: str) -> None:
+    with pytest.raises(GraphError, match="Global arguments cannot set"):
+        output(
+            input("movie.mp4").video(),
+            to="copy.mp4",
+            global_args=(option,),
+        )
+
+
+@pytest.mark.parametrize(
+    "option",
+    ["-filter_complex", "-i=extra.mp4", "-map", "-progress", "-y"],
+)
+def test_output_arguments_cannot_override_plan_structure(option: str) -> None:
+    with pytest.raises(GraphError, match="Output arguments cannot set"):
+        output(input("movie.mp4").video(), to="copy.mp4", args=(option,))
+
+
+@pytest.mark.parametrize(
+    "option",
+    ["-filter_complex", "-map", "-nostats", "-progress", "-stats_period"],
+)
+def test_input_arguments_cannot_override_runner_structure(option: str) -> None:
+    with pytest.raises(GraphError, match="Input arguments cannot set"):
+        output(input("movie.mp4", option).video(), to="copy.mp4")
+
+
 def test_optional_input_audio_compiles_to_optional_map() -> None:
     source = input("silent.mp4")
     plan = output(source.video(), source.audio(optional=True), to="copy.mp4")
