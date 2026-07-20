@@ -604,6 +604,15 @@ _BASE_COMMAND_CATALOG = (
         capability_group="video-processing",
     ),
     CommandSpec(
+        "suggest-crop",
+        "inspect",
+        "Rank crop rectangles from video borders",
+        ("crop-report", "detect-crop"),
+        input_kind="video",
+        output_kind="report",
+        capability_group="video-processing",
+    ),
+    CommandSpec(
         "doctor",
         "inspect",
         "Check tools and media capabilities",
@@ -726,6 +735,7 @@ _COMMAND_TAGS = {
     "detect-silence": ("archive",),
     "detect-black": ("archive",),
     "detect-scenes": ("archive", "creator"),
+    "suggest-crop": ("archive", "creator"),
     "tag-media": ("archive", "copy"),
 }
 
@@ -964,6 +974,7 @@ _COMMAND_REQUIREMENTS = {
     "detect-silence": ("filter:silencedetect",),
     "detect-black": ("filter:blackdetect",),
     "detect-scenes": _requirements("filter:metadata", "filter:select"),
+    "suggest-crop": ("filter:cropdetect",),
 }
 
 COMMAND_CATALOG = tuple(

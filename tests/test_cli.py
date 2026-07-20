@@ -16,6 +16,7 @@ from flowmpeg import cli, diagnostics
 from flowmpeg.black import BlackInterval, BlackReport
 from flowmpeg.catalog import COMMAND_CATALOG
 from flowmpeg.comparison import MediaComparison, MediaSummary
+from flowmpeg.crop_detection import CropCandidate, CropReport
 from flowmpeg.errors import (
     BinaryNotFoundError,
     BinaryUnusableError,
@@ -966,6 +967,34 @@ def test_scene_report_json_includes_strongest_change(
     assert report["schema_version"] == 1
     assert report["strongest_change"] == {"score": 0.91, "time": 8.5}
     assert len(report["changes"]) == 2
+
+
+def test_crop_report_prints_ranked_candidates(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    monkeypatch.setattr(cli, "detect_crop", lambda *args, **kwargs: _crop_report())
+
+    assert cli.main(["crop-report", "letterboxed.mp4", "--duration", "20"]) == 0
+    output = capsys.readouterr().out
+
+    assert "Crop report: 4 samples, 2 candidates" in output
+    assert "Recommended: crop=120:100:20:10" in output
+    assert "Agreement: 75.0%" in output
+
+
+def test_crop_report_json_includes_recommendation(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    monkeypatch.setattr(cli, "detect_crop", lambda *args, **kwargs: _crop_report())
+
+    assert cli.main(["detect-crop", "letterboxed.mp4", "--json"]) == 0
+    report = json.loads(capsys.readouterr().out)
+
+    assert report["schema_version"] == 1
+    assert report["agreement"] == 0.75
+    assert report["recommended"]["filter_value"] == "crop=120:100:20:10"
 
 
 def test_doctor_json_reports_ready(
@@ -2262,5 +2291,22 @@ def _scenes() -> SceneReport:
         changes=(
             SceneChange(2, 0.4),
             SceneChange(8.5, 0.91),
+        ),
+    )
+
+
+def _crop_report() -> CropReport:
+    return CropReport(
+        source="letterboxed.mp4",
+        track=0,
+        limit=24,
+        round_to=2,
+        skip_frames=2,
+        start=0,
+        duration=20,
+        sample_count=4,
+        candidates=(
+            CropCandidate(120, 100, 20, 10, 3),
+            CropCandidate(118, 100, 22, 10, 1),
         ),
     )

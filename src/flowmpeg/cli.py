@@ -27,6 +27,7 @@ from flowmpeg.audit import (
 from flowmpeg.black import BlackReport, detect_black
 from flowmpeg.catalog import CATEGORIES, COMMAND_CATALOG, TAGS, command_spec
 from flowmpeg.comparison import MediaComparison, MediaSummary, compare_media
+from flowmpeg.crop_detection import CropReport, detect_crop
 from flowmpeg.diagnostics import display_argv, redact_text
 from flowmpeg.errors import (
     BinaryNotFoundError,
@@ -195,6 +196,7 @@ _BASE_EXAMPLES = (
     _Example("inspect", "flowmpeg find-silence interview.wav"),
     _Example("inspect", "flowmpeg find-black tape.mp4"),
     _Example("inspect", "flowmpeg scenes interview.mp4"),
+    _Example("inspect", "flowmpeg crop-report letterboxed.mp4 --duration 30"),
     _Example("inspect", "flowmpeg doctor"),
     _Example("inspect", "flowmpeg setup"),
     _Example("help", "flowmpeg errors"),
@@ -568,6 +570,7 @@ def build_parser() -> argparse.ArgumentParser:
     _add_silence_detection(commands)
     _add_black_detection(commands)
     _add_scene_detection(commands)
+    _add_crop_detection(commands)
     _add_doctor(commands)
     _add_setup(commands)
     _add_errors(commands)
@@ -2318,6 +2321,51 @@ def _add_scene_detection(
     parser.set_defaults(handler=_run_scene_detection)
 
 
+def _add_crop_detection(
+    commands: argparse._SubParsersAction[argparse.ArgumentParser],
+) -> None:
+    parser = commands.add_parser(
+        "suggest-crop",
+        aliases=["crop-report", "detect-crop"],
+        help="Rank crop rectangles from video borders.",
+        description="Scan a bounded video range and rank crop rectangles.",
+        allow_abbrev=False,
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+    _source(parser)
+    parser.add_argument("--track", type=_nonnegative_int, default=0)
+    parser.add_argument(
+        "--limit",
+        type=_nonnegative_float,
+        default=24.0,
+        help="Pixel level treated as black",
+    )
+    parser.add_argument(
+        "--round",
+        dest="round_to",
+        type=_positive_int,
+        default=2,
+        help="Width and height divisibility",
+    )
+    parser.add_argument(
+        "--skip-frames",
+        type=_nonnegative_int,
+        default=2,
+        help="Initial filter samples to skip",
+    )
+    parser.add_argument("--start", type=_nonnegative_float)
+    parser.add_argument(
+        "--duration",
+        type=_positive_float,
+        default=60.0,
+        help="Seconds to scan",
+    )
+    parser.add_argument("--ffmpeg", default="ffmpeg", help="FFmpeg executable")
+    parser.add_argument("--timeout", type=_positive_float)
+    parser.add_argument("--json", action="store_true", help="Print crop JSON")
+    parser.set_defaults(handler=_run_crop_detection)
+
+
 def _add_doctor(commands: argparse._SubParsersAction[argparse.ArgumentParser]) -> None:
     parser = commands.add_parser(
         "doctor",
@@ -2656,6 +2704,29 @@ def _run_scene_detection(args: argparse.Namespace) -> int:
         print(json.dumps(_redact_json(data), indent=2, sort_keys=True))
     else:
         print(redact_text(_format_scenes(result)))
+    return 0
+
+
+def _run_crop_detection(args: argparse.Namespace) -> int:
+    result = detect_crop(
+        cast(str, args.source),
+        track=cast(int, args.track),
+        limit=cast(float, args.limit),
+        round_to=cast(int, args.round_to),
+        skip_frames=cast(int, args.skip_frames),
+        start=cast(float | None, args.start),
+        duration=cast(float, args.duration),
+        ffmpeg=cast(str, args.ffmpeg),
+        timeout=cast(float | None, args.timeout),
+    )
+    if cast(bool, args.json):
+        data = asdict(result)
+        data["schema_version"] = _JSON_SCHEMA_VERSION
+        data["recommended"] = result.recommended_json()
+        data["agreement"] = result.agreement
+        print(json.dumps(_redact_json(data), indent=2, sort_keys=True))
+    else:
+        print(redact_text(_format_crop(result)))
     return 0
 
 
@@ -3230,6 +3301,42 @@ def _format_scenes(result: SceneReport) -> str:
             for index, item in enumerate(result.changes, start=1)
         )
     return "\n".join(lines)
+
+
+def _format_crop(result: CropReport) -> str:
+    count = len(result.candidates)
+    noun = "candidate" if count == 1 else "candidates"
+    agreement = "none" if result.agreement is None else f"{result.agreement:.1%}"
+    recommended = (
+        "none" if result.recommended is None else result.recommended.filter_value
+    )
+    lines = [
+        f"Crop report: {result.sample_count} samples, {count} {noun}",
+        f"Source: {result.source}",
+        f"Video track: {result.track}",
+        f"Scan: {_crop_scan_range(result)}",
+        f"Limit: {result.limit:g}",
+        f"Round to: {result.round_to}",
+        f"Recommended: {recommended}",
+        f"Agreement: {agreement}",
+    ]
+    if result.candidates:
+        lines.extend(("", "Candidates:"))
+        lines.extend(
+            f"  {index}. {item.filter_value} ({item.samples} samples)"
+            for index, item in enumerate(result.candidates[:10], start=1)
+        )
+        remaining = len(result.candidates) - 10
+        if remaining > 0:
+            lines.append(f"  ... {remaining} more candidates in JSON output")
+    return "\n".join(lines)
+
+
+def _crop_scan_range(result: CropReport) -> str:
+    start = 0 if result.start is None else result.start
+    if result.duration is None:
+        return f"from {start:g}s to the end"
+    return f"from {start:g}s for {result.duration:g}s"
 
 
 def _detect_installer() -> _Installer | None:
