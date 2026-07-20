@@ -1029,6 +1029,24 @@ def test_setup_rejects_install_only_flags(
     assert "--json cannot be combined" in capsys.readouterr().err
 
 
+def test_setup_rejects_install_with_custom_tool_paths(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    code = cli.main(
+        [
+            "setup",
+            "--install",
+            "--ffmpeg",
+            "C:/tools/ffmpeg.exe",
+            "--ffprobe",
+            "C:/tools/ffprobe.exe",
+        ]
+    )
+
+    assert code == 2
+    assert "cannot be combined with custom tool paths" in capsys.readouterr().err
+
+
 def test_windows_installer_uses_exact_winget_package(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

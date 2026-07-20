@@ -223,6 +223,9 @@ Setup can perform the same read-only check:
 flowmpeg setup --ffmpeg C:\tools\ffmpeg\bin\ffmpeg.exe --ffprobe C:\tools\ffmpeg\bin\ffprobe.exe
 ```
 
+Custom setup paths are for checking an existing installation. They cannot be
+combined with `--install`, which installs the package manager's default tools.
+
 Python plans accept the executable at run time:
 
 ```python

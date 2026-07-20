@@ -1930,6 +1930,12 @@ def _run_setup(args: argparse.Namespace) -> int:
             2,
             "FMG200",
         )
+    if install and (ffmpeg_executable != "ffmpeg" or ffprobe_executable != "ffprobe"):
+        return _error(
+            GraphError("--install cannot be combined with custom tool paths"),
+            2,
+            "FMG200",
+        )
 
     ffmpeg = _tool_report(ffmpeg_executable, timeout)
     ffprobe = _tool_report(ffprobe_executable, timeout)
