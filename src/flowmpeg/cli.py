@@ -159,14 +159,19 @@ _FEATURE_REQUIREMENTS = {
         "muxer:wav",
     ),
     "composition": (
+        "encoder:aac",
+        "encoder:libx264",
         "filter:concat",
         "filter:crop",
         "filter:overlay",
         "filter:pad",
         "filter:scale",
         "filter:xstack",
+        "muxer:mp4",
     ),
     "video-effects": (
+        "encoder:aac",
+        "encoder:libx264",
         "filter:colorchannelmixer",
         "filter:fade",
         "filter:format",
@@ -174,6 +179,7 @@ _FEATURE_REQUIREMENTS = {
         "filter:hflip",
         "filter:transpose",
         "filter:vflip",
+        "muxer:mp4",
     ),
     "animated-gif": (
         "encoder:gif",
@@ -207,12 +213,17 @@ _FEATURE_REQUIREMENTS = {
         "filter:volume",
     ),
     "reverse": (
+        "encoder:aac",
+        "encoder:libx264",
         "filter:areverse",
         "filter:asetpts",
         "filter:reverse",
         "filter:setpts",
+        "muxer:mp4",
     ),
     "creator-video": (
+        "encoder:aac",
+        "encoder:libx264",
         "filter:boxblur",
         "filter:bwdif",
         "filter:eq",
@@ -220,6 +231,7 @@ _FEATURE_REQUIREMENTS = {
         "filter:tpad",
         "filter:unsharp",
         "filter:yadif",
+        "muxer:mp4",
     ),
     "voice-cleanup": (
         "filter:acompressor",
@@ -228,17 +240,29 @@ _FEATURE_REQUIREMENTS = {
         "filter:areverse",
         "filter:highpass",
         "filter:lowpass",
+        "filter:loudnorm",
+        "filter:aresample",
         "filter:silenceremove",
+        "encoder:pcm_s16le",
+        "muxer:wav",
     ),
     "subtitles": (
+        "encoder:aac",
         "encoder:ass",
+        "encoder:libx264",
         "encoder:mov_text",
         "encoder:srt",
         "encoder:webvtt",
+        "muxer:mp4",
     ),
     "audiogram": (
+        "encoder:aac",
+        "encoder:libx264",
         "filter:colorkey",
+        "filter:overlay",
+        "filter:scale",
         "filter:showwaves",
+        "muxer:mp4",
     ),
 }
 
@@ -1851,7 +1875,7 @@ def _run_doctor(args: argparse.Namespace) -> int:
     required_state = (
         features.get(required_group) if required_group is not None else None
     )
-    required_ready = required_group is None or required_state is True
+    required_ready = required_state if required_group is not None else None
     report: dict[str, object] = {
         "ok": okay,
         "flowmpeg_version": __version__,
@@ -1867,7 +1891,7 @@ def _run_doctor(args: argparse.Namespace) -> int:
         print(json.dumps(report, indent=2, sort_keys=True))
     else:
         print(_format_doctor(report))
-    return 0 if okay and required_ready else 3
+    return 0 if okay and (required_group is None or required_ready is True) else 3
 
 
 def _run_setup(args: argparse.Namespace) -> int:
@@ -2275,7 +2299,7 @@ def _tool_report(executable: str, timeout: float) -> dict[str, object]:
     first_line = version_text.splitlines()[0] if version_text else None
     reason = None
     if completed.returncode != 0:
-        reason = _stderr_reason(completed.stderr or completed.stdout)
+        reason = _stderr_reason(redact_text(completed.stderr or completed.stdout))
     return {
         "ok": completed.returncode == 0,
         "status": "ready" if completed.returncode == 0 else "failed",
@@ -2448,7 +2472,10 @@ def _format_doctor(report: dict[str, object]) -> str:
             lines.append(f"  {name}: {state}")
     required_group = report.get("required_group")
     if isinstance(required_group, str):
-        state = "ready" if report.get("required_ready") is True else "not ready"
+        ready = report.get("required_ready")
+        state = "ready" if ready is True else "limited"
+        if ready is None:
+            state = "unknown"
         lines.append(f"Required group: {required_group} ({state})")
     lines.append(f"Core ready: {'yes' if report['ok'] else 'no'}")
     return "\n".join(lines)

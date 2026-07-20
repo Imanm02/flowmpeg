@@ -40,6 +40,16 @@ flowmpeg doctor --json
 flowmpeg setup --json
 ```
 
+Require one group in CI when a job depends on it:
+
+```console
+flowmpeg doctor --require web-video
+flowmpeg doctor --require audiogram --json
+```
+
+Without `--require`, limited optional groups do not change the exit code. A
+requested group that is limited or unknown returns exit code 3.
+
 ## Let Flowmpeg run the package manager
 
 Installation is opt-in:

@@ -35,6 +35,13 @@ runs with `flowmpeg setup --install` and confirmation. See the
 `doctor` checks both executables and a selected set of filters and output
 capabilities, then groups the results by the kind of job they support.
 
+Use `--require` when a script depends on one group. A limited or unknown
+requested group returns exit code 3:
+
+```console
+flowmpeg doctor --require web-video
+```
+
 The module form runs the same program:
 
 ```console

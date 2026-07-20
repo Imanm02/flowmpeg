@@ -718,7 +718,24 @@ def test_doctor_required_group_controls_exit_code(
     )
 
     assert cli.main(["doctor", "--require", "web-video"]) == 3
-    assert "Required group: web-video (not ready)" in capsys.readouterr().out
+    assert "Required group: web-video (limited)" in capsys.readouterr().out
+
+
+def test_doctor_without_requirement_reports_null_state(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    monkeypatch.setattr(
+        cli,
+        "_tool_report",
+        lambda *args: {"ok": True, "status": "ready", "path": "tool"},
+    )
+    monkeypatch.setattr(cli, "_capability_report", lambda *args: {})
+
+    assert cli.main(["doctor", "--json"]) == 0
+    report = json.loads(capsys.readouterr().out)
+    assert report["required_group"] is None
+    assert report["required_ready"] is None
 
 
 def test_setup_ready_is_read_only(
