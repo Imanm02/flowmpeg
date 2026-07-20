@@ -98,6 +98,10 @@ class Plan:
         if len(destinations) != len(set(destinations)):
             raise GraphError("Output destinations must be unique")
 
+        input_sources = {_destination_id(node.source) for node in self.graph.inputs}
+        if input_sources.intersection(destinations):
+            raise GraphError("An output destination cannot replace a plan input")
+
         input_keys = {node.key for node in self.graph.inputs}
         filter_by_key = {node.key: node for node in self.graph.filters}
         for output_spec in self.outputs:

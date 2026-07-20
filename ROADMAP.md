@@ -19,7 +19,7 @@ only a discussion or test placeholder.
   reserves stdin and stdout.
 - [x] Reject local output aliases such as `out.mp4` and `.\out.mp4` in one
   plan.
-- [ ] Reject a local output that resolves to one of the plan inputs.
+- [x] Reject a local output that resolves to one of the plan inputs.
 - [ ] Make common video shortcuts work with silent input files without mapping
   a missing audio stream.
 - [ ] Guarantee even H.264 dimensions for compression, resize, crop, and grid

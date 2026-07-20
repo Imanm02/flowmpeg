@@ -174,3 +174,11 @@ def test_local_output_aliases_are_rejected() -> None:
 
     with pytest.raises(GraphError, match="must be unique"):
         plan.add_output(source.video(), to=absolute_alias)
+
+
+def test_output_cannot_alias_an_input() -> None:
+    source_path = Path.cwd() / "same.mp4"
+    source = input(source_path)
+
+    with pytest.raises(GraphError, match="cannot replace a plan input"):
+        output(source.video(), to="same.mp4")
