@@ -68,12 +68,12 @@ only a discussion or test placeholder.
 - [x] Parse documented terminal options, not only command names.
 - [ ] Build safe graph examples without starting FFmpeg.
 - [x] Add an encode, copy, and filter behavior matrix.
-- [ ] Add a stream retention and track-selection matrix.
+- [x] Add a stream retention and track-selection matrix.
 - [ ] Add a social frame dimension and fill-mode comparison.
 - [ ] Add a plan lifecycle and failure-path diagram.
 - [ ] Add a podcast voice-chain diagram.
 - [ ] Add a fixed-region privacy blur coordinate diagram.
-- [ ] Add probe-first examples for secondary tracks.
+- [x] Add probe-first examples for secondary tracks.
 - [ ] Add CMD, PowerShell, and Bash batch examples.
 - [ ] Add a generated demo-media script based on FFmpeg test sources.
 - [ ] Add an education workflow from trim through selectable captions.
