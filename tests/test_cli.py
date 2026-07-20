@@ -1316,6 +1316,17 @@ def test_examples_filter_by_category_and_search(
     assert "flowmpeg cut" not in output
 
 
+def test_examples_filter_by_use_case_tag(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    assert cli.main(["examples", "--tag", "privacy"]) == 0
+    output = capsys.readouterr().out
+
+    assert "flowmpeg mute" in output
+    assert "flowmpeg privacy-blur" in output
+    assert "flowmpeg convert" not in output
+
+
 def test_examples_report_an_empty_search(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
@@ -1337,6 +1348,7 @@ def test_examples_json_keeps_active_filters(
         {
             "category": "images",
             "command": "flowmpeg waveform song.mp3 -o waveform.png",
+            "tags": ["creator"],
         }
     ]
 

@@ -1077,10 +1077,11 @@ The installed program carries a small set of commands for quick recall:
 ```console
 flowmpeg examples
 flowmpeg examples --category images --json
+flowmpeg examples --tag privacy
 ```
 
-JSON output keeps the active category and search filters. Each item contains
-its category and copyable command text.
+Category, tag, and search filters can be combined. JSON output keeps those
+filters and includes each example's category, tags, and command text.
 
 This file is the longer reference. The [Python shortcut guide](shortcuts.md)
 shows the same kinds of jobs as one-call `Plan` builders, while the

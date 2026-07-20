@@ -12,11 +12,11 @@ import shutil
 import subprocess
 import sys
 from collections.abc import Callable, Sequence
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
 from typing import TextIO, cast
 
 from flowmpeg import __version__, shortcuts
-from flowmpeg.catalog import CATEGORIES, COMMAND_CATALOG, TAGS
+from flowmpeg.catalog import CATEGORIES, COMMAND_CATALOG, TAGS, command_spec
 from flowmpeg.diagnostics import display_argv, redact_text
 from flowmpeg.errors import (
     BinaryNotFoundError,
@@ -62,9 +62,10 @@ _CONTROL_NAMES = {
 class _Example:
     category: str
     command: str
+    tags: tuple[str, ...] = ()
 
 
-_EXAMPLES = (
+_BASE_EXAMPLES = (
     _Example("video", "flowmpeg convert recording.mov -o recording.mp4"),
     _Example("video", "flowmpeg convert animation.mov --no-audio -o animation.mp4"),
     _Example("video", "flowmpeg cut input.mp4 --start 5 --duration 12 -o clip.mp4"),
@@ -143,6 +144,17 @@ _EXAMPLES = (
     _Example("help", "flowmpeg examples --category video"),
     _Example("help", "flowmpeg commands --category audio"),
 )
+
+
+def _tag_example(example: _Example) -> _Example:
+    command = example.command.split(maxsplit=2)[1]
+    spec = command_spec(command)
+    if spec is None:
+        return example
+    return replace(example, tags=spec.tags)
+
+
+_EXAMPLES = tuple(_tag_example(example) for example in _BASE_EXAMPLES)
 
 _DURATION_FACTORIES = (
     shortcuts.trim,
@@ -1802,6 +1814,7 @@ def _add_examples(
         help="Show one category",
     )
     parser.add_argument("--search", help="Find text in example commands")
+    parser.add_argument("--tag", choices=TAGS, help="Show one use case")
     parser.add_argument("--json", action="store_true", help="Print example JSON")
     parser.set_defaults(handler=_run_examples)
 
@@ -2059,11 +2072,14 @@ def _run_explain_error(args: argparse.Namespace) -> int:
 def _run_examples(args: argparse.Namespace) -> int:
     category = cast(str | None, args.category)
     search = cast(str | None, args.search)
+    selected_tag = cast(str | None, args.tag)
     examples = [
         example
         for example in _EXAMPLES
         if category is None or example.category == category
     ]
+    if selected_tag is not None:
+        examples = [example for example in examples if selected_tag in example.tags]
     if search is not None:
         lowered = search.casefold()
         examples = [

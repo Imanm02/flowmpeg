@@ -97,8 +97,8 @@ only a discussion or test placeholder.
 - [ ] Build safe graph examples without starting FFmpeg.
 - [ ] Execute CMD, PowerShell, and Bash loop examples in documentation tests.
 - [x] Add built-in examples for every editing, inspection, and help command.
-- [ ] Keep built-in example categories aligned with the command catalog.
-- [ ] Add creator, podcast, privacy, archive, copy, inspect, and silent-input
+- [x] Keep built-in example categories aligned with the command catalog.
+- [x] Add creator, podcast, privacy, archive, copy, inspect, and silent-input
   tags to commands and examples.
 - [ ] Generate the CLI command map from the command catalog.
 - [x] Add effects and metadata to the documentation task index.
