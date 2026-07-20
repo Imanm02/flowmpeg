@@ -34,6 +34,7 @@ flowmpeg probe demo-media/sample.mp4
 flowmpeg audit demo-media/sample.mp4 --expect av
 flowmpeg loudness demo-media/voice.wav
 flowmpeg find-silence demo-media/voice.wav --noise-db -45 --minimum 0.2
+flowmpeg find-black demo-media/sample.mp4 --minimum 0.2
 flowmpeg cut demo-media/sample.mp4 --duration 1 -o demo-media/clip.mp4
 flowmpeg loop demo-media/sample.mp4 --duration 3 -o demo-media/looped.mp4
 flowmpeg webm demo-media/sample.mp4 -o demo-media/sample.webm
@@ -114,6 +115,7 @@ Paths can also be `pathlib.Path` objects.
 | Several recordings in sequence | WAV files | `show.wav` |
 | A loudness measurement report | `episode.wav` | Terminal text or JSON |
 | A silence interval report | `interview.wav` | Terminal text or JSON |
+| A black picture report | `tape.mp4` | Terminal text or JSON |
 | A video with a logo | `interview.mp4`, `logo.png` | `branded.mp4` |
 | A video with background music | `interview.mp4`, `music.mp3` | `with-music.mp4` |
 | One podcast mix | Two WAV files | `podcast.wav` |

@@ -44,6 +44,7 @@ flowmpeg doctor --smoke-test
 flowmpeg audit input.mp4 --expect av
 flowmpeg loudness episode.wav
 flowmpeg find-silence interview.wav
+flowmpeg find-black tape.mp4
 ```
 
 The second check accepts the `cut` shortcut and verifies the default encoders,
@@ -59,9 +60,9 @@ stable finding codes for scripts.
 The loudness command measures integrated LUFS, true peak, loudness range, and
 the offset from a chosen normalization target without writing an output file.
 
-The silence report turns FFmpeg filter output into typed time intervals. The
-[analysis guide](docs/analysis.md) shows the text report, JSON fields, a visual
-timeline, and threshold choices for different recordings.
+The silence and black reports turn FFmpeg filter output into typed time
+intervals. The [analysis guide](docs/analysis.md) shows text reports, JSON
+fields, visual timelines, and threshold choices for different recordings.
 
 ## One-line terminal jobs
 

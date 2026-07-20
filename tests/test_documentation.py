@@ -146,6 +146,15 @@ def test_python_documentation_examples_build(
             longest_silence=1.0,
         ),
     )
+    monkeypatch.setattr(
+        flowmpeg,
+        "detect_black",
+        lambda *args, **kwargs: SimpleNamespace(
+            intervals=(SimpleNamespace(start=1.0, end=2.0, duration=1.0),),
+            total_black=1.0,
+            longest_black=1.0,
+        ),
+    )
     text = path.read_text(encoding="utf-8")
     namespace: dict[str, object] = {"ff": shortcuts}
     for match in _PYTHON_BLOCK.finditer(text):

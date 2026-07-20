@@ -13,6 +13,7 @@ choose settings from measured input instead of guessing.
 | What changed after an edit? | `compare` | Before and after media values |
 | How loud is an audio track? | `loudness` | EBU R128 measurements |
 | Where are the quiet gaps? | `find-silence` | Start, end, and duration intervals |
+| Where is the picture black? | `find-black` | Black picture intervals |
 | Can this machine run a command? | `doctor --command NAME` | Exact capability checks |
 
 Add `--json` when another program will read the result. Human reports favor
@@ -169,3 +170,86 @@ flowmpeg doctor --command find-silence
 
 This checks for FFmpeg's `silencedetect` filter. It does not require a video
 encoder or an output muxer because the command writes no media file.
+
+## Find black picture ranges
+
+```console
+flowmpeg find-black tape.mp4
+```
+
+The default report requires 98 percent of pixels to be black for at least half
+a second. Each pixel counts as black when its normalized level is at or below
+0.1. A tape with black leader and a later gap could report:
+
+```text
+Black report: 2 intervals
+Source: tape.mp4
+Video track: 0
+Picture ratio: 0.98
+Pixel threshold: 0.1
+Minimum duration: 0.5s
+Total black: 2.900s
+Longest black: 2.200s
+
+Intervals:
+  1. 0.000s to 0.700s (0.700s)
+  2. 5.200s to 7.400s (2.200s)
+```
+
+```text
+picture    black leader            program             black gap
+           |----------|================================|----------|
+time       0.00       0.70                              5.20       7.40
+candidate  remove lead-in                              chapter break
+```
+
+Black ranges are editing candidates, not automatic cuts. A title card with a
+black background can meet the detector settings even though it carries useful
+text.
+
+## Tune black detection
+
+```console
+flowmpeg black-report tape.mp4 --minimum 1.5
+flowmpeg find-black faded-film.mp4 --picture-ratio 0.9 --pixel-threshold 0.16
+flowmpeg detect-black multi-angle.mkv --track 1 --json
+```
+
+| Control | Lower value | Higher value |
+|---|---|---|
+| `--picture-ratio` | Allows more nonblack pixels | Requires more of the frame to be black |
+| `--pixel-threshold` | Uses a darker pixel cutoff | Accepts brighter dark pixels |
+| `--minimum-duration` | Reports shorter flashes | Keeps only longer ranges |
+
+The two threshold options are normalized from 0 through 1. Start with the
+defaults. For faded analog sources, raise the pixel threshold slightly and
+check the returned intervals against the picture.
+
+## Use black intervals in Python
+
+```python
+from flowmpeg import detect_black
+
+report = detect_black(
+    "tape.mp4",
+    picture_ratio=0.95,
+    pixel_threshold=0.12,
+    minimum_duration=1,
+    timeout=60,
+)
+
+for interval in report.intervals:
+    print(interval.start, interval.end)
+
+print(report.total_black)
+```
+
+Use the command-specific doctor check before adding this scan to an ingest
+script:
+
+```console
+flowmpeg doctor --command find-black
+```
+
+The check requires FFmpeg's `blackdetect` filter. The scan maps one selected
+video track and does not encode an output file.
