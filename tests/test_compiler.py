@@ -118,6 +118,19 @@ def test_display_redacts_signed_url_queries(query: str) -> None:
     assert "<redacted>" in command
 
 
+def test_plan_explanation_redacts_input_and_output_urls() -> None:
+    source = input("https://user:REDACT_ME@example.com/live?token=REDACT_ME")
+    plan = output(
+        source.video(),
+        to="https://example.com/upload?signature=REDACT_ME",
+    )
+
+    explanation = plan.explain()
+
+    assert "REDACT_ME" not in explanation
+    assert explanation.count("<redacted>") == 3
+
+
 def test_unconnected_split_output_is_rejected() -> None:
     first, _ = input("movie.mp4").video().split()
 

@@ -7,6 +7,7 @@ from collections.abc import Callable, Iterable
 from dataclasses import dataclass, replace
 from typing import TYPE_CHECKING
 
+from flowmpeg.diagnostics import redact_text
 from flowmpeg.errors import GraphError
 from flowmpeg.model import MediaGraph, StreamRef
 from flowmpeg.streams import Stream
@@ -133,7 +134,8 @@ class Plan:
 
         lines = ["Inputs:"]
         lines.extend(
-            f"  {index}: {node.source}" for index, node in enumerate(self.graph.inputs)
+            f"  {index}: {redact_text(node.source)}"
+            for index, node in enumerate(self.graph.inputs)
         )
         lines.append("Filters:")
         if self.graph.filters:
@@ -142,7 +144,8 @@ class Plan:
             lines.append("  none")
         lines.append("Outputs:")
         lines.extend(
-            f"  {output.destination}: {len(output.streams)} mapped stream(s)"
+            f"  {redact_text(output.destination)}: "
+            f"{len(output.streams)} mapped stream(s)"
             for output in self.outputs
         )
         lines.append(f"Overwrite: {'yes' if self.overwrite_enabled else 'no'}")
