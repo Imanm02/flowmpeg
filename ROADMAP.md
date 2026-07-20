@@ -168,7 +168,7 @@ only a discussion or test placeholder.
 - [x] Report scene-change timecodes for chapter and thumbnail candidates.
 - [x] Suggest crop rectangles from measured border data.
 - [x] Check delivery constraints such as duration, dimensions, and codecs.
-- [ ] Add measured two-pass loudness normalization as a workflow.
+- [x] Add measured two-pass loudness normalization as a workflow.
 - [ ] Define owned artifact sets for HLS and DASH outputs.
 - [ ] Define batch cancellation and temporary-file cleanup rules.
 

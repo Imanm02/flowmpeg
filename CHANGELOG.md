@@ -14,7 +14,7 @@
 - Paired clip operations and a web MP4 output preset
 - Python 3.10 through 3.14 test coverage
 - A task-based guide with input and output examples
-- Fifty-two path-to-path shortcuts with input and output examples
+- Path-to-path shortcuts with input and output examples
 - Installed `flowmpeg` and `python -m flowmpeg` command entry points
 - Short command aliases for common terminal jobs
 - CLI dry runs, explanations, progress, timeouts, and overwrite control
@@ -27,3 +27,4 @@
 - Read-only setup checks and confirmed package manager installation
 - Stable CLI error identifiers with focused failure output
 - Installation, error, and real-world workflow guides
+- Measured two-pass loudness normalization with an inspectable workflow

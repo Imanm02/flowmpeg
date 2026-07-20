@@ -19,6 +19,7 @@ from flowmpeg import cli, shortcuts
 from flowmpeg.catalog import COMMAND_CATALOG
 from flowmpeg.cli import build_parser
 from flowmpeg.plan import Plan
+from flowmpeg.workflows import LoudnessWorkflow
 
 _ROOT = Path(__file__).parents[1]
 _MARKDOWN_FILES = (_ROOT / "README.md", *sorted((_ROOT / "docs").glob("*.md")))
@@ -131,6 +132,14 @@ def test_python_documentation_examples_build(
     )
 
     monkeypatch.setattr(Plan, "run", skip_run)
+    monkeypatch.setattr(
+        LoudnessWorkflow,
+        "run",
+        lambda *args, **kwargs: SimpleNamespace(
+            measurement=SimpleNamespace(integrated_lufs=-18.4),
+            encoding=SimpleNamespace(outputs=("program-exact.wav",), elapsed=0.0),
+        ),
+    )
     monkeypatch.setattr(flowmpeg, "probe", lambda *args, **kwargs: info)
     monkeypatch.setattr(
         flowmpeg,
@@ -254,6 +263,8 @@ def test_documented_edit_commands_build() -> None:
                 continue
             if any(token in argv for token in ("|", ">", "<", "&&")):
                 continue
+            if "--analyze-only" in argv:
+                argv.remove("--analyze-only")
             if "--dry-run" not in argv:
                 argv.append("--dry-run")
             checked.append(line)
@@ -328,7 +339,7 @@ def test_shortcut_reference_names_every_factory() -> None:
         if inspect.isfunction(getattr(shortcuts, name))
     }
 
-    assert len(factories) == 67
+    assert len(factories) == 68
     for name in factories:
         assert f"`{name}`" in text
 

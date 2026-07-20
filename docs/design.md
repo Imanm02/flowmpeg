@@ -75,11 +75,16 @@ objects. Missing and `N/A` fields become `None`. Exact ratios remain rational
 values. `probe_raw()` remains available for packets, frames, or fields that do
 not belong in the common model.
 
-## Planned boundaries
+## Workflow boundary
 
-Two-pass loudness normalization and two-pass encoding will use a `Workflow`
-that owns several plans and temporary artifacts. Async execution will share the
-same compiled command and result models instead of introducing another builder.
+Measured loudness normalization uses `LoudnessWorkflow`. It owns an analysis
+pass and the `Plan` built from that measurement. Building the workflow starts
+nothing. Callers can inspect the first command, run only the measurement, build
+the exact second plan, or run both passes.
+
+Future two-pass video encoding will follow the same boundary. Async execution
+will share the compiled command and result models instead of introducing
+another builder.
 
 Generated wrappers for every FFmpeg filter are not part of the current design.
 Typed helpers will be added for common operations, while `filter()` remains the

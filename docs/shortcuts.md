@@ -440,8 +440,28 @@ ff.normalize_loudness("voice.wav", "normalized.mp3", codec="mp3").run()
 ff.normalize_loudness("program.wav", "broadcast.wav", integrated=-23, true_peak=-2).run()
 ```
 
-This shortcut uses one-pass FFmpeg `loudnorm`. Measured two-pass normalization
-will require a multi-plan workflow.
+This shortcut uses one-pass FFmpeg `loudnorm`. Use a workflow when the second
+pass must receive measured first-pass values:
+
+```python
+from flowmpeg import normalize_loudness_two_pass
+
+workflow = normalize_loudness_two_pass(
+    "program.wav",
+    "program-exact.wav",
+    target_integrated=-23,
+    target_peak=-2,
+)
+
+print(workflow.explain())
+result = workflow.run(measurement_timeout=60, timeout=120)
+print(result.measurement.integrated_lufs)
+```
+
+`workflow.measure()` runs only the analysis. Pass that result to
+`workflow.plan(measurement)` to inspect or run the exact encoding plan yourself.
+The plan builder is also available directly as `normalize_loudness_measured`
+when the caller already owns a matching `LoudnessMeasurement`.
 
 ## Composition and images
 

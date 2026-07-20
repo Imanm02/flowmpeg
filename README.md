@@ -44,6 +44,7 @@ flowmpeg doctor --smoke-test
 flowmpeg audit input.mp4 --expect av
 flowmpeg audit delivery.mp4 --max-duration 60 --width 1920 --height 1080
 flowmpeg loudness episode.wav
+flowmpeg normalize-exact episode.wav -o episode-exact.wav
 flowmpeg find-silence interview.wav
 flowmpeg find-black tape.mp4
 flowmpeg scenes interview.mp4
@@ -62,6 +63,9 @@ stable finding codes for scripts and returns a separate policy-failure code.
 
 The loudness command measures integrated LUFS, true peak, loudness range, and
 the offset from a chosen normalization target without writing an output file.
+`normalize-exact` uses those measurements in a second FFmpeg pass. Its dry run
+starts no process, while `--analyze-only` measures and prints the exact encoding
+command without creating the destination.
 
 The analysis commands turn FFmpeg filter output into typed intervals,
 scene-change scores, and ranked crop rectangles. The
@@ -79,6 +83,7 @@ flowmpeg av1 input.mov --crf 35 --speed 8 -o delivery-av1.webm
 flowmpeg remux input.mp4 -o archive.mkv
 flowmpeg scale input.mp4 --width 1280 -o small.mp4
 flowmpeg audio input.mp4 -o audio.mp3
+flowmpeg normalize-exact voice.wav --target-integrated -16 -o voice-exact.wav
 flowmpeg pip input.mp4 camera.mp4 -o with-camera.mp4
 flowmpeg join-any phone.mp4 camera.mp4 --width 1280 --height 720 -o joined.mp4
 flowmpeg waveform audio.mp3 -o waveform.png

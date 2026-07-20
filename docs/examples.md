@@ -34,6 +34,7 @@ flowmpeg probe demo-media/sample.mp4
 flowmpeg audit demo-media/sample.mp4 --expect av
 flowmpeg audit demo-media/sample.mp4 --expect av --max-duration 5 --width 320 --height 180 --video-codec h264 --audio-codec aac
 flowmpeg loudness demo-media/voice.wav
+flowmpeg normalize-exact demo-media/voice.wav -o demo-media/voice-exact.wav
 flowmpeg find-silence demo-media/voice.wav --noise-db -45 --minimum 0.2
 flowmpeg find-black demo-media/sample.mp4 --minimum 0.2
 flowmpeg scenes demo-media/sample.mp4 --threshold 0.2
@@ -117,6 +118,7 @@ Paths can also be `pathlib.Path` objects.
 | Faster speech with stable pitch | `lesson.wav` | `lesson-fast.wav` |
 | Several recordings in sequence | WAV files | `show.wav` |
 | A loudness measurement report | `episode.wav` | Terminal text or JSON |
+| Audio normalized from measured values | `episode.wav` | `episode-exact.wav` |
 | A delivery contract result | `delivery.mp4` | Pass or stable audit findings |
 | A silence interval report | `interview.wav` | Terminal text or JSON |
 | A black picture report | `tape.mp4` | Terminal text or JSON |

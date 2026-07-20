@@ -112,6 +112,7 @@ The table below is a compact editing index for scanning this longer guide.
 | Crop a rectangle | `crop` | - |
 | Change playback speed | `change-speed` | `speed` |
 | Normalize loudness | `normalize-loudness` | `normalize` |
+| Measure then normalize loudness | `normalize-loudness-two-pass` | `normalize-exact`, `loudnorm-two-pass` |
 | Fit a fixed canvas | `fit-canvas` | `fit` |
 | Add an inset video | `picture-in-picture` | `pip` |
 | Draw a waveform | `waveform-image` | `waveform` |
@@ -901,6 +902,51 @@ flowmpeg voice mastered.wav --no-denoise --no-compress -o level.wav
 
 The default chain applies high-pass and low-pass filters, noise reduction,
 compression, loudness normalization, and 48 kHz resampling.
+
+### Normalize from measured loudness
+
+```console
+flowmpeg normalize-exact voice.wav --target-integrated -16 -o voice-exact.wav
+```
+
+This workflow runs FFmpeg twice. Pass 1 measures integrated loudness, true
+peak, loudness range, threshold, and target offset. Pass 2 places those values
+in the `loudnorm` filter and encodes the destination.
+
+```text
+voice.wav
+   |
+   +-- pass 1: measure, no output file
+   |       input_i, input_tp, input_lra, input_thresh, target_offset
+   |
+   +-- pass 2: measured loudnorm and 48 kHz resampling
+           |
+           +-- voice-exact.wav
+```
+
+Inspect both stages without starting FFmpeg:
+
+```console
+flowmpeg normalize-exact voice.wav -o voice-exact.wav --dry-run --explain
+```
+
+Run the measurement but do not encode:
+
+```console
+flowmpeg normalize-exact voice.wav -o voice-exact.wav --analyze-only --explain
+```
+
+`--analyze-only` prints the loudness report and the exact second-pass command.
+The normal timeout applies to encoding. `--measurement-timeout` bounds the
+first pass separately. Existing outputs are rejected before measurement unless
+`--overwrite` is present.
+
+Use another track or delivery format when needed:
+
+```console
+flowmpeg loudnorm-two-pass film.mkv --track 1 --target-integrated -23 --target-peak -2 --codec flac -o program.flac
+flowmpeg normalize-exact podcast.wav --codec mp3 --bitrate 192k -o podcast.mp3
+```
 
 ### Trim edge silence or create mono output
 
