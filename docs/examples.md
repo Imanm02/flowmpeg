@@ -55,6 +55,9 @@ The [real-world workflow guide](workflows.md) adds 30 terminal and Python pairs
 for social video, privacy edits, voice cleanup, subtitles, metadata, image
 sequences, and podcast audiograms.
 
+The [runnable demo lab](demo-lab.md) applies multi-input and delivery commands
+to the generated fixtures, then lists the output shape to check.
+
 ```text
 input files -> media graph -> plan -> FFmpeg process -> output files
 ```
