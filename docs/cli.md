@@ -100,6 +100,7 @@ The table below is a compact editing index for scanning this longer guide.
 | Add an image mark | `watermark` | `mark` |
 | Mix music under video | `add-music` | `music` |
 | Join matching clips | `join-matching` | `join` |
+| Normalize and join clips | `join-normalized` | `join-any`, `normalize-join` |
 | Mix audio files | `mix-audio` | `mix`, `mix-audio-files` |
 | Arrange video cells | `grid` | - |
 | Save one frame | `thumbnail` | `thumb` |
@@ -528,6 +529,22 @@ flowmpeg join-matching one.mp4 two.mp4 three.mp4 --no-audio -o joined-silent.mp4
 
 The command does not repair different resolutions, frame rates, pixel
 formats, sample rates, or channel layouts.
+
+### Normalize and join different clips
+
+**Inputs:** `phone.mp4` and `camera.mp4` with different media formats.
+
+**Output:** `joined.mp4`, normalized to a 1280 by 720 canvas, 30 fps, 48 kHz
+stereo audio, then joined in input order.
+
+```console
+flowmpeg join-any phone.mp4 camera.mp4 --width 1280 --height 720 -o joined.mp4
+```
+
+Each video is fitted without stretching and padded with black by default.
+Change the padding with `--color`. Use `--fps` and `--sample-rate` when the
+delivery format calls for other values. If any input has no audio,
+`join-any` automatically creates a video-only result.
 
 ### Arrange a video grid
 

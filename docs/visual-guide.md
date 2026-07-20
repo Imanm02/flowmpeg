@@ -44,6 +44,7 @@ decoded frames or samples, so its stream must be encoded again.
 | `mute` | Packet copy | Dropped | No | Remove audio without changing video packets |
 | `audio` | Dropped | Encode or copy by selected codec | No | Save one audio-only track index |
 | `join` | Encode | Encode | `concat` | Join matching decoded formats |
+| `join-any` | Encode | Encode | Format alignment, then `concat` | Join different decoded formats |
 | `clean-metadata` | Packet copy | Packet copy | No | Drop mapped metadata and chapters |
 | `captions` | H.264 encode | AAC encode | No | Add an encoded MP4 text track |
 | `burn-captions` | H.264 encode | AAC encode | `subtitles` | Render visible caption text |

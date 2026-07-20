@@ -261,6 +261,14 @@ _BASE_COMMAND_CATALOG = (
         capability_group="composition",
     ),
     CommandSpec(
+        "join-normalized",
+        "composition",
+        "Normalize and join different clips",
+        ("join-any", "normalize-join"),
+        input_kind="two or more media files",
+        capability_group="composition",
+    ),
+    CommandSpec(
         "grid",
         "composition",
         "Arrange videos in a grid",
@@ -549,6 +557,7 @@ _COMMAND_TAGS = {
     "tag-audio": ("archive",),
     "watermark": ("delivery", "silent-input"),
     "join-matching": ("archive",),
+    "join-normalized": ("delivery", "silent-input"),
     "grid": ("silent-input",),
     "fit-canvas": ("delivery", "silent-input"),
     "picture-in-picture": ("silent-input",),
@@ -660,6 +669,18 @@ _COMMAND_REQUIREMENTS = {
     "watermark": _requirements(*_MP4, "filter:overlay"),
     "join-matching": _requirements(
         *_MP4, "filter:asetpts", "filter:concat", "filter:setpts"
+    ),
+    "join-normalized": _requirements(
+        *_MP4,
+        "filter:aformat",
+        "filter:aresample",
+        "filter:asetpts",
+        "filter:concat",
+        "filter:fps",
+        "filter:pad",
+        "filter:scale",
+        "filter:setpts",
+        "filter:setsar",
     ),
     "grid": _requirements(
         "encoder:libx264", "filter:scale", "filter:xstack", "muxer:mp4"

@@ -131,6 +131,7 @@ __all__ = [
     "flip_video",
     "freeze_end",
     "grid",
+    "join_normalized",
     "join_matching",
     "image_sequence_video",
     "make_gif",
@@ -848,6 +849,73 @@ def join_matching(
     fallback = join_matching(
         source_values,
         to,
+        include_audio=False,
+        preset=preset,
+        overwrite=overwrite,
+    )
+    return plan.with_missing_audio_fallback(fallback, *source_values)
+
+
+def join_normalized(
+    sources: Sequence[Pathish],
+    to: Pathish,
+    *,
+    width: int = 1920,
+    height: int = 1080,
+    fps: int = 30,
+    sample_rate: int = 48_000,
+    color: str = "black",
+    include_audio: bool = True,
+    preset: VideoPreset = "web",
+    overwrite: bool = False,
+) -> Plan:
+    """Normalize clip formats before joining their timelines."""
+
+    source_values = _source_sequence(sources)
+    if len(source_values) < 2:
+        raise GraphError("Joining requires at least two sources")
+    _even_positive_integer("width", width)
+    _even_positive_integer("height", height)
+    if isinstance(fps, bool) or not isinstance(fps, int) or not 1 <= fps <= 120:
+        raise GraphError("Frame rate must be an integer between 1 and 120")
+    if (
+        isinstance(sample_rate, bool)
+        or not isinstance(sample_rate, int)
+        or not 8_000 <= sample_rate <= 192_000
+    ):
+        raise GraphError("Sample rate must be between 8000 and 192000")
+    _nonempty_text("color", color)
+    clips: list[Clip] = []
+    for source in source_values:
+        clip = media(source, audio=include_audio)
+        video = _fit_canvas_video(
+            _require_video(clip),
+            width=width,
+            height=height,
+            color=color,
+        ).filter("fps", fps=fps)
+        audio = clip.audio
+        if audio is not None:
+            audio = audio.filter("aresample", sample_rate)
+            audio = audio.filter("aformat", channel_layouts="stereo")
+        clips.append(Clip(video, audio))
+    plan = _web_plan(
+        concat_clips(*clips),
+        to,
+        source_values,
+        preset,
+        overwrite,
+    )
+    if not include_audio:
+        return plan
+    fallback = join_normalized(
+        source_values,
+        to,
+        width=width,
+        height=height,
+        fps=fps,
+        sample_rate=sample_rate,
+        color=color,
         include_audio=False,
         preset=preset,
         overwrite=overwrite,

@@ -113,6 +113,10 @@ _BASE_EXAMPLES = (
     _Example("composition", "flowmpeg pip main.mp4 inset.mp4 -o result.mp4"),
     _Example("composition", "flowmpeg mark video.mp4 logo.png -o branded.mp4"),
     _Example("composition", "flowmpeg join part-1.mp4 part-2.mp4 -o joined.mp4"),
+    _Example(
+        "composition",
+        "flowmpeg join-any phone.mp4 camera.mp4 --width 1280 --height 720 -o joined.mp4",
+    ),
     _Example("composition", "flowmpeg grid cam-1.mp4 cam-2.mp4 -o grid.mp4"),
     _Example("composition", "flowmpeg fit portrait.mp4 -o portrait-wide.mp4"),
     _Example(
@@ -206,10 +210,13 @@ _FEATURE_REQUIREMENTS = {
         "muxer:wav",
     ),
     "composition": (
+        "filter:aformat",
+        "filter:aresample",
         "encoder:aac",
         "encoder:libx264",
         "filter:concat",
         "filter:crop",
+        "filter:fps",
         "filter:gblur",
         "filter:overlay",
         "filter:pad",
@@ -447,6 +454,7 @@ def build_parser() -> argparse.ArgumentParser:
     _add_watermark(commands)
     _add_add_music(commands)
     _add_join(commands)
+    _add_join_normalized(commands)
     _add_mix_audio(commands)
     _add_grid(commands)
     _add_thumbnail(commands)
@@ -833,6 +841,27 @@ def _add_join(commands: argparse._SubParsersAction[argparse.ArgumentParser]) -> 
         aliases=("join",),
     )
     parser.add_argument("sources", nargs="+", help="Input video paths")
+    _audio_toggle(parser)
+    _output(parser)
+
+
+def _add_join_normalized(
+    commands: argparse._SubParsersAction[argparse.ArgumentParser],
+) -> None:
+    parser = _command(
+        commands,
+        "join-normalized",
+        "Normalize different clips before joining them.",
+        shortcuts.join_normalized,
+        ("sources",),
+        aliases=("join-any", "normalize-join"),
+    )
+    parser.add_argument("sources", nargs="+", help="Input media paths")
+    parser.add_argument("--width", type=_positive_int, default=1920)
+    parser.add_argument("--height", type=_positive_int, default=1080)
+    parser.add_argument("--fps", type=_positive_int, default=30)
+    parser.add_argument("--sample-rate", type=_positive_int, default=48_000)
+    parser.add_argument("--color", default="black")
     _audio_toggle(parser)
     _output(parser)
 

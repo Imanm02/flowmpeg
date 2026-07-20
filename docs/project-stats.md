@@ -9,17 +9,17 @@ source change.
 
 | Measure | Count | Source |
 |---|---:|---|
-| Canonical terminal commands | 62 | `COMMAND_CATALOG` |
-| Command aliases | 57 | `COMMAND_CATALOG` |
-| Python shortcut functions | 54 | `shortcuts.__all__` |
-| One-line terminal examples | 63 | CLI example catalog |
+| Canonical terminal commands | 63 | `COMMAND_CATALOG` |
+| Command aliases | 59 | `COMMAND_CATALOG` |
+| Python shortcut functions | 55 | `shortcuts.__all__` |
+| One-line terminal examples | 64 | CLI example catalog |
 | Stable error identifiers | 16 | CLI error guide |
 | Doctor feature groups | 13 | Doctor requirements |
-| Test function definitions | 313 | `tests/test_*.py` |
-| FFmpeg integration tests | 26 | Pytest markers |
+| Test function definitions | 315 | `tests/test_*.py` |
+| FFmpeg integration tests | 27 | Pytest markers |
 | Documentation pages | 15 | `docs/*.md` |
-| Documented command lines | 323 | Markdown code lines |
-| Completed roadmap items | 89 | `ROADMAP.md` |
+| Documented command lines | 325 | Markdown code lines |
+| Completed roadmap items | 90 | `ROADMAP.md` |
 | Open roadmap items | 0 | `ROADMAP.md` |
 
 ## Category matrix
@@ -31,7 +31,7 @@ counts distinct canonical commands with at least one built-in example.
 |---|---:|---:|---:|---:|---:|---|
 | video | 17 | 18 | 18 | 17/17 (100%) | 17 | `#################` |
 | audio | 13 | 14 | 13 | 13/13 (100%) | 13 | `#############` |
-| composition | 8 | 7 | 8 | 8/8 (100%) | 8 | `########` |
+| composition | 9 | 9 | 9 | 9/9 (100%) | 9 | `#########` |
 | effects | 5 | 4 | 5 | 5/5 (100%) | 5 | `#####` |
 | images | 6 | 7 | 6 | 6/6 (100%) | 6 | `######` |
 | subtitles | 4 | 5 | 4 | 4/4 (100%) | 4 | `####` |
@@ -48,13 +48,13 @@ The bar uses one `#` per canonical command carrying the tag.
 | accessibility | 4 | 4 | `####` |
 | archive | 9 | 9 | `#########` |
 | copy | 5 | 5 | `#####` |
-| creator | 38 | 39 | `######################################` |
-| delivery | 16 | 17 | `################` |
+| creator | 39 | 40 | `#######################################` |
+| delivery | 17 | 18 | `#################` |
 | discover | 4 | 4 | `####` |
 | inspect | 4 | 4 | `####` |
 | podcast | 13 | 13 | `#############` |
 | privacy | 4 | 4 | `####` |
-| silent-input | 29 | 30 | `#############################` |
+| silent-input | 30 | 31 | `##############################` |
 
 ## What the counts mean
 

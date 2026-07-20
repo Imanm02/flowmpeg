@@ -51,6 +51,7 @@ def test_shortcuts_namespace_is_public() -> None:
         "flip_video",
         "freeze_end",
         "grid",
+        "join_normalized",
         "image_sequence_video",
         "join_matching",
         "make_gif",
@@ -824,6 +825,26 @@ def test_crossfade_audio_maps_two_inputs() -> None:
     assert plan.raw_argv().count("-i") == 2
 
 
+def test_join_normalized_aligns_video_and_audio_formats() -> None:
+    plan = shortcuts.join_normalized(
+        ("phone.mp4", "camera.mp4"),
+        "joined.mp4",
+        width=1280,
+        height=720,
+        fps=24,
+        sample_rate=44_100,
+    )
+    graph = plan.filter_graph() or ""
+
+    assert graph.count("scale=w=1280:h=720") == 2
+    assert graph.count("pad=w=1280:h=720") == 2
+    assert graph.count("fps=fps=24") == 2
+    assert graph.count("aresample=44100") == 2
+    assert graph.count("aformat=channel_layouts=stereo") == 2
+    assert "concat=n=2:v=1:a=1" in graph
+    assert plan.missing_audio_fallback is not None
+
+
 def test_subtitle_shortcuts_map_selected_streams() -> None:
     extracted = shortcuts.extract_subtitles("movie.mkv", "captions.vtt", track=1)
     added = shortcuts.add_subtitles(
@@ -993,6 +1014,14 @@ def test_shortcuts_accept_path_objects_and_overwrite() -> None:
             "in.mov",
             "out.webm",
             audio_bitrate="96k -map 0",
+        ),
+        lambda: shortcuts.join_normalized(("one.mp4",), "out.mp4"),
+        lambda: shortcuts.join_normalized(
+            ("one.mp4", "two.mp4"), "out.mp4", width=1279
+        ),
+        lambda: shortcuts.join_normalized(("one.mp4", "two.mp4"), "out.mp4", fps=0),
+        lambda: shortcuts.join_normalized(
+            ("one.mp4", "two.mp4"), "out.mp4", sample_rate=7999
         ),
         lambda: shortcuts.fit_canvas(
             "in.mp4",
@@ -1529,6 +1558,13 @@ def test_video_filters_accept_a_source_without_audio(tmp_path: Path) -> None:
     targets = (
         shortcuts.transcode(source, tmp_path / "converted.mp4"),
         shortcuts.transcode_webm(source, tmp_path / "converted.webm"),
+        shortcuts.join_normalized(
+            (source, source),
+            tmp_path / "joined-silent.mp4",
+            width=64,
+            height=48,
+            fps=15,
+        ),
         shortcuts.resize(source, tmp_path / "resized.mp4", width=32),
         shortcuts.crop(source, tmp_path / "cropped.mp4", width=32, height=24),
     )
@@ -1538,6 +1574,54 @@ def test_video_filters_accept_a_source_without_audio(tmp_path: Path) -> None:
         info = probe(plan.outputs[0].destination)
         assert info.video_streams
         assert not info.audio_streams
+
+
+@pytest.mark.integration
+def test_join_normalized_runs_with_different_inputs(
+    shortcut_media: tuple[str, Path, Path, Path],
+) -> None:
+    ffmpeg, source, _, _ = shortcut_media
+    second = source.parent / "different.mp4"
+    target = source.parent / "normalized-join.mp4"
+    subprocess.run(
+        (
+            ffmpeg,
+            "-hide_banner",
+            "-loglevel",
+            "error",
+            "-y",
+            "-f",
+            "lavfi",
+            "-i",
+            "color=blue:size=80x60:rate=12:duration=0.3",
+            "-f",
+            "lavfi",
+            "-i",
+            "sine=frequency=330:sample_rate=32000:duration=0.3",
+            "-shortest",
+            "-c:v",
+            "mpeg4",
+            "-c:a",
+            "aac",
+            str(second),
+        ),
+        check=True,
+    )
+
+    shortcuts.join_normalized(
+        (source, second),
+        target,
+        width=64,
+        height=48,
+        fps=15,
+        sample_rate=44_100,
+    ).run(ffmpeg=ffmpeg, timeout=10)
+    info = probe(target)
+
+    assert info.video_streams[0].width == 64
+    assert info.video_streams[0].height == 48
+    assert info.audio_streams[0].sample_rate == 44_100
+    assert info.duration is not None and info.duration > 0.6
 
 
 @pytest.mark.integration

@@ -39,6 +39,7 @@ flowmpeg captions demo-media/sample.mp4 demo-media/captions.srt -o demo-media/ca
 flowmpeg burn-captions demo-media/sample.mp4 demo-media/captions.srt -o demo-media/open-captioned.mp4
 flowmpeg audiogram demo-media/voice.wav demo-media/cover.jpg -o demo-media/audiogram.mp4
 flowmpeg join demo-media/sample.mp4 demo-media/second.mp4 -o demo-media/joined.mp4
+flowmpeg join-any phone.mp4 camera.mp4 --width 1280 --height 720 -o joined.mp4
 flowmpeg mark demo-media/sample.mp4 demo-media/logo.png -o demo-media/branded.mp4
 flowmpeg crossfade demo-media/voice.wav demo-media/music.wav --duration 0.5 -o demo-media/blend.wav
 ```
@@ -92,6 +93,7 @@ Paths can also be `pathlib.Path` objects.
 | Music that lowers under speech | `music.mp3`, `narration.wav` | `ducked.wav` |
 | Music with fades | `music.mp3` | `faded.mp3` |
 | One joined video | Two MP4 files | `joined.mp4` |
+| One timeline from different cameras | Two different video files | `normalized-join.mp4` |
 | A 2 by 2 camera grid | Four MP4 files | `grid.mp4` |
 | A file that keeps subtitles | `film.mkv` | `film-copy.mkv` |
 | A grayscale video | `scene.mp4` | `grayscale.mp4` |

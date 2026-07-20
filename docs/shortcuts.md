@@ -456,6 +456,23 @@ ff.join_matching(["one.mp4", "two.mp4", "three.mp4"], "joined.mp4", include_audi
 pixel formats, sample rates, or channel layouts. Its name keeps that rule
 visible.
 
+### Normalize and join different clips
+
+```python
+ff.join_normalized(
+    ["phone.mp4", "camera.mp4"],
+    "joined.mp4",
+    width=1280,
+    height=720,
+    fps=30,
+    sample_rate=48000,
+).run()
+```
+
+Every input is fitted and padded to the chosen canvas, set to one frame rate,
+and converted to stereo at one sample rate before `concat`. A missing audio
+track switches the whole result to video-only output.
+
 ### Place two videos side by side
 
 **Inputs:** `left.mp4` and `right.mp4`.
@@ -1379,6 +1396,7 @@ ff.trim("input.mp4", "clip.mp4", start=5, duration=20).run(
 | `watermark` | Branded MP4 | Encodes overlay video and keeps optional audio |
 | `add_music` | MP4 with mixed or new music | Encodes audio and video |
 | `join_matching` | Joined MP4 | Filters compatible streams and encodes |
+| `join_normalized` | Joined MP4 | Aligns canvas, frame rate, and audio format first |
 | `mix_audio_files` | One mixed audio file | Encodes the mixed result |
 | `grid` | Fixed-cell MP4 grid | Encodes video and drops audio |
 | `thumbnail` | JPEG, PNG, or WebP | Maps one decoded video frame |
