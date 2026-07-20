@@ -50,10 +50,14 @@ def test_runner_refuses_existing_output(tmp_path: Path) -> None:
         plan.run()
 
 
-def test_runner_refuses_existing_file_url(tmp_path: Path) -> None:
-    target = tmp_path / "copy file.mp4"
+@pytest.mark.parametrize("name", ["copy file.mp4", "copy%20file.mp4", "copy#file.mp4"])
+def test_runner_refuses_existing_file_protocol_path(
+    tmp_path: Path,
+    name: str,
+) -> None:
+    target = tmp_path / name
     target.touch()
-    plan = output(input("movie.mp4").video(), to=target.as_uri())
+    plan = output(input("movie.mp4").video(), to=f"file:{target}")
 
     with pytest.raises(OutputExistsError, match="already exists"):
         plan.run()

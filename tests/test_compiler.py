@@ -199,12 +199,21 @@ def test_output_cannot_alias_an_input() -> None:
         output(source.video(), to="same.mp4")
 
 
-def test_file_url_output_cannot_alias_an_input(tmp_path: Path) -> None:
+def test_file_protocol_output_cannot_alias_an_input(tmp_path: Path) -> None:
     source_path = tmp_path / "same.mp4"
     source = input(source_path)
 
     with pytest.raises(GraphError, match="cannot replace a plan input"):
-        output(source.video(), to=source_path.as_uri())
+        output(source.video(), to=f"file:{source_path}")
+
+
+@pytest.mark.parametrize("name", ["clip%20name.mp4", "clip#name.mp4"])
+def test_file_protocol_keeps_literal_filename_text(tmp_path: Path, name: str) -> None:
+    source_path = tmp_path / name
+    source = input(source_path)
+
+    with pytest.raises(GraphError, match="cannot replace a plan input"):
+        output(source.video(), to=f"file:{source_path}")
 
 
 def test_existing_hardlink_outputs_are_not_unique(tmp_path: Path) -> None:

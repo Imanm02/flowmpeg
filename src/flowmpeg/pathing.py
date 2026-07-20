@@ -5,10 +5,8 @@ from __future__ import annotations
 import os
 import re
 from pathlib import Path
-from urllib.parse import unquote, urlsplit
 
 _protocol = re.compile(r"^[A-Za-z][A-Za-z0-9+.-]+:")
-_windows_uri_path = re.compile(r"^/[A-Za-z]:[/\\]")
 
 
 def local_path(value: str) -> Path | None:
@@ -23,13 +21,7 @@ def local_path(value: str) -> Path | None:
     if protocol.group()[:-1].lower() != "file":
         return None
 
-    parsed = urlsplit(value)
-    path = unquote(parsed.path)
-    if parsed.netloc and parsed.netloc.lower() != "localhost":
-        path = f"//{parsed.netloc}{path}"
-    if os.name == "nt" and _windows_uri_path.match(path):
-        path = path[1:]
-    return Path(path)
+    return Path(value[protocol.end() :])
 
 
 def same_destination(first: str, second: str) -> bool:
