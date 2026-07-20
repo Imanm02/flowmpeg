@@ -161,6 +161,17 @@ only a discussion or test placeholder.
 - Batch orchestration, cancellation groups, and temporary-file cleanup are not
   part of the current single-process runner.
 
+## Next work
+
+- [x] Turn FFmpeg silence detection into typed intervals and terminal JSON.
+- [ ] Report black video intervals with configurable picture and time levels.
+- [ ] Report scene-change timecodes for chapter and thumbnail candidates.
+- [ ] Suggest crop rectangles from measured border data.
+- [ ] Check delivery constraints such as duration, dimensions, and codecs.
+- [ ] Add measured two-pass loudness normalization as a workflow.
+- [ ] Define owned artifact sets for HLS and DASH outputs.
+- [ ] Define batch cancellation and temporary-file cleanup rules.
+
 ## Release gates
 
 - Every behavior change needs a focused regression test.

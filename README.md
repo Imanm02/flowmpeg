@@ -43,6 +43,7 @@ flowmpeg doctor --command cut
 flowmpeg doctor --smoke-test
 flowmpeg audit input.mp4 --expect av
 flowmpeg loudness episode.wav
+flowmpeg find-silence interview.wav
 ```
 
 The second check accepts the `cut` shortcut and verifies the default encoders,
@@ -57,6 +58,10 @@ stable finding codes for scripts.
 
 The loudness command measures integrated LUFS, true peak, loudness range, and
 the offset from a chosen normalization target without writing an output file.
+
+The silence report turns FFmpeg filter output into typed time intervals. The
+[analysis guide](docs/analysis.md) shows the text report, JSON fields, a visual
+timeline, and threshold choices for different recordings.
 
 ## One-line terminal jobs
 
@@ -81,8 +86,8 @@ flowmpeg audiogram episode.wav cover.jpg -o episode.mp4
 
 Editing commands run immediately, protect existing outputs, and report
 progress. `--dry-run` prints the redacted FFmpeg command without starting it.
-The [command guide](docs/cli.md) covers all 52 jobs, their short forms, inputs,
-outputs, and exit codes.
+The [command guide](docs/cli.md) covers the editing and inspection commands,
+their short forms, inputs, outputs, and exit codes.
 
 The module form runs the same interface:
 
@@ -162,6 +167,7 @@ outputs for common jobs:
 - Join clips or arrange four videos in a grid
 - Copy subtitles and call raw FFmpeg filters
 - Produce multiple outputs, inspect metadata, and report progress
+- Find silent ranges and read analysis reports
 
 The [real-world workflow guide](docs/workflows.md) adds 30 paired terminal and
 Python examples. It covers social formats, privacy edits, voice cleanup,
@@ -182,7 +188,7 @@ plans, see the [shortcut guide](docs/shortcuts.md).
 - Deterministic `filter_complex` labels and argv compilation
 - Typed FFprobe container and stream results
 - Synchronous execution with progress callbacks and timeouts
-- An installed `flowmpeg` command with 52 editing jobs and short aliases
+- An installed `flowmpeg` command with editing, inspection, and help groups
 - Read-only setup checks with confirmed package manager installation
 - Stable CLI error identifiers with bounded failure output
 - Audio gain, delay, fades, mixing, and sidechain ducking

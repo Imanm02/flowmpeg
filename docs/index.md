@@ -38,6 +38,7 @@ flowmpeg examples --search subtitle
 | Check current and planned work | [Roadmap](../ROADMAP.md) | Verified bugs, release gates, current limits |
 | See source-backed project counts | [Project statistics](project-stats.md) | Commands, examples, tests, task distribution |
 | Compare stream and encoding behavior | [Visual guide](visual-guide.md) | Matrices and data-flow diagrams |
+| Find cut points from measured media | [Analysis guide](analysis.md) | Silence intervals, JSON reports, timelines |
 
 ## Pick an interface
 
@@ -51,6 +52,7 @@ one edit in Python    -> ff.trim(...)
 custom stream graph   -> input(...), filter(...), output(...)
 inspect media first   -> flowmpeg probe ...
 check media shape     -> flowmpeg audit ...
+find quiet ranges     -> flowmpeg find-silence ...
 check local support   -> flowmpeg doctor
 ```
 
@@ -72,7 +74,7 @@ building one does not start FFmpeg.
 | Images | `thumb`, `gif`, `sheet`, `waveform` | `thumbnail`, `make_gif`, `contact_sheet` |
 | Subtitles | `subtitles`, `captions`, `strip-subtitles` | subtitle shortcut functions |
 | Metadata | `clean-metadata`, `tag` | `strip_metadata`, `tag_audio` |
-| Inspection | `probe`, `audit`, `doctor`, `errors` | `probe`, `audit_media`, typed errors |
+| Inspection | `probe`, `audit`, `loudness`, `find-silence` | Typed reports and intervals |
 
 The command catalog is also available as JSON for shell completion, editor
 tools, or documentation checks:

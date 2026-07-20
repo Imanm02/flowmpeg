@@ -137,6 +137,15 @@ def test_python_documentation_examples_build(
         "measure_loudness",
         lambda *args, **kwargs: SimpleNamespace(integrated_lufs=-18.4),
     )
+    monkeypatch.setattr(
+        flowmpeg,
+        "detect_silence",
+        lambda *args, **kwargs: SimpleNamespace(
+            intervals=(SimpleNamespace(start=1.0, end=2.0, duration=1.0),),
+            total_silence=1.0,
+            longest_silence=1.0,
+        ),
+    )
     text = path.read_text(encoding="utf-8")
     namespace: dict[str, object] = {"ff": shortcuts}
     for match in _PYTHON_BLOCK.finditer(text):
