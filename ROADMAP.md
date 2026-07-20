@@ -107,7 +107,7 @@ only a discussion or test placeholder.
   sequence inputs.
 - [ ] Run join, grid, watermark, social, GIF, contact sheet, crossfade, and
   metadata cleanup in the demo lab.
-- [ ] Document that exit code 3 also covers an unmet doctor requirement.
+- [x] Document that exit code 3 also covers an unmet doctor requirement.
 - [x] Add an encode, copy, and filter behavior matrix.
 - [x] Add a stream retention and track-selection matrix.
 - [x] Add a social frame dimension and fill-mode comparison.

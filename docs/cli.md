@@ -1051,7 +1051,7 @@ flowmpeg thumb "C:\Media\گفتگو.mp4" --at 5 -o "C:\Media\تصویر.jpg"
 | 0 | The command completed or a preview was printed |
 | 1 | Another Flowmpeg error occurred |
 | 2 | Arguments or the media plan were invalid |
-| 3 | A required executable was unavailable, or core doctor checks failed |
+| 3 | A tool is unavailable, setup is incomplete, or `doctor --require` is unmet |
 | 4 | A local output already exists |
 | 5 | FFprobe could not inspect the input |
 | 6 | FFmpeg exited with an error |
