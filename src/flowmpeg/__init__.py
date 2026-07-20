@@ -1,5 +1,6 @@
 """Build inspectable FFmpeg media jobs."""
 
+from flowmpeg import shortcuts
 from flowmpeg.clip import Clip, concat_clips, media, replace_audio
 from flowmpeg.errors import (
     BinaryNotFoundError,
@@ -26,14 +27,24 @@ from flowmpeg.probe import (
 )
 from flowmpeg.progress import Progress
 from flowmpeg.recipes.audio import (
+    change_audio_speed,
     delay_audio,
     duck_audio,
     fade_audio,
     mix_audio,
+    normalize_loudness,
     trim_audio,
     volume,
 )
-from flowmpeg.recipes.video import overlay_video, scale, stack_video, trim_video
+from flowmpeg.recipes.video import (
+    change_video_speed,
+    crop_video,
+    overlay_video,
+    rotate_video,
+    scale,
+    stack_video,
+    trim_video,
+)
 from flowmpeg.runner import RunResult, run
 from flowmpeg.streams import (
     AudioStream,
@@ -76,7 +87,10 @@ __all__ = [
     "VideoStreamInfo",
     "__version__",
     "apply_filter",
+    "change_audio_speed",
+    "change_video_speed",
     "concat_clips",
+    "crop_video",
     "delay_audio",
     "duck_audio",
     "expr",
@@ -84,14 +98,17 @@ __all__ = [
     "input",
     "media",
     "mix_audio",
+    "normalize_loudness",
     "overlay_video",
     "output",
     "probe",
     "probe_raw",
     "replace_audio",
+    "rotate_video",
     "run",
     "scale",
     "stack_video",
+    "shortcuts",
     "trim_audio",
     "trim_video",
     "volume",

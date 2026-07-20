@@ -162,6 +162,63 @@ def duck_audio(
     )
 
 
+def change_audio_speed(stream: AudioStream, factor: float) -> AudioStream:
+    """Change audio tempo using compatible atempo stages."""
+
+    _positive("factor", factor)
+    if factor == 1:
+        return stream
+
+    changed = stream
+    for stage in _tempo_stages(factor):
+        value: float | int = int(stage) if stage.is_integer() else stage
+        changed = changed.filter("atempo", value)
+    return changed.filter("asetpts", expr("PTS-STARTPTS"))
+
+
+def normalize_loudness(
+    stream: AudioStream,
+    *,
+    integrated: float = -16,
+    loudness_range: float = 11,
+    true_peak: float = -1.5,
+    sample_rate: int = 48_000,
+) -> AudioStream:
+    """Apply one-pass EBU R128 loudness normalization."""
+
+    _range("integrated", integrated, -70, -5)
+    _range("loudness_range", loudness_range, 1, 50)
+    _range("true_peak", true_peak, -9, 0)
+    if (
+        isinstance(sample_rate, bool)
+        or not isinstance(sample_rate, int)
+        or sample_rate <= 0
+    ):
+        raise GraphError("Sample rate must be a positive integer")
+
+    normalized = stream.filter(
+        "loudnorm",
+        I=integrated,
+        LRA=loudness_range,
+        TP=true_peak,
+    )
+    return normalized.filter("aresample", sample_rate)
+
+
+def _tempo_stages(factor: float) -> tuple[float, ...]:
+    remaining = factor
+    stages: list[float] = []
+    while remaining > 2:
+        stages.append(2.0)
+        remaining /= 2
+    while remaining < 0.5:
+        stages.append(0.5)
+        remaining /= 0.5
+    if remaining != 1:
+        stages.append(remaining)
+    return tuple(stages)
+
+
 def _finite(name: str, value: float) -> None:
     if not math.isfinite(value):
         raise GraphError(f"{name} must be finite")

@@ -11,6 +11,7 @@ from flowmpeg.streams import VideoStream, apply_filter
 
 OverlayPosition: TypeAlias = int | Expression
 OverlayEofAction = Literal["repeat", "endall", "pass"]
+Rotation = Literal[90, 180, 270]
 
 
 def scale(
@@ -101,6 +102,7 @@ def stack_video(
     *streams: VideoStream,
     columns: int = 2,
     fill: str = "black",
+    shortest: bool = False,
 ) -> VideoStream:
     """Arrange video streams in a grid with an FFmpeg xstack filter."""
 
@@ -127,6 +129,7 @@ def stack_video(
         "inputs": len(streams),
         "layout": "|".join(layout),
         "fill": fill,
+        "shortest": shortest,
     }
     (result,) = apply_filter(
         streams,
@@ -136,6 +139,49 @@ def stack_video(
     )
     assert isinstance(result, VideoStream)
     return result
+
+
+def crop_video(
+    stream: VideoStream,
+    *,
+    width: int,
+    height: int,
+    x: int | Expression | None = None,
+    y: int | Expression | None = None,
+) -> VideoStream:
+    """Crop video to fixed dimensions with optional coordinates."""
+
+    _positive_integer("width", width)
+    _positive_integer("height", height)
+    _nonnegative_position("x", x)
+    _nonnegative_position("y", y)
+    options: dict[str, FilterValue] = {"w": width, "h": height}
+    if x is not None:
+        options["x"] = x
+    if y is not None:
+        options["y"] = y
+    return stream.filter("crop", **options)
+
+
+def rotate_video(stream: VideoStream, degrees: Rotation) -> VideoStream:
+    """Rotate displayed video by a clockwise quarter-turn amount."""
+
+    if degrees == 90:
+        return stream.filter("transpose", dir="clock")
+    if degrees == 180:
+        return stream.filter("hflip").filter("vflip")
+    if degrees == 270:
+        return stream.filter("transpose", dir="cclock")
+    raise GraphError("Rotation must be 90, 180, or 270 degrees")
+
+
+def change_video_speed(stream: VideoStream, factor: float) -> VideoStream:
+    """Change video speed and reset its starting timestamp."""
+
+    _positive("factor", factor)
+    if factor == 1:
+        return stream
+    return stream.filter("setpts", expr(f"(PTS-STARTPTS)/{factor}"))
 
 
 def named_overlay_position(
@@ -178,3 +224,15 @@ def _nonnegative(name: str, value: float) -> None:
     _finite(name, value)
     if value < 0:
         raise GraphError(f"{name} cannot be negative")
+
+
+def _positive_integer(name: str, value: int) -> None:
+    if isinstance(value, bool) or not isinstance(value, int) or value <= 0:
+        raise GraphError(f"{name} must be a positive integer")
+
+
+def _nonnegative_position(name: str, value: int | Expression | None) -> None:
+    if value is None or isinstance(value, Expression):
+        return
+    if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+        raise GraphError(f"{name} must be a nonnegative integer or expression")
