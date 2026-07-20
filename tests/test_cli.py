@@ -1327,9 +1327,7 @@ def test_examples_json_keeps_active_filters(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     assert (
-        cli.main(
-            ["examples", "--category", "images", "--search", "wave", "--json"]
-        )
+        cli.main(["examples", "--category", "images", "--search", "wave", "--json"])
         == 0
     )
     report = json.loads(capsys.readouterr().out)

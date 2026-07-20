@@ -1,7 +1,7 @@
 import argparse
 from typing import cast
 
-from flowmpeg.catalog import CATEGORIES, COMMAND_CATALOG, command_spec
+from flowmpeg.catalog import CATEGORIES, COMMAND_CATALOG, TAGS, command_spec
 from flowmpeg.cli import build_parser
 
 
@@ -37,4 +37,6 @@ def test_catalog_fields_support_task_discovery() -> None:
     assert len(COMMAND_CATALOG) == len({spec.name for spec in COMMAND_CATALOG})
     assert set(CATEGORIES) == {spec.category for spec in COMMAND_CATALOG}
     assert all(spec.summary for spec in COMMAND_CATALOG)
+    assert all(spec.tags for spec in COMMAND_CATALOG)
+    assert all(set(spec.tags) <= set(TAGS) for spec in COMMAND_CATALOG)
     assert command_spec("gif") == command_spec("make-gif")

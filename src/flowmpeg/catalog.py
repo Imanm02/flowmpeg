@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 
 @dataclass(frozen=True, slots=True)
@@ -13,12 +13,13 @@ class CommandSpec:
     category: str
     summary: str
     aliases: tuple[str, ...] = ()
+    tags: tuple[str, ...] = ()
     input_kind: str = "media"
     output_kind: str = "media"
     capability_group: str | None = None
 
 
-COMMAND_CATALOG = (
+_BASE_COMMAND_CATALOG = (
     CommandSpec(
         "transcode",
         "video",
@@ -473,6 +474,86 @@ COMMAND_CATALOG = (
     ),
 )
 
+TAGS = (
+    "accessibility",
+    "archive",
+    "copy",
+    "creator",
+    "delivery",
+    "discover",
+    "inspect",
+    "podcast",
+    "privacy",
+    "silent-input",
+)
+
+_CATEGORY_TAGS = {
+    "video": ("creator",),
+    "audio": ("podcast",),
+    "composition": ("creator",),
+    "effects": ("creator",),
+    "images": ("creator",),
+    "subtitles": ("accessibility",),
+    "metadata": ("archive",),
+    "inspect": ("inspect",),
+    "help": ("discover",),
+}
+
+_COMMAND_TAGS = {
+    "transcode": ("delivery", "silent-input"),
+    "trim": ("delivery", "silent-input"),
+    "resize": ("delivery", "silent-input"),
+    "remove-audio": ("copy", "privacy", "silent-input"),
+    "compress-video": ("delivery", "silent-input"),
+    "reframe": ("delivery", "silent-input"),
+    "social-video": ("delivery", "silent-input"),
+    "set-frame-rate": ("archive", "silent-input"),
+    "deinterlace": ("archive", "silent-input"),
+    "flip-video": ("silent-input",),
+    "rotate": ("silent-input",),
+    "crop": ("silent-input",),
+    "change-speed": ("silent-input",),
+    "freeze-end": ("silent-input",),
+    "boomerang": ("silent-input",),
+    "extract-audio": ("copy",),
+    "mix-audio": ("creator",),
+    "normalize-loudness": ("delivery",),
+    "podcast-voice": ("delivery",),
+    "trim-silence": ("delivery",),
+    "crossfade-audio": ("creator",),
+    "tag-audio": ("archive",),
+    "watermark": ("delivery", "silent-input"),
+    "join-matching": ("archive",),
+    "grid": ("silent-input",),
+    "fit-canvas": ("delivery", "silent-input"),
+    "picture-in-picture": ("silent-input",),
+    "blurred-background": ("delivery", "silent-input"),
+    "fade-edges": ("silent-input",),
+    "blur-region": ("privacy", "silent-input"),
+    "reverse-clip": ("silent-input",),
+    "thumbnail": ("archive", "silent-input"),
+    "make-gif": ("delivery", "silent-input"),
+    "contact-sheet": ("archive", "silent-input"),
+    "image-sequence-video": ("silent-input",),
+    "extract-subtitles": ("archive", "copy"),
+    "add-subtitles": ("delivery",),
+    "remove-subtitles": ("copy", "privacy"),
+    "strip-metadata": ("copy", "privacy"),
+    "probe": ("archive",),
+}
+
+COMMAND_CATALOG = tuple(
+    replace(
+        spec,
+        tags=tuple(
+            dict.fromkeys(
+                (*_CATEGORY_TAGS[spec.category], *_COMMAND_TAGS.get(spec.name, ()))
+            )
+        ),
+    )
+    for spec in _BASE_COMMAND_CATALOG
+)
+
 CATEGORIES = tuple(dict.fromkeys(spec.category for spec in COMMAND_CATALOG))
 
 
@@ -486,4 +567,4 @@ def command_spec(name: str) -> CommandSpec | None:
     return None
 
 
-__all__ = ["CATEGORIES", "COMMAND_CATALOG", "CommandSpec", "command_spec"]
+__all__ = ["CATEGORIES", "COMMAND_CATALOG", "TAGS", "CommandSpec", "command_spec"]
