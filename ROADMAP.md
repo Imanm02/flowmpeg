@@ -82,10 +82,10 @@ only a discussion or test placeholder.
 - [x] Add probe-first examples for secondary tracks.
 - [x] Add CMD, PowerShell, and Bash batch examples.
 - [x] Add a generated demo-media script based on FFmpeg test sources.
-- [ ] Add an education workflow from trim through selectable captions.
-- [ ] Add a podcast workflow from voice cleanup through tags and audiogram.
-- [ ] Add an archive workflow with deinterlacing and review images.
-- [ ] Add creator workflows for product demos and animation sequences.
+- [x] Add an education workflow from trim through selectable captions.
+- [x] Add a podcast workflow from voice cleanup through tags and audiogram.
+- [x] Add an archive workflow with deinterlacing and review images.
+- [x] Add a creator workflow for product demos and derived previews.
 
 ## Current limits
 
