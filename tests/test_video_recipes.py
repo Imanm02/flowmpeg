@@ -1,4 +1,5 @@
 import shutil
+from math import inf, nan
 from pathlib import Path
 from typing import cast
 
@@ -14,6 +15,7 @@ from flowmpeg import (
     stack_video,
 )
 from flowmpeg.recipes.video import (
+    change_video_speed,
     named_overlay_position,
     overlay_video,
     scale,
@@ -122,6 +124,27 @@ def test_stack_requires_integer_columns(value: object) -> None:
 def test_overlay_padding_requires_nonnegative_integer(value: object) -> None:
     with pytest.raises(GraphError, match="nonnegative integer"):
         named_overlay_position("top-left", padding=cast(int, value))
+
+
+@pytest.mark.parametrize("value", [True, "1", inf, nan, 10**1_000])
+def test_trim_rejects_nonfinite_numbers(value: object) -> None:
+    with pytest.raises(GraphError, match="must be finite"):
+        trim_video(input("movie.mp4").video(), start=cast(float, value))
+
+
+@pytest.mark.parametrize("value", [True, "2", inf, nan, 10**1_000])
+def test_video_speed_rejects_nonfinite_numbers(value: object) -> None:
+    with pytest.raises(GraphError, match="must be finite"):
+        change_video_speed(input("movie.mp4").video(), cast(float, value))
+
+
+@pytest.mark.parametrize("value", [True, "1", inf, nan, 10**1_000])
+def test_overlay_rejects_nonfinite_opacity(value: object) -> None:
+    background = input("background.mp4").video()
+    foreground = input("foreground.mp4").video()
+
+    with pytest.raises(GraphError, match="must be finite"):
+        overlay_video(background, foreground, opacity=cast(float, value))
 
 
 @pytest.mark.integration

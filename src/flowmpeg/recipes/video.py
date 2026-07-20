@@ -73,8 +73,7 @@ def overlay_video(
 ) -> VideoStream:
     """Place one video stream over another."""
 
-    if not 0 <= opacity <= 1 or not math.isfinite(opacity):
-        raise GraphError("Overlay opacity must be between 0 and 1")
+    _range("opacity", opacity, 0, 1)
     if eof_action not in {"repeat", "endall", "pass"}:
         raise GraphError("Invalid overlay end behavior")
 
@@ -208,7 +207,13 @@ def named_overlay_position(
 
 
 def _finite(name: str, value: float) -> None:
-    if not math.isfinite(value):
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise GraphError(f"{name} must be finite")
+    try:
+        finite = math.isfinite(value)
+    except OverflowError:
+        finite = False
+    if not finite:
         raise GraphError(f"{name} must be finite")
 
 
@@ -222,6 +227,12 @@ def _nonnegative(name: str, value: float) -> None:
     _finite(name, value)
     if value < 0:
         raise GraphError(f"{name} cannot be negative")
+
+
+def _range(name: str, value: float, minimum: float, maximum: float) -> None:
+    _finite(name, value)
+    if not minimum <= value <= maximum:
+        raise GraphError(f"{name} must be between {minimum:g} and {maximum:g}")
 
 
 def _positive_integer(name: str, value: int) -> None:
