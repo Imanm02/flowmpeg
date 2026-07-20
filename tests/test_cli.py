@@ -667,6 +667,26 @@ def test_doctor_marks_missing_feature_without_failing_core(
     assert "Core ready: yes" in output
 
 
+def test_doctor_checks_filters_and_ass_subtitles(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    checked: list[str] = []
+    monkeypatch.setattr(cli, "_listing", lambda *args: "listing")
+
+    def listing_has(listing: str, name: str) -> bool:
+        del listing
+        checked.append(name)
+        return True
+
+    monkeypatch.setattr(cli, "_listing_has", listing_has)
+
+    report = cli._capability_report("ffmpeg", 1)
+
+    for name in ("acrossfade", "adelay", "aformat", "yadif", "ass"):
+        assert name in checked
+    assert report["encoder:ass"] is True
+
+
 def test_setup_ready_is_read_only(
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],

@@ -135,6 +135,8 @@ _FEATURE_REQUIREMENTS = {
         "muxer:image2",
     ),
     "audio-processing": (
+        "filter:acrossfade",
+        "filter:adelay",
         "filter:afade",
         "filter:amix",
         "filter:apad",
@@ -158,16 +160,19 @@ _FEATURE_REQUIREMENTS = {
         "filter:fps",
         "filter:tpad",
         "filter:unsharp",
+        "filter:yadif",
     ),
     "voice-cleanup": (
         "filter:acompressor",
         "filter:afftdn",
+        "filter:aformat",
         "filter:areverse",
         "filter:highpass",
         "filter:lowpass",
         "filter:silenceremove",
     ),
     "subtitles": (
+        "encoder:ass",
         "encoder:mov_text",
         "encoder:srt",
         "encoder:webvtt",
@@ -2162,8 +2167,11 @@ def _capability_report(ffmpeg: str, timeout: float) -> dict[str, bool]:
     muxers = _listing(ffmpeg, "-muxers", timeout)
     names = (
         "acompressor",
+        "acrossfade",
+        "adelay",
         "afade",
         "afftdn",
+        "aformat",
         "amix",
         "apad",
         "areverse",
@@ -2209,10 +2217,12 @@ def _capability_report(ffmpeg: str, timeout: float) -> dict[str, bool]:
         "vflip",
         "volume",
         "xstack",
+        "yadif",
     )
     report = {f"filter:{name}": _listing_has(filters, name) for name in names}
     for name in (
         "aac",
+        "ass",
         "flac",
         "gif",
         "libmp3lame",
