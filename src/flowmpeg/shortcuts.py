@@ -931,6 +931,8 @@ def crop(
 ) -> Plan:
     """Build a fixed-size video crop plan."""
 
+    _even_positive_integer("width", width)
+    _even_positive_integer("height", height)
     clip = media(source, audio=include_audio)
     video = crop_video(
         _require_video(clip),

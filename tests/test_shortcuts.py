@@ -409,6 +409,12 @@ def test_crop_uses_centered_defaults() -> None:
     assert positioned.filter_graph() == "[0:v:0]crop=w=640:h=360:x=10:y=20[v0]"
 
 
+@pytest.mark.parametrize("width,height", [(639, 360), (640, 359)])
+def test_crop_rejects_odd_web_dimensions(width: int, height: int) -> None:
+    with pytest.raises(GraphError, match="must be even"):
+        shortcuts.crop("in.mp4", "out.mp4", width=width, height=height)
+
+
 @pytest.mark.parametrize(
     ("factor", "audio_filters"),
     [
