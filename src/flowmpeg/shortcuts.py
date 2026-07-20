@@ -157,6 +157,7 @@ __all__ = [
     "thumbnail",
     "trim_silence",
     "transcode",
+    "transcode_hevc",
     "transcode_webm",
     "trim",
     "strip_metadata",
@@ -223,6 +224,51 @@ def transcode_webm(
     )
     if clip.audio is not None:
         args += ("-c:a", "libopus", "-b:a", audio_bitrate)
+    plan = output(
+        _require_video(clip),
+        *(stream for stream in (clip.audio,) if stream is not None),
+        to=to,
+        args=args,
+    )
+    return _set_overwrite(plan, overwrite)
+
+
+def transcode_hevc(
+    source: Pathish,
+    to: Pathish,
+    *,
+    crf: int = 28,
+    encoder_preset: EncoderPreset = "medium",
+    audio_bitrate: str = "160k",
+    include_audio: bool = True,
+    overwrite: bool = False,
+) -> Plan:
+    """Encode HEVC video and optional AAC audio in MP4."""
+
+    if isinstance(crf, bool) or not isinstance(crf, int) or not 0 <= crf <= 51:
+        raise GraphError("HEVC CRF must be an integer between 0 and 51")
+    _validate_encoder_preset(encoder_preset, codec="HEVC")
+    clip = _media_with_optional_audio(source, include_audio)
+    if clip.audio is not None:
+        _validate_bitrate(audio_bitrate)
+    _require_suffix(to, frozenset({".mp4"}), "HEVC output")
+    _validate_paths((source,), to)
+    args: tuple[str, ...] = (
+        "-c:v",
+        "libx265",
+        "-crf",
+        str(crf),
+        "-preset",
+        encoder_preset,
+        "-pix_fmt",
+        "yuv420p",
+        "-tag:v",
+        "hvc1",
+        "-movflags",
+        "+faststart",
+    )
+    if clip.audio is not None:
+        args += ("-c:a", "aac", "-b:a", audio_bitrate)
     plan = output(
         _require_video(clip),
         *(stream for stream in (clip.audio,) if stream is not None),
@@ -2228,7 +2274,11 @@ def _web_args(
     return args
 
 
-def _validate_encoder_preset(value: EncoderPreset) -> None:
+def _validate_encoder_preset(
+    value: EncoderPreset,
+    *,
+    codec: str = "H.264",
+) -> None:
     if value not in {
         "ultrafast",
         "superfast",
@@ -2240,7 +2290,7 @@ def _validate_encoder_preset(value: EncoderPreset) -> None:
         "slower",
         "veryslow",
     }:
-        raise GraphError(f"Unknown H.264 encoder preset: {value}")
+        raise GraphError(f"Unknown {codec} encoder preset: {value}")
 
 
 def _audio_args(

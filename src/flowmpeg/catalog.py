@@ -36,6 +36,13 @@ _BASE_COMMAND_CATALOG = (
         capability_group="webm-video",
     ),
     CommandSpec(
+        "transcode-hevc",
+        "video",
+        "Encode HEVC and AAC MP4",
+        ("hevc", "h265"),
+        capability_group="hevc-video",
+    ),
+    CommandSpec(
         "trim",
         "video",
         "Cut an exact time range",
@@ -549,6 +556,7 @@ _CATEGORY_TAGS = {
 _COMMAND_TAGS = {
     "transcode": ("delivery", "silent-input"),
     "transcode-webm": ("delivery", "silent-input"),
+    "transcode-hevc": ("archive", "delivery", "silent-input"),
     "trim": ("delivery", "silent-input"),
     "resize": ("delivery", "silent-input"),
     "remove-audio": ("copy", "privacy", "silent-input"),
@@ -607,6 +615,11 @@ _COMMAND_REQUIREMENTS = {
         "encoder:libopus",
         "encoder:libvpx-vp9",
         "muxer:webm",
+    ),
+    "transcode-hevc": (
+        "encoder:aac",
+        "encoder:libx265",
+        "muxer:mp4",
     ),
     "trim": _requirements(
         *_MP4,

@@ -81,6 +81,24 @@ ff.transcode_webm(
 
 Set `include_audio=False` for a video-only source. The default VP9 CRF is 32.
 
+### Encode a smaller HEVC delivery file
+
+**Input:** `camera-master.mov`
+
+**Output:** `camera-hevc.mp4` with HEVC video and optional AAC audio.
+
+```python
+ff.transcode_hevc(
+    "camera-master.mov",
+    "camera-hevc.mp4",
+    crf=28,
+    encoder_preset="medium",
+).run()
+```
+
+The `hvc1` video tag improves recognition in Apple players. Run
+`flowmpeg doctor --command hevc` before a batch to check for `libx265`.
+
 ### Keep an exact time range
 
 **Input:** `interview.mp4`
@@ -1403,6 +1421,7 @@ ff.trim("input.mp4", "clip.mp4", start=5, duration=20).run(
 | --- | --- | --- |
 | `transcode` | Web MP4 | Encodes selected video and optional audio |
 | `transcode_webm` | VP9 and Opus WebM | Encodes selected video and optional audio |
+| `transcode_hevc` | HEVC and AAC MP4 | Encodes selected video and optional audio |
 | `trim` | Accurate time range | Filters paired timestamps, then encodes |
 | `resize` | New width or height | Encodes video and keeps optional audio |
 | `remove_audio` | Video-only file | Copies video and drops other streams |

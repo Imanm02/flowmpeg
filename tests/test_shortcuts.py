@@ -79,6 +79,7 @@ def test_shortcuts_namespace_is_public() -> None:
         "tag_media",
         "thumbnail",
         "transcode",
+        "transcode_hevc",
         "trim",
         "trim_silence",
         "transcode_webm",
@@ -147,6 +148,24 @@ def test_webm_transcode_sets_vp9_and_opus() -> None:
     )
     assert argv[argv.index("-crf") : argv.index("-crf") + 2] == ("-crf", "28")
     assert "0:a:0?" in argv
+
+
+def test_hevc_transcode_sets_x265_and_hvc1() -> None:
+    plan = shortcuts.transcode_hevc(
+        "source.mov",
+        "delivery.mp4",
+        crf=26,
+        encoder_preset="slow",
+        audio_bitrate="128k",
+    )
+    argv = plan.raw_argv()
+
+    pairs = tuple(zip(argv, argv[1:], strict=False))
+    assert ("-c:v", "libx265") in pairs
+    assert ("-tag:v", "hvc1") in pairs
+    assert ("-crf", "26") in pairs
+    assert ("-preset", "slow") in pairs
+    assert ("-c:a", "aac") in pairs
 
 
 @pytest.mark.parametrize(
@@ -1038,6 +1057,13 @@ def test_shortcuts_accept_path_objects_and_overwrite() -> None:
             "out.webm",
             audio_bitrate="96k -map 0",
         ),
+        lambda: shortcuts.transcode_hevc("in.mov", "out.webm"),
+        lambda: shortcuts.transcode_hevc("in.mov", "out.mp4", crf=52),
+        lambda: shortcuts.transcode_hevc(
+            "in.mov",
+            "out.mp4",
+            encoder_preset=cast(shortcuts.EncoderPreset, "quick"),
+        ),
         lambda: shortcuts.join_normalized(("one.mp4",), "out.mp4"),
         lambda: shortcuts.join_normalized(
             ("one.mp4", "two.mp4"), "out.mp4", width=1279
@@ -1610,6 +1636,34 @@ def test_video_filters_accept_a_source_without_audio(tmp_path: Path) -> None:
         info = probe(plan.outputs[0].destination)
         assert info.video_streams
         assert not info.audio_streams
+
+
+@pytest.mark.integration
+def test_hevc_transcode_runs(
+    shortcut_media: tuple[str, Path, Path, Path],
+) -> None:
+    ffmpeg, source, _, _ = shortcut_media
+    encoders = subprocess.run(
+        (ffmpeg, "-hide_banner", "-encoders"),
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout
+    if "libx265" not in encoders:
+        pytest.skip("The FFmpeg build does not include libx265")
+    target = source.parent / "delivery-hevc.mp4"
+
+    shortcuts.transcode_hevc(
+        source,
+        target,
+        crf=35,
+        encoder_preset="ultrafast",
+        include_audio=False,
+    ).run(ffmpeg=ffmpeg, timeout=20)
+
+    info = probe(target)
+    assert info.video_streams[0].codec_name == "hevc"
+    assert not info.audio_streams
 
 
 @pytest.mark.integration

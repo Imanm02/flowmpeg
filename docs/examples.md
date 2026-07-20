@@ -34,6 +34,7 @@ flowmpeg probe demo-media/sample.mp4
 flowmpeg audit demo-media/sample.mp4 --expect av
 flowmpeg cut demo-media/sample.mp4 --duration 1 -o demo-media/clip.mp4
 flowmpeg webm demo-media/sample.mp4 -o demo-media/sample.webm
+flowmpeg hevc demo-media/sample.mp4 -o demo-media/sample-hevc.mp4
 flowmpeg waveform demo-media/voice.wav -o demo-media/waveform.png
 flowmpeg audio demo-media/sample.mp4 --codec opus -o demo-media/audio.opus
 flowmpeg captions demo-media/sample.mp4 demo-media/captions.srt -o demo-media/captioned.mp4
@@ -87,6 +88,7 @@ Paths can also be `pathlib.Path` objects.
 | A selected time range | `interview.mp4` | `clip.mp4` |
 | A smaller video | `interview.mp4` | `small.mp4` |
 | An open-codec web video | `interview.mp4` | `delivery.webm` |
+| A compact HEVC delivery file | `camera-master.mov` | `camera-hevc.mp4` |
 | A silent video | `interview.mp4` | `silent.mp4` |
 | An MP3 from a video | `interview.mp4` | `voice.mp3` |
 | A video with a logo | `interview.mp4`, `logo.png` | `branded.mp4` |

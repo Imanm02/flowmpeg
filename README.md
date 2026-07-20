@@ -59,6 +59,7 @@ stable finding codes for scripts.
 ```console
 flowmpeg cut input.mp4 --start 10 --duration 20 -o clip.mp4
 flowmpeg webm input.mov --crf 30 -o delivery.webm
+flowmpeg hevc input.mov --crf 28 -o archive.mp4
 flowmpeg scale input.mp4 --width 1280 -o small.mp4
 flowmpeg audio input.mp4 -o audio.mp3
 flowmpeg pip input.mp4 camera.mp4 -o with-camera.mp4

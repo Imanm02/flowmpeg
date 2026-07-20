@@ -74,6 +74,7 @@ class _Example:
 _BASE_EXAMPLES = (
     _Example("video", "flowmpeg convert recording.mov -o recording.mp4"),
     _Example("video", "flowmpeg webm recording.mov -o recording.webm"),
+    _Example("video", "flowmpeg hevc recording.mov -o recording-hevc.mp4"),
     _Example("video", "flowmpeg convert animation.mov --no-audio -o animation.mp4"),
     _Example("video", "flowmpeg cut input.mp4 --start 5 --duration 12 -o clip.mp4"),
     _Example("video", "flowmpeg resize input.mp4 --width 1280 -o smaller.mp4"),
@@ -202,6 +203,11 @@ _FEATURE_REQUIREMENTS = {
         "encoder:libopus",
         "encoder:libvpx-vp9",
         "muxer:webm",
+    ),
+    "hevc-video": (
+        "encoder:aac",
+        "encoder:libx265",
+        "muxer:mp4",
     ),
     "audio-files": (
         "encoder:aac",
@@ -452,6 +458,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     _add_transcode(commands)
     _add_transcode_webm(commands)
+    _add_transcode_hevc(commands)
     _add_trim(commands)
     _add_resize(commands)
     _add_remove_audio(commands)
@@ -682,6 +689,39 @@ def _add_transcode_webm(
     parser.add_argument("--crf", type=_nonnegative_int, default=32)
     parser.add_argument("--cpu-used", type=_nonnegative_int, default=2)
     parser.add_argument("--audio-bitrate", default="128k")
+    _audio_toggle(parser)
+    _output(parser)
+
+
+def _add_transcode_hevc(
+    commands: argparse._SubParsersAction[argparse.ArgumentParser],
+) -> None:
+    parser = _command(
+        commands,
+        "transcode-hevc",
+        "Encode HEVC video and AAC audio in MP4.",
+        shortcuts.transcode_hevc,
+        ("source",),
+        aliases=("hevc", "h265"),
+    )
+    _source(parser)
+    parser.add_argument("--crf", type=_nonnegative_int, default=28)
+    parser.add_argument(
+        "--encoder-preset",
+        choices=(
+            "ultrafast",
+            "superfast",
+            "veryfast",
+            "faster",
+            "fast",
+            "medium",
+            "slow",
+            "slower",
+            "veryslow",
+        ),
+        default="medium",
+    )
+    parser.add_argument("--audio-bitrate", default="160k")
     _audio_toggle(parser)
     _output(parser)
 

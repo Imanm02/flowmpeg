@@ -92,6 +92,7 @@ The table below is a compact editing index for scanning this longer guide.
 | --- | --- | --- |
 | Convert to web MP4 | `transcode` | `convert` |
 | Convert to VP9 WebM | `transcode-webm` | `webm`, `vp9` |
+| Convert to HEVC MP4 | `transcode-hevc` | `hevc`, `h265` |
 | Cut a time range | `trim` | `cut` |
 | Resize by one side | `resize` | `scale` |
 | Remove the audio stream | `remove-audio` | `mute`, `strip-audio` |
@@ -187,6 +188,20 @@ VP9 CRF accepts 0 through 63. Lower values retain more detail. `--cpu-used`
 accepts 0 through 8, where higher values trade compression work for speed.
 Use `--audio-bitrate 96k` to change the Opus bitrate or `--no-audio` for a
 video-only result.
+
+### Convert to HEVC and AAC MP4
+
+**Input:** `camera-master.mov`
+
+**Output:** `camera-hevc.mp4` with HEVC video and optional AAC audio.
+
+```console
+flowmpeg hevc camera-master.mov --crf 28 --encoder-preset medium -o camera-hevc.mp4
+```
+
+HEVC CRF accepts 0 through 51. Lower values retain more detail. The output uses
+the `hvc1` video tag for recognition in Apple players. Use `--no-audio` for a
+video-only source.
 
 Commands that change audio timing inspect their sources when they run. `cut`,
 `join`, `speed`, `fade`, `freeze`, `reverse`, and `bounce` select a video-only
@@ -1113,6 +1128,7 @@ parts of the command set are supported by the installed FFmpeg build:
 
 - `web-video`
 - `webm-video`
+- `hevc-video`
 - `audio-files`
 - `composition`
 - `video-effects`

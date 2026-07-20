@@ -41,6 +41,7 @@ from flowmpeg.runner import RunResult
     [
         ["transcode", "in.mov", "-o", "out.mp4"],
         ["transcode-webm", "in.mov", "-o", "out.webm"],
+        ["transcode-hevc", "in.mov", "-o", "out.mp4"],
         ["trim", "in.mp4", "--start", "2", "--duration", "5", "-o", "out.mp4"],
         ["resize", "in.mp4", "--width", "640", "-o", "out.mp4"],
         ["remove-audio", "in.mp4", "-o", "out.mp4"],
@@ -160,6 +161,7 @@ def test_audio_commands_accept_opus_output(
     [
         ["convert", "in.mov", "-o", "out.mp4"],
         ["webm", "in.mov", "-o", "out.webm"],
+        ["h265", "in.mov", "-o", "out.mp4"],
         ["cut", "in.mp4", "--duration", "2", "-o", "out.mp4"],
         ["mute", "in.mp4", "-o", "out.mp4"],
         ["strip-audio", "in.mp4", "-o", "out.mp4"],
