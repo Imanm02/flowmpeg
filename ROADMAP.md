@@ -62,7 +62,7 @@ only a discussion or test placeholder.
   input.
 - [ ] Infer progress duration for start and end trims.
 - [ ] Infer doubled progress duration for boomerang outputs.
-- [ ] Add a documentation landing page organized by task.
+- [x] Add a documentation landing page organized by task.
 - [ ] Add a generated project statistics report from source metadata.
 - [ ] Test that generated statistics remain current.
 - [ ] Parse documented terminal options, not only command names.

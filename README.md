@@ -123,6 +123,10 @@ combined with lower-level filters.
 
 ## Start with a task
 
+The [documentation index](docs/index.md) groups every guide by the job I am
+trying to finish. It also shows the choice between terminal commands, Python
+shortcuts, and custom graphs.
+
 The [example guide](docs/examples.md) shows complete inputs and expected
 outputs for common jobs:
 
