@@ -205,3 +205,41 @@ def test_filter_outputs_cannot_be_optional() -> None:
 
     with pytest.raises(GraphError, match="direct input mappings"):
         Plan(filtered.graph, (spec,))
+
+
+def test_input_arguments_require_an_immutable_tuple() -> None:
+    values = cast(tuple[str, ...], ["-ss", "2"])
+
+    with pytest.raises(GraphError, match="immutable tuple"):
+        InputNode(NodeKey(50), "movie.mp4", values)
+
+
+def test_filter_connections_require_an_immutable_tuple() -> None:
+    source = InputNode(NodeKey(51), "movie.mp4")
+    values = cast(
+        tuple[StreamRef, ...],
+        [StreamRef(source.key, 0, StreamKind.VIDEO)],
+    )
+
+    with pytest.raises(GraphError, match="immutable tuple"):
+        FilterNode(
+            NodeKey(52),
+            "scale",
+            values,
+            (StreamKind.VIDEO,),
+        )
+
+
+def test_graph_members_require_an_immutable_tuple() -> None:
+    values = cast(tuple[InputNode, ...], [InputNode(NodeKey(53), "movie.mp4")])
+
+    with pytest.raises(GraphError, match="immutable tuple"):
+        MediaGraph(inputs=values)
+
+
+def test_output_arguments_require_an_immutable_tuple() -> None:
+    stream = StreamRef(NodeKey(54), 0, StreamKind.VIDEO)
+    values = cast(tuple[str, ...], ["-c:v", "copy"])
+
+    with pytest.raises(GraphError, match="immutable tuple"):
+        OutputSpec("out.mp4", (stream,), values)

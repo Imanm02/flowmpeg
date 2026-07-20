@@ -106,6 +106,8 @@ class InputNode:
             raise GraphError("Inputs require a node key")
         if not isinstance(self.source, str) or not self.source:
             raise GraphError("Input sources cannot be empty")
+        if not isinstance(self.args, tuple):
+            raise GraphError("Input arguments must be an immutable tuple")
         if not all(isinstance(value, str) for value in self.args):
             raise GraphError("Input arguments must be strings")
 
@@ -125,18 +127,26 @@ class FilterNode:
         if not isinstance(self.key, NodeKey):
             raise GraphError("Filters require a node key")
         validate_filter_name(self.name)
+        if not isinstance(self.inputs, tuple):
+            raise GraphError("Filter inputs must be an immutable tuple")
         if not self.inputs:
             raise GraphError("Filters require at least one input")
         if not all(isinstance(value, StreamRef) for value in self.inputs):
             raise GraphError("Filter inputs must be stream references")
         if any(value.optional for value in self.inputs):
             raise GraphError("Optional input streams cannot feed filters")
+        if not isinstance(self.output_kinds, tuple):
+            raise GraphError("Filter outputs must be an immutable tuple")
         if not self.output_kinds:
             raise GraphError("Filters require at least one output")
         if not all(isinstance(value, StreamKind) for value in self.output_kinds):
             raise GraphError("Filters require known output kinds")
+        if not isinstance(self.args, tuple):
+            raise GraphError("Filter arguments must be an immutable tuple")
         if not all(_is_filter_value(value) for value in self.args):
             raise GraphError("Filter arguments have an unsupported type")
+        if not isinstance(self.options, tuple):
+            raise GraphError("Filter options must be an immutable tuple")
         if not all(isinstance(value, FilterOption) for value in self.options):
             raise GraphError("Filter options must be named values")
         names = [option.name for option in self.options]
@@ -150,6 +160,12 @@ class MediaGraph:
 
     inputs: tuple[InputNode, ...] = ()
     filters: tuple[FilterNode, ...] = ()
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.inputs, tuple):
+            raise GraphError("Graph inputs must be an immutable tuple")
+        if not isinstance(self.filters, tuple):
+            raise GraphError("Graph filters must be an immutable tuple")
 
     @classmethod
     def merge(cls, graphs: Iterable[MediaGraph]) -> MediaGraph:

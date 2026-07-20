@@ -32,10 +32,14 @@ class OutputSpec:
             raise GraphError("Output destinations cannot be empty")
         if self.destination.startswith("-"):
             raise GraphError("Output destinations cannot start with a dash")
+        if not isinstance(self.streams, tuple):
+            raise GraphError("Output streams must be an immutable tuple")
         if not self.streams:
             raise GraphError("Outputs require at least one stream")
         if not all(isinstance(value, StreamRef) for value in self.streams):
             raise GraphError("Output streams must be stream references")
+        if not isinstance(self.args, tuple):
+            raise GraphError("Output arguments must be an immutable tuple")
         if not all(isinstance(value, str) for value in self.args):
             raise GraphError("Output arguments must be strings")
 
@@ -90,8 +94,12 @@ class Plan:
 
         if not isinstance(self.graph, MediaGraph):
             raise GraphError("Plans require a media graph")
+        if not isinstance(self.outputs, tuple):
+            raise GraphError("Plan outputs must be an immutable tuple")
         if not all(isinstance(value, OutputSpec) for value in self.outputs):
             raise GraphError("Plan outputs must be output specifications")
+        if not isinstance(self.global_args, tuple):
+            raise GraphError("Global arguments must be an immutable tuple")
         if not all(isinstance(value, str) for value in self.global_args):
             raise GraphError("Global arguments must be strings")
         if not isinstance(self.overwrite_enabled, bool):
