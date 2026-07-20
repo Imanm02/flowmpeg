@@ -579,9 +579,9 @@ def resize(
     if (width is None) == (height is None):
         raise GraphError("Set exactly one of width or height")
     if width is not None:
-        _positive_integer("width", width)
+        _even_positive_integer("width", width)
     if height is not None:
-        _positive_integer("height", height)
+        _even_positive_integer("height", height)
     clip = media(source, audio=include_audio).scale(width=width, height=height)
     return _web_plan(clip, to, (source,), preset, overwrite)
 

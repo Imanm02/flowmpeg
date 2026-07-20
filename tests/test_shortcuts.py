@@ -141,6 +141,12 @@ def test_resize_preserves_aspect_ratio() -> None:
     assert height_plan.filter_graph() == "[0:v:0]scale=-2:720[v0]"
 
 
+@pytest.mark.parametrize("size", [{"width": 1279}, {"height": 719}])
+def test_resize_rejects_odd_web_dimensions(size: dict[str, int]) -> None:
+    with pytest.raises(GraphError, match="must be even"):
+        shortcuts.resize("in.mp4", "out.mp4", **size)
+
+
 def test_remove_audio_copies_only_video() -> None:
     plan = shortcuts.remove_audio("in.mp4", "silent.mp4")
 
