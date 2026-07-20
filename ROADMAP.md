@@ -55,7 +55,7 @@ only a discussion or test placeholder.
   capability metadata.
 - [x] Add `flowmpeg commands` with category filtering.
 - [x] Add machine-readable command catalog output.
-- [ ] Add category and search filters to `flowmpeg examples`.
+- [x] Add category and search filters to `flowmpeg examples`.
 - [ ] Add `doctor --require GROUP` for scripts that depend on one feature
   group.
 - [ ] Add an optional doctor smoke test that encodes and probes a tiny generated

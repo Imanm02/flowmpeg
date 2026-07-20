@@ -735,15 +735,18 @@ def test_setup_checks_custom_tool_paths(
     monkeypatch.setattr(cli, "_tool_report", tool_report)
     monkeypatch.setattr(cli, "_detect_installer", lambda: None)
 
-    assert cli.main(
-        [
-            "setup",
-            "--ffmpeg",
-            "C:/media/ffmpeg.exe",
-            "--ffprobe",
-            "C:/media/ffprobe.exe",
-        ]
-    ) == 0
+    assert (
+        cli.main(
+            [
+                "setup",
+                "--ffmpeg",
+                "C:/media/ffmpeg.exe",
+                "--ffprobe",
+                "C:/media/ffprobe.exe",
+            ]
+        )
+        == 0
+    )
     assert checked == ["C:/media/ffmpeg.exe", "C:/media/ffprobe.exe"]
 
 
@@ -936,9 +939,7 @@ def test_setup_install_timeout_returns_eight(
 
     monkeypatch.setattr(subprocess, "run", time_out)
 
-    assert cli.main(
-        ["setup", "--install", "--yes", "--install-timeout", "2"]
-    ) == 8
+    assert cli.main(["setup", "--install", "--yes", "--install-timeout", "2"]) == 8
     output = capsys.readouterr().err
     assert "timed out after 2 seconds" in output
     assert "FMG304" in output
@@ -1154,6 +1155,22 @@ def test_examples_are_ready_to_edit(capsys: pytest.CaptureFixture[str]) -> None:
     assert "flowmpeg cut" in output
     assert "flowmpeg doctor" in output
     assert output.count("flowmpeg ") >= 10
+
+
+def test_examples_filter_by_category_and_search(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    assert cli.main(["examples", "--category", "images", "--search", "wave"]) == 0
+    output = capsys.readouterr().out
+    assert "flowmpeg waveform" in output
+    assert "flowmpeg cut" not in output
+
+
+def test_examples_report_an_empty_search(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    assert cli.main(["examples", "--search", "not-a-real-command"]) == 2
+    assert "no examples matched" in capsys.readouterr().err
 
 
 def test_commands_are_grouped_by_task(capsys: pytest.CaptureFixture[str]) -> None:

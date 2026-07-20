@@ -56,26 +56,33 @@ _CONTROL_NAMES = {
     "timeout",
 }
 
+
+@dataclass(frozen=True, slots=True)
+class _Example:
+    category: str
+    command: str
+
+
 _EXAMPLES = (
-    "flowmpeg cut input.mp4 --start 5 --duration 12 -o clip.mp4",
-    "flowmpeg resize input.mp4 --width 1280 -o smaller.mp4",
-    "flowmpeg mute input.mp4 -o silent.mp4",
-    "flowmpeg audio input.mp4 -o track.mp3",
-    "flowmpeg pip main.mp4 inset.mp4 -o result.mp4",
-    "flowmpeg gif input.mp4 --start 3 --duration 4 -o preview.gif",
-    "flowmpeg waveform song.mp3 -o waveform.png",
-    "flowmpeg spectrum song.mp3 -o spectrum.png",
-    "flowmpeg sheet input.mp4 --interval 8 -o sheet.jpg",
-    "flowmpeg reverse input.mp4 --duration 6 -o reversed.mp4",
-    "flowmpeg compress input.mov -o smaller.mp4",
-    "flowmpeg social input.mp4 --target vertical -o vertical.mp4",
-    "flowmpeg voice recording.wav -o finished.wav",
-    "flowmpeg captions movie.mp4 subtitles.srt -o captioned.mp4",
-    "flowmpeg timelapse frames/frame-%04d.png -o timelapse.mp4",
-    "flowmpeg audiogram episode.wav cover.jpg -o episode.mp4",
-    "flowmpeg probe input.mp4",
-    "flowmpeg doctor",
-    "flowmpeg setup",
+    _Example("video", "flowmpeg cut input.mp4 --start 5 --duration 12 -o clip.mp4"),
+    _Example("video", "flowmpeg resize input.mp4 --width 1280 -o smaller.mp4"),
+    _Example("video", "flowmpeg mute input.mp4 -o silent.mp4"),
+    _Example("audio", "flowmpeg audio input.mp4 -o track.mp3"),
+    _Example("composition", "flowmpeg pip main.mp4 inset.mp4 -o result.mp4"),
+    _Example("images", "flowmpeg gif input.mp4 --start 3 --duration 4 -o preview.gif"),
+    _Example("images", "flowmpeg waveform song.mp3 -o waveform.png"),
+    _Example("images", "flowmpeg spectrum song.mp3 -o spectrum.png"),
+    _Example("images", "flowmpeg sheet input.mp4 --interval 8 -o sheet.jpg"),
+    _Example("effects", "flowmpeg reverse input.mp4 --duration 6 -o reversed.mp4"),
+    _Example("video", "flowmpeg compress input.mov -o smaller.mp4"),
+    _Example("video", "flowmpeg social input.mp4 --target vertical -o vertical.mp4"),
+    _Example("audio", "flowmpeg voice recording.wav -o finished.wav"),
+    _Example("subtitles", "flowmpeg captions movie.mp4 subtitles.srt -o captioned.mp4"),
+    _Example("images", "flowmpeg timelapse frames/frame-%04d.png -o timelapse.mp4"),
+    _Example("composition", "flowmpeg audiogram episode.wav cover.jpg -o episode.mp4"),
+    _Example("inspect", "flowmpeg probe input.mp4"),
+    _Example("inspect", "flowmpeg doctor"),
+    _Example("inspect", "flowmpeg setup"),
 )
 
 _DURATION_FACTORIES = (
@@ -1687,6 +1694,8 @@ def _add_examples(
         allow_abbrev=False,
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
+    parser.add_argument("--category", choices=CATEGORIES, help="Show one category")
+    parser.add_argument("--search", help="Find text in example commands")
     parser.set_defaults(handler=_run_examples)
 
 
@@ -1923,8 +1932,21 @@ def _run_explain_error(args: argparse.Namespace) -> int:
 
 
 def _run_examples(args: argparse.Namespace) -> int:
-    del args
-    print("\n".join(_EXAMPLES))
+    category = cast(str | None, args.category)
+    search = cast(str | None, args.search)
+    examples = [
+        example
+        for example in _EXAMPLES
+        if category is None or example.category == category
+    ]
+    if search is not None:
+        lowered = search.casefold()
+        examples = [
+            example for example in examples if lowered in example.command.casefold()
+        ]
+    if not examples:
+        return _error(GraphError("no examples matched"), 2, "FMG200")
+    print("\n".join(example.command for example in examples))
     return 0
 
 
@@ -2455,7 +2477,9 @@ def _probe_error(error: ProbeError) -> int:
 
 def _execution_error_id(stderr: str) -> str:
     lowered = stderr.lower()
-    if re.search(r"unknown encoder|encoder .* not found|error selecting an encoder", lowered):
+    if re.search(
+        r"unknown encoder|encoder .* not found|error selecting an encoder", lowered
+    ):
         return "FMG610"
     if re.search(r"unknown decoder|decoder .* not found", lowered):
         return "FMG611"
@@ -2495,7 +2519,9 @@ def _stderr_reason(
     lines = stderr.splitlines()
     if preferred:
         causal = [
-            line for line in lines if any(re.search(pattern, line, re.I) for pattern in preferred)
+            line
+            for line in lines
+            if any(re.search(pattern, line, re.I) for pattern in preferred)
         ]
         lines = causal or lines
     for line in reversed(lines):
