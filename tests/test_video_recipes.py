@@ -1,5 +1,6 @@
 import shutil
 from pathlib import Path
+from typing import cast
 
 import pytest
 
@@ -12,7 +13,12 @@ from flowmpeg import (
     output,
     stack_video,
 )
-from flowmpeg.recipes.video import overlay_video, scale, trim_video
+from flowmpeg.recipes.video import (
+    named_overlay_position,
+    overlay_video,
+    scale,
+    trim_video,
+)
 
 
 def test_clip_edits_video_and_keeps_audio() -> None:
@@ -95,6 +101,27 @@ def test_direct_video_recipes_compose() -> None:
     assert "trim=end=5" in graph
     assert "scale=120:-2" in graph
     assert "overlay=x=10:y=20" in graph
+
+
+@pytest.mark.parametrize("value", [True, 1.5, "640", 0, -1])
+def test_scale_requires_integer_dimensions(value: object) -> None:
+    with pytest.raises(GraphError, match="positive integer"):
+        scale(input("movie.mp4").video(), width=cast(int, value))
+
+
+@pytest.mark.parametrize("value", [True, 1.5, "2", 0, -1])
+def test_stack_requires_integer_columns(value: object) -> None:
+    first = input("first.mp4").video()
+    second = input("second.mp4").video()
+
+    with pytest.raises(GraphError, match="positive integer"):
+        stack_video(first, second, columns=cast(int, value))
+
+
+@pytest.mark.parametrize("value", [True, 1.5, "24", -1])
+def test_overlay_padding_requires_nonnegative_integer(value: object) -> None:
+    with pytest.raises(GraphError, match="nonnegative integer"):
+        named_overlay_position("top-left", padding=cast(int, value))
 
 
 @pytest.mark.integration

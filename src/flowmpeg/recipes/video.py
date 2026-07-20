@@ -24,10 +24,10 @@ def scale(
 
     if width is None and height is None:
         raise GraphError("Video scale requires width or height")
-    if width is not None and width <= 0:
-        raise GraphError("Video width must be positive")
-    if height is not None and height <= 0:
-        raise GraphError("Video height must be positive")
+    if width is not None:
+        _positive_integer("width", width)
+    if height is not None:
+        _positive_integer("height", height)
     return stream.filter(
         "scale",
         width if width is not None else -2,
@@ -108,8 +108,7 @@ def stack_video(
 
     if len(streams) < 2:
         raise GraphError("Video stacking requires at least two streams")
-    if columns <= 0:
-        raise GraphError("Video stack columns must be positive")
+    _positive_integer("columns", columns)
     if not fill:
         raise GraphError("Video stack fill cannot be empty")
 
@@ -191,8 +190,7 @@ def named_overlay_position(
 ) -> tuple[OverlayPosition, OverlayPosition]:
     """Convert a named overlay position into FFmpeg coordinates."""
 
-    if padding < 0:
-        raise GraphError("Overlay padding cannot be negative")
+    _nonnegative_integer("padding", padding)
     positions: dict[str, tuple[OverlayPosition, OverlayPosition]] = {
         "top-left": (padding, padding),
         "top-right": (expr(f"W-w-{padding}"), padding),
@@ -229,6 +227,11 @@ def _nonnegative(name: str, value: float) -> None:
 def _positive_integer(name: str, value: int) -> None:
     if isinstance(value, bool) or not isinstance(value, int) or value <= 0:
         raise GraphError(f"{name} must be a positive integer")
+
+
+def _nonnegative_integer(name: str, value: int) -> None:
+    if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+        raise GraphError(f"{name} must be a nonnegative integer")
 
 
 def _nonnegative_position(name: str, value: int | Expression | None) -> None:
