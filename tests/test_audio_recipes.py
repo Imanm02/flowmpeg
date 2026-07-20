@@ -1,5 +1,6 @@
 import shutil
 from pathlib import Path
+from typing import cast
 
 import pytest
 
@@ -26,6 +27,14 @@ def test_integer_speed_factor_builds_float_tempo_stages() -> None:
     assert output(changed, to="fast.wav").filter_graph() == (
         "[0:a:0]atempo=2[a0];[a0]asetpts=PTS-STARTPTS[a1]"
     )
+
+
+@pytest.mark.parametrize("value", [True, "fast"])
+def test_audio_recipes_reject_non_numeric_factors(value: object) -> None:
+    source = input("voice.wav").audio()
+
+    with pytest.raises(GraphError, match="must be finite"):
+        change_audio_speed(source, cast(float, value))
 
 
 def test_audio_mix_compiles_gains_and_weights() -> None:
