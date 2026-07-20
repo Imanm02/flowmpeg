@@ -1,9 +1,11 @@
 import io
 import os
+import queue
 import shutil
 import signal
 import subprocess
 import threading
+import time
 from math import inf, nan
 from pathlib import Path
 from typing import cast
@@ -15,12 +17,14 @@ from flowmpeg import (
     BinaryUnusableError,
     ExecutionError,
     GraphError,
+    JobTimeoutError,
     OutputExistsError,
     Progress,
     input,
     output,
 )
 from flowmpeg.runner import (
+    _put_latest,
     _read_stderr,
     _signal_process_tree,
     _stop_process,
@@ -346,6 +350,58 @@ def test_windows_cleanup_targets_descendants(
         ["taskkill", "/PID", "456", "/T"],
         ["taskkill", "/PID", "456", "/T", "/F"],
     ]
+
+
+def test_progress_queue_keeps_only_the_latest_event() -> None:
+    events: queue.Queue[Progress] = queue.Queue(maxsize=1)
+    first = Progress(None, None, None, None, None, None, "continue", ())
+    latest = Progress(None, None, None, None, None, None, "end", ())
+
+    _put_latest(events, first)
+    _put_latest(events, latest)
+
+    assert events.qsize() == 1
+    assert events.get_nowait() is latest
+
+
+def test_slow_progress_callback_does_not_block_timeout(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    callback_entered = threading.Event()
+    release_callback = threading.Event()
+
+    class RunningProcess:
+        def __init__(self) -> None:
+            self.stdout = io.StringIO("progress=continue\n")
+            self.stderr = io.StringIO()
+
+        def poll(self) -> None:
+            return None
+
+    process = RunningProcess()
+    monkeypatch.setattr(subprocess, "Popen", lambda *args, **kwargs: process)
+    monkeypatch.setattr("flowmpeg.runner._stop_process", lambda *args: True)
+    plan = output(input("movie.mp4").video(), to=tmp_path / "copy.mp4")
+
+    def wait_on_progress(event: Progress) -> None:
+        del event
+        callback_entered.set()
+        release_callback.wait(timeout=5)
+
+    started = time.monotonic()
+    try:
+        with pytest.raises(JobTimeoutError, match="timed out"):
+            plan.run(
+                on_progress=wait_on_progress,
+                timeout=0.1,
+                termination_grace=0.01,
+            )
+    finally:
+        release_callback.set()
+
+    assert callback_entered.is_set()
+    assert time.monotonic() - started < 1
 
 
 @pytest.mark.parametrize("failed_start", [1, 2])

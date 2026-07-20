@@ -12,8 +12,9 @@ import time
 import warnings
 from collections import deque
 from collections.abc import Callable
+from contextlib import suppress
 from dataclasses import dataclass
-from typing import IO, Any, TextIO
+from typing import IO, Any, TextIO, TypeVar
 
 from flowmpeg.diagnostics import display_argv, redact_text
 from flowmpeg.errors import (
@@ -29,6 +30,7 @@ from flowmpeg.plan import Plan
 from flowmpeg.progress import Progress, ProgressParser
 
 _WINDOWS = os.name == "nt"
+_QueueValue = TypeVar("_QueueValue")
 
 
 @dataclass(frozen=True, slots=True)
@@ -108,9 +110,27 @@ def run(
 
     assert process.stdout is not None
     assert process.stderr is not None
-    progress_events: queue.Queue[Progress] = queue.Queue()
+    progress_events: queue.Queue[Progress] = queue.Queue(maxsize=1)
     parser = ProgressParser(expected_duration)
     stderr_tail = _TextTail(stderr_limit)
+    callback_events: queue.Queue[Progress] | None = None
+    callback_failures: queue.Queue[BaseException] | None = None
+    callback_stop = threading.Event()
+    callback_thread: threading.Thread | None = None
+    if on_progress is not None:
+        callback_events = queue.Queue(maxsize=1)
+        callback_failures = queue.Queue(maxsize=1)
+        callback_thread = threading.Thread(
+            target=_dispatch_progress,
+            args=(
+                callback_events,
+                callback_stop,
+                on_progress,
+                callback_failures,
+            ),
+            name="flowmpeg-callback",
+            daemon=True,
+        )
     progress_thread = threading.Thread(
         target=_read_progress,
         args=(process.stdout, parser, progress_events),
@@ -127,38 +147,52 @@ def run(
     last_progress: Progress | None = None
     progress_started = False
     stderr_started = False
+    callback_started = False
 
     try:
+        if callback_thread is not None:
+            callback_thread.start()
+            callback_started = True
         progress_thread.start()
         progress_started = True
         stderr_thread.start()
         stderr_started = True
         while process.poll() is None or progress_thread.is_alive():
-            if timeout is not None and time.monotonic() - started >= timeout:
-                raise JobTimeoutError(f"FFmpeg timed out after {timeout:g} seconds")
+            _raise_callback_failure(callback_failures)
+            _raise_timeout(timeout, started)
             try:
                 event = progress_events.get(timeout=0.05)
             except queue.Empty:
                 continue
             last_progress = event
-            if on_progress is not None:
-                on_progress(event)
+            if callback_events is not None:
+                _put_latest(callback_events, event)
+
+        remaining = _take_latest_progress(progress_events)
+        if remaining is not None:
+            last_progress = remaining
+            if callback_events is not None:
+                _put_latest(callback_events, remaining)
+        callback_stop.set()
+        while callback_thread is not None and callback_thread.is_alive():
+            _raise_callback_failure(callback_failures)
+            _raise_timeout(timeout, started)
+            callback_thread.join(timeout=0.05)
+        _raise_callback_failure(callback_failures)
     except BaseException:
         if not _stop_process(process, termination_grace):
             _warn_unconfirmed_cleanup()
         raise
     finally:
+        callback_stop.set()
         if progress_started:
             progress_thread.join(timeout=termination_grace)
         if stderr_started:
             stderr_thread.join(timeout=termination_grace)
+        if callback_started and callback_thread is not None:
+            callback_thread.join(timeout=termination_grace)
         _close_pipe(process.stdout)
         _close_pipe(process.stderr)
-
-    while not progress_events.empty():
-        last_progress = progress_events.get_nowait()
-        if on_progress is not None:
-            on_progress(last_progress)
 
     returncode = process.wait()
     elapsed = time.monotonic() - started
@@ -189,7 +223,69 @@ def _read_progress(
     for line in stream:
         event = parser.feed_line(line)
         if event is not None:
-            events.put(event)
+            _put_latest(events, event)
+
+
+def _dispatch_progress(
+    events: queue.Queue[Progress],
+    stop: threading.Event,
+    callback: Callable[[Progress], None],
+    failures: queue.Queue[BaseException],
+) -> None:
+    while not stop.is_set() or not events.empty():
+        try:
+            event = events.get(timeout=0.05)
+        except queue.Empty:
+            continue
+        try:
+            callback(event)
+        except BaseException as error:
+            _put_latest(failures, error)
+            stop.set()
+            return
+
+
+def _put_latest(
+    events: queue.Queue[_QueueValue],
+    event: _QueueValue,
+) -> None:
+    try:
+        events.put_nowait(event)
+        return
+    except queue.Full:
+        pass
+    with suppress(queue.Empty):
+        events.get_nowait()
+    try:
+        events.put_nowait(event)
+    except queue.Full:
+        return
+
+
+def _take_latest_progress(events: queue.Queue[Progress]) -> Progress | None:
+    latest: Progress | None = None
+    while True:
+        try:
+            latest = events.get_nowait()
+        except queue.Empty:
+            return latest
+
+
+def _raise_callback_failure(
+    failures: queue.Queue[BaseException] | None,
+) -> None:
+    if failures is None:
+        return
+    try:
+        error = failures.get_nowait()
+    except queue.Empty:
+        return
+    raise error
+
+
+def _raise_timeout(timeout: float | None, started: float) -> None:
+    if timeout is not None and time.monotonic() - started >= timeout:
+        raise JobTimeoutError(f"FFmpeg timed out after {timeout:g} seconds")
 
 
 def _require_positive_finite(name: str, value: float) -> None:
