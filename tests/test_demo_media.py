@@ -48,6 +48,7 @@ def test_demo_media_script_generates_example_inputs(tmp_path: Path) -> None:
     audiogram = tmp_path / "audiogram.mp4"
     joined = tmp_path / "joined.mp4"
     grid = tmp_path / "grid.mp4"
+    branded = tmp_path / "branded.mp4"
     assert cli.main(["probe", str(video)]) == 0
     assert (
         cli.main(
@@ -133,8 +134,25 @@ def test_demo_media_script_generates_example_inputs(tmp_path: Path) -> None:
         )
         == 0
     )
+    assert (
+        cli.main(
+            [
+                "mark",
+                str(video),
+                str(tmp_path / "logo.png"),
+                "--position",
+                "top-right",
+                "--width",
+                "64",
+                "--no-progress",
+                "-o",
+                str(branded),
+            ]
+        )
+        == 0
+    )
 
-    for target in (clip, waveform, captioned, audiogram, joined, grid):
+    for target in (clip, waveform, captioned, audiogram, joined, grid, branded):
         assert target.stat().st_size > 0
     assert len(probe(captioned).subtitle_streams) == 1
     assert probe(audiogram).duration == pytest.approx(2.0, abs=0.2)
@@ -144,3 +162,7 @@ def test_demo_media_script_generates_example_inputs(tmp_path: Path) -> None:
     assert len(joined_info.audio_streams) == 1
     grid_video = probe(grid).video_streams[0]
     assert (grid_video.width, grid_video.height) == (640, 180)
+    branded_info = probe(branded)
+    branded_video = branded_info.video_streams[0]
+    assert (branded_video.width, branded_video.height) == (320, 180)
+    assert len(branded_info.audio_streams) == 1
