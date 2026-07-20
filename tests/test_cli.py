@@ -14,6 +14,7 @@ import pytest
 from flowmpeg import cli, diagnostics
 from flowmpeg.errors import (
     BinaryNotFoundError,
+    BinaryUnusableError,
     CompilationError,
     ExecutionError,
     FlowmpegError,
@@ -419,6 +420,7 @@ def test_dry_run_hides_url_credentials(
     [
         (CompilationError("bad compile"), 2),
         (BinaryNotFoundError("missing binary"), 3),
+        (BinaryUnusableError("blocked binary"), 3),
         (OutputExistsError("output exists"), 4),
         (
             ExecutionError(
@@ -455,6 +457,8 @@ def test_media_errors_have_stable_exit_codes(
     else:
         assert str(error) in captured.err
     assert "FMG" in captured.err
+    if isinstance(error, BinaryUnusableError):
+        assert "FMG302" in captured.err
     if isinstance(error, OutputExistsError):
         assert "--overwrite" in captured.err
 

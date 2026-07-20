@@ -11,7 +11,7 @@ only a discussion or test placeholder.
 - [x] Redact secret query values in displayed URLs, including signed URL keys.
 - [x] Redact input and output values printed by `Plan.explain()`.
 - [x] Redact completed destination paths before the CLI prints them.
-- [ ] Convert FFmpeg startup permission and operating-system failures into a
+- [x] Convert FFmpeg startup permission and operating-system failures into a
   typed Flowmpeg error instead of a traceback.
 - [ ] Convert FFprobe startup permission and operating-system failures into a
   typed Flowmpeg error instead of a traceback.

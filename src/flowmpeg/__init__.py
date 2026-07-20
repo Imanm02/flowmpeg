@@ -4,6 +4,7 @@ from flowmpeg import shortcuts
 from flowmpeg.clip import Clip, concat_clips, media, replace_audio
 from flowmpeg.errors import (
     BinaryNotFoundError,
+    BinaryUnusableError,
     CompilationError,
     ExecutionError,
     FlowmpegError,
@@ -61,6 +62,7 @@ __all__ = [
     "AudioStream",
     "AudioStreamInfo",
     "BinaryNotFoundError",
+    "BinaryUnusableError",
     "Clip",
     "CompilationError",
     "ExecutionError",

@@ -1,10 +1,12 @@
 import shutil
+import subprocess
 from pathlib import Path
 
 import pytest
 
 from flowmpeg import (
     BinaryNotFoundError,
+    BinaryUnusableError,
     ExecutionError,
     GraphError,
     OutputExistsError,
@@ -21,6 +23,21 @@ def test_runner_reports_missing_binary(tmp_path: Path) -> None:
 
     with pytest.raises(BinaryNotFoundError, match="was not found"):
         plan.run(ffmpeg="missing-flowmpeg-ffmpeg")
+
+
+def test_runner_reports_unusable_binary(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    plan = output(input("movie.mp4").video(), to=tmp_path / "copy.mp4")
+
+    def deny_start(*args: object, **kwargs: object) -> None:
+        raise PermissionError("denied")
+
+    monkeypatch.setattr(subprocess, "Popen", deny_start)
+
+    with pytest.raises(BinaryUnusableError, match="could not be started"):
+        plan.run(ffmpeg="blocked-ffmpeg")
 
 
 def test_runner_refuses_existing_output(tmp_path: Path) -> None:

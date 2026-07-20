@@ -9,6 +9,10 @@ class BinaryNotFoundError(FlowmpegError):
     """Raised when FFmpeg or FFprobe cannot be found."""
 
 
+class BinaryUnusableError(FlowmpegError):
+    """Raised when FFmpeg or FFprobe exists but cannot be started."""
+
+
 class GraphError(FlowmpegError):
     """Raised when a media graph is invalid."""
 

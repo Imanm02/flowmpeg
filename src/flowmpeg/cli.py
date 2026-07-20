@@ -19,6 +19,7 @@ from flowmpeg import __version__, shortcuts
 from flowmpeg.diagnostics import display_argv, redact_text
 from flowmpeg.errors import (
     BinaryNotFoundError,
+    BinaryUnusableError,
     CompilationError,
     ExecutionError,
     FlowmpegError,
@@ -373,6 +374,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     except BinaryNotFoundError as error:
         error_id = "FMG301" if "probe" in str(error).lower() else "FMG300"
         return _error(error, 3, error_id)
+    except BinaryUnusableError as error:
+        return _error(error, 3, "FMG302")
     except OutputExistsError as error:
         _error(error, 4, "FMG400")
         print("flowmpeg: add --overwrite to replace it", file=sys.stderr)
