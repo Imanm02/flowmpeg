@@ -42,6 +42,12 @@ class NodeKey:
 
     value: int
 
+    def __post_init__(self) -> None:
+        if isinstance(self.value, bool) or not isinstance(self.value, int):
+            raise GraphError("Node keys must be integers")
+        if self.value < 0:
+            raise GraphError("Node keys cannot be negative")
+
 
 def new_node_key() -> NodeKey:
     """Return an identity that is unique for this Python process."""
@@ -58,10 +64,14 @@ class StreamRef:
     kind: StreamKind
 
     def __post_init__(self) -> None:
+        if not isinstance(self.node, NodeKey):
+            raise GraphError("Stream references require a node key")
         if isinstance(self.pad, bool) or not isinstance(self.pad, int):
             raise GraphError("Stream indexes must be integers")
         if self.pad < 0:
             raise GraphError("Stream indexes cannot be negative")
+        if not isinstance(self.kind, StreamKind):
+            raise GraphError("Stream references require a known stream kind")
 
 
 @dataclass(frozen=True, slots=True)
@@ -72,8 +82,10 @@ class FilterOption:
     value: FilterValue
 
     def __post_init__(self) -> None:
-        if not self.name:
+        if not isinstance(self.name, str) or not self.name:
             raise GraphError("Filter option names cannot be empty")
+        if not _is_filter_value(self.value):
+            raise GraphError("Filter option values have an unsupported type")
 
 
 @dataclass(frozen=True, slots=True)
@@ -85,7 +97,9 @@ class InputNode:
     args: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
-        if not self.source:
+        if not isinstance(self.key, NodeKey):
+            raise GraphError("Inputs require a node key")
+        if not isinstance(self.source, str) or not self.source:
             raise GraphError("Input sources cannot be empty")
         if not all(isinstance(value, str) for value in self.args):
             raise GraphError("Input arguments must be strings")
@@ -103,12 +117,25 @@ class FilterNode:
     options: tuple[FilterOption, ...] = ()
 
     def __post_init__(self) -> None:
-        if not self.name:
+        if not isinstance(self.key, NodeKey):
+            raise GraphError("Filters require a node key")
+        if not isinstance(self.name, str) or not self.name:
             raise GraphError("Filter names cannot be empty")
         if not self.inputs:
             raise GraphError("Filters require at least one input")
+        if not all(isinstance(value, StreamRef) for value in self.inputs):
+            raise GraphError("Filter inputs must be stream references")
         if not self.output_kinds:
             raise GraphError("Filters require at least one output")
+        if not all(isinstance(value, StreamKind) for value in self.output_kinds):
+            raise GraphError("Filters require known output kinds")
+        if not all(_is_filter_value(value) for value in self.args):
+            raise GraphError("Filter arguments have an unsupported type")
+        if not all(isinstance(value, FilterOption) for value in self.options):
+            raise GraphError("Filter options must be named values")
+        names = [option.name for option in self.options]
+        if len(names) != len(set(names)):
+            raise GraphError("Filter option names must be unique")
 
 
 @dataclass(frozen=True, slots=True)
@@ -203,6 +230,10 @@ class MediaGraph:
 
         if visited != len(dependencies):
             raise GraphError("Media graphs cannot contain cycles")
+
+
+def _is_filter_value(value: object) -> bool:
+    return isinstance(value, (str, int, float, bool, Expression))
 
 
 def expr(value: str) -> Expression:

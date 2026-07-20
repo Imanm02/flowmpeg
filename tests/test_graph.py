@@ -6,6 +6,9 @@ from flowmpeg import GraphError, input
 from flowmpeg.model import (
     Expression,
     FilterNode,
+    FilterOption,
+    FilterValue,
+    InputNode,
     MediaGraph,
     NodeKey,
     StreamKind,
@@ -25,6 +28,25 @@ def test_input_selects_typed_streams() -> None:
 def test_expressions_reject_non_text_values() -> None:
     with pytest.raises(GraphError, match="nonempty text"):
         Expression(cast(str, 12))
+
+
+def test_filter_nodes_reject_unknown_runtime_values() -> None:
+    source = InputNode(NodeKey(20), "movie.mp4")
+    stream = StreamRef(source.key, 0, StreamKind.VIDEO)
+
+    with pytest.raises(GraphError, match="unsupported type"):
+        FilterNode(
+            NodeKey(21),
+            "scale",
+            (stream,),
+            (StreamKind.VIDEO,),
+            args=(cast(FilterValue, object()),),
+        )
+
+
+def test_filter_options_reject_unknown_runtime_values() -> None:
+    with pytest.raises(GraphError, match="unsupported type"):
+        FilterOption("width", cast(FilterValue, object()))
 
 
 @pytest.mark.parametrize("selector", ["video", "audio", "subtitle"])
