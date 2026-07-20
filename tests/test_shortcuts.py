@@ -18,24 +18,37 @@ def test_shortcuts_namespace_is_public() -> None:
         "NamedPosition",
         "Pathish",
         "ReplacementDuration",
+        "SpectrumColor",
+        "SpectrumMode",
         "VideoPreset",
+        "WaveformScale",
         "add_music",
+        "blurred_background",
         "change_speed",
+        "contact_sheet",
         "crop",
+        "duck_music",
         "extract_audio",
+        "fade_edges",
+        "fit_canvas",
         "grid",
         "join_matching",
         "make_gif",
         "mix_audio_files",
         "normalize_loudness",
+        "picture_in_picture",
         "remove_audio",
         "replace_audio",
         "resize",
+        "reverse_clip",
         "rotate",
+        "spectrum_image",
+        "still_image_video",
         "thumbnail",
         "transcode",
         "trim",
         "watermark",
+        "waveform_image",
     }
 
 
@@ -391,6 +404,165 @@ def test_normalize_loudness_is_explicitly_one_pass() -> None:
     assert plan.raw_argv()[-3:] == ("-c:a", "pcm_s16le", "normal.wav")
 
 
+def test_fit_canvas_builds_scale_pad_and_square_pixels() -> None:
+    plan = shortcuts.fit_canvas(
+        "portrait.mp4",
+        "fitted.mp4",
+        width=1280,
+        height=720,
+    )
+
+    assert plan.filter_graph() == (
+        "[0:v:0]scale=w=1280:h=720:"
+        "force_original_aspect_ratio=decrease:force_divisible_by=2[v0];"
+        "[v0]pad=w=1280:h=720:x=(ow-iw)/2:y=(oh-ih)/2:color=black[v1];"
+        "[v1]setsar=1[v2]"
+    )
+
+
+def test_picture_in_picture_drops_finished_inset() -> None:
+    plan = shortcuts.picture_in_picture(
+        "main.mp4",
+        "inset.mp4",
+        "pip.mp4",
+        inset_width=320,
+    )
+
+    graph = plan.filter_graph()
+    assert graph is not None
+    assert "scale=320:-2" in graph
+    assert "eof_action=pass" in graph
+    assert plan.raw_argv().count("-i") == 2
+
+
+def test_waveform_image_changes_audio_into_video() -> None:
+    plan = shortcuts.waveform_image(
+        "voice.wav",
+        "waveform.png",
+        width=800,
+        height=240,
+        color="white",
+    )
+
+    assert plan.filter_graph() == (
+        "[0:a:0]showwavespic=s=800x240:colors=white:"
+        "split_channels=0:scale=lin:filter=peak[v0]"
+    )
+    assert plan.raw_argv()[-3:] == ("-frames:v", "1", "waveform.png")
+
+
+def test_spectrum_image_builds_frequency_plot() -> None:
+    plan = shortcuts.spectrum_image(
+        "voice.wav",
+        "spectrum.png",
+        mode="separate",
+        color="fire",
+        legend=False,
+    )
+
+    graph = plan.filter_graph()
+    assert graph is not None
+    assert "showspectrumpic=" in graph
+    assert "mode=separate:color=fire:scale=log:legend=0" in graph
+
+
+def test_still_image_video_scopes_loop_to_image_input() -> None:
+    plan = shortcuts.still_image_video(
+        "cover.png",
+        "voice.wav",
+        "episode.mp4",
+        width=1280,
+        height=720,
+    )
+
+    argv = plan.raw_argv()
+    assert argv[4:12] == (
+        "-loop",
+        "1",
+        "-framerate",
+        "25",
+        "-i",
+        "cover.png",
+        "-i",
+        "voice.wav",
+    )
+    assert argv[-3:] == ("-tune", "stillimage", "episode.mp4")
+    assert "-shortest" in argv
+
+
+def test_contact_sheet_samples_and_tiles_frames() -> None:
+    plan = shortcuts.contact_sheet(
+        "video.mp4",
+        "sheet.jpg",
+        columns=3,
+        rows=2,
+        interval=5,
+    )
+
+    graph = plan.filter_graph()
+    assert graph is not None
+    assert graph.startswith("[0:v:0]fps=fps=0.2")
+    assert "tile=layout=3x2:nb_frames=6:padding=4:margin=8:color=black" in graph
+
+
+def test_duck_music_follows_speech_duration() -> None:
+    plan = shortcuts.duck_music("speech.mp4", "music.mp3", "ducked.mp4")
+
+    graph = plan.filter_graph()
+    assert graph is not None
+    assert "asplit=outputs=2" in graph
+    assert "sidechaincompress=" in graph
+    assert "amix=inputs=2:duration=first" in graph
+    assert plan.raw_argv()[6:10] == ("-stream_loop", "-1", "-i", "music.mp3")
+
+
+def test_fade_edges_pairs_video_and_audio_fades() -> None:
+    plan = shortcuts.fade_edges(
+        "video.mp4",
+        "faded.mp4",
+        duration=10,
+        fade_in=2,
+        fade_out=3,
+    )
+
+    graph = plan.filter_graph()
+    assert graph is not None
+    assert "fade=t=in:st=0:d=2" in graph
+    assert "fade=t=out:st=7:d=3" in graph
+    assert "afade=t=in:st=0:d=2" in graph
+    assert "afade=t=out:st=7:d=3" in graph
+
+
+def test_blurred_background_splits_video_once() -> None:
+    plan = shortcuts.blurred_background(
+        "portrait.mp4",
+        "landscape.mp4",
+        width=1280,
+        height=720,
+    )
+
+    graph = plan.filter_graph()
+    assert graph is not None
+    assert "split=outputs=2" in graph
+    assert "force_original_aspect_ratio=increase" in graph
+    assert "gblur=sigma=20" in graph
+    assert "overlay=x=(W-w)/2:y=(H-h)/2:shortest=1" in graph
+
+
+def test_reverse_clip_is_trimmed_before_buffering() -> None:
+    plan = shortcuts.reverse_clip(
+        "video.mp4",
+        "reverse.mp4",
+        start=3,
+        duration=5,
+    )
+
+    graph = plan.filter_graph()
+    assert graph is not None
+    assert graph.index("trim=start=3:end=8") < graph.index("reverse")
+    assert graph.index("atrim=start=3:end=8") < graph.index("areverse")
+
+
 def test_shortcuts_accept_path_objects_and_overwrite() -> None:
     plan = shortcuts.resize(
         Path("folder/input.mp4"),
@@ -449,6 +621,29 @@ def test_shortcuts_accept_path_objects_and_overwrite() -> None:
             "in.mov",
             "out.mp4",
             overwrite=cast(bool, "false"),
+        ),
+        lambda: shortcuts.fit_canvas(
+            "in.mp4",
+            "out.mp4",
+            width=1279,
+            height=720,
+        ),
+        lambda: shortcuts.fade_edges(
+            "in.mp4",
+            "out.mp4",
+            duration=3,
+            fade_in=2,
+            fade_out=2,
+        ),
+        lambda: shortcuts.reverse_clip(
+            "in.mp4",
+            "out.mp4",
+            duration=61,
+        ),
+        lambda: shortcuts.waveform_image(
+            "voice.wav",
+            "wave.png",
+            scale_mode=cast(shortcuts.WaveformScale, "unknown"),
         ),
     ],
 )
@@ -618,3 +813,105 @@ def test_replace_audio_shortcut_pads_short_track(
     info = probe(target)
     assert info.duration == pytest.approx(0.6, abs=0.15)
     assert len(info.audio_streams) == 1
+
+
+@pytest.mark.integration
+def test_fit_canvas_shortcut_has_requested_dimensions(
+    shortcut_media: tuple[str, Path, Path, Path],
+) -> None:
+    ffmpeg, source, _, _ = shortcut_media
+    target = source.parent / "canvas.mp4"
+
+    shortcuts.fit_canvas(source, target, width=128, height=72).run(
+        ffmpeg=ffmpeg,
+        timeout=10,
+    )
+
+    video = probe(target).video_streams[0]
+    assert (video.width, video.height) == (128, 72)
+
+
+@pytest.mark.integration
+def test_audio_image_shortcuts_run(
+    shortcut_media: tuple[str, Path, Path, Path],
+) -> None:
+    ffmpeg, source, voice, _ = shortcut_media
+    waveform = source.parent / "waveform.png"
+    spectrum = source.parent / "spectrum.png"
+
+    shortcuts.waveform_image(voice, waveform, width=120, height=40).run(
+        ffmpeg=ffmpeg,
+        timeout=10,
+    )
+    shortcuts.spectrum_image(voice, spectrum, width=120, height=60).run(
+        ffmpeg=ffmpeg,
+        timeout=10,
+    )
+
+    waveform_video = probe(waveform).video_streams[0]
+    spectrum_video = probe(spectrum).video_streams[0]
+    assert (waveform_video.width, waveform_video.height) == (120, 40)
+    assert (spectrum_video.width, spectrum_video.height) == (120, 60)
+
+
+@pytest.mark.integration
+def test_still_image_video_ends_with_audio(
+    shortcut_media: tuple[str, Path, Path, Path],
+) -> None:
+    ffmpeg, source, voice, logo = shortcut_media
+    target = source.parent / "still.mp4"
+
+    shortcuts.still_image_video(
+        logo,
+        voice,
+        target,
+        width=64,
+        height=48,
+    ).run(ffmpeg=ffmpeg, timeout=10)
+
+    info = probe(target)
+    assert info.duration == pytest.approx(0.2, abs=0.2)
+    assert len(info.video_streams) == 1
+    assert len(info.audio_streams) == 1
+
+
+@pytest.mark.integration
+def test_contact_sheet_has_combined_dimensions(
+    shortcut_media: tuple[str, Path, Path, Path],
+) -> None:
+    ffmpeg, source, _, _ = shortcut_media
+    target = source.parent / "sheet.jpg"
+
+    shortcuts.contact_sheet(
+        source,
+        target,
+        columns=2,
+        rows=2,
+        interval=0.1,
+        cell_width=32,
+        cell_height=24,
+        padding=2,
+        margin=2,
+    ).run(ffmpeg=ffmpeg, timeout=10)
+
+    video = probe(target).video_streams[0]
+    assert (video.width, video.height) == (70, 54)
+
+
+@pytest.mark.integration
+def test_duck_and_reverse_shortcuts_run(
+    shortcut_media: tuple[str, Path, Path, Path],
+) -> None:
+    ffmpeg, source, voice, _ = shortcut_media
+    ducked = source.parent / "ducked.mp4"
+    reversed_target = source.parent / "reversed.mp4"
+
+    shortcuts.duck_music(source, voice, ducked).run(ffmpeg=ffmpeg, timeout=10)
+    shortcuts.reverse_clip(source, reversed_target, duration=0.4).run(
+        ffmpeg=ffmpeg,
+        timeout=10,
+    )
+
+    assert probe(ducked).audio_streams
+    reversed_info = probe(reversed_target)
+    assert reversed_info.duration == pytest.approx(0.4, abs=0.2)
