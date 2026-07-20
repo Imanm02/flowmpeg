@@ -52,7 +52,16 @@ def test_input_arguments_cannot_change_input_order(option: str) -> None:
 
 @pytest.mark.parametrize(
     "option",
-    ["-filter_complex", "-map", "-n", "-progress=pipe:2", "-y"],
+    [
+        "-filter_complex",
+        "-lavfi",
+        "-map",
+        "-n",
+        "-progress=pipe:2",
+        "-stats",
+        "-stdin",
+        "-y",
+    ],
 )
 def test_global_arguments_cannot_override_plan_structure(option: str) -> None:
     with pytest.raises(GraphError, match="Global arguments cannot set"):

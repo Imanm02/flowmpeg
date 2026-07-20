@@ -24,12 +24,15 @@ _STRUCTURAL_ARGS = frozenset(
         "-filter_complex",
         "-filter_complex_script",
         "-i",
+        "-lavfi",
         "-map",
         "-n",
         "-nostats",
         "-nostdin",
         "-progress",
+        "-stats",
         "-stats_period",
+        "-stdin",
         "-y",
     }
 )
