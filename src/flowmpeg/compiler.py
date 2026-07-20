@@ -4,14 +4,11 @@ from __future__ import annotations
 
 import heapq
 import math
-import os
 import re
-import shlex
-import subprocess
 from collections import Counter
 from dataclasses import dataclass
 
-from flowmpeg.diagnostics import redact_argv
+from flowmpeg.diagnostics import display_argv
 from flowmpeg.errors import CompilationError
 from flowmpeg.model import (
     Expression,
@@ -42,10 +39,7 @@ class CompiledCommand:
     def display(self, *, redact: bool = True) -> str:
         """Format the command for the current platform."""
 
-        argv = redact_argv(self.argv) if redact else self.argv
-        if os.name == "nt":
-            return subprocess.list2cmdline(argv)
-        return shlex.join(argv)
+        return display_argv(self.argv, redact=redact)
 
 
 def compile_plan(plan: Plan, *, ffmpeg: str = "ffmpeg") -> CompiledCommand:

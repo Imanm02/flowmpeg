@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+import os
 import re
+import shlex
+import subprocess
 from collections.abc import Iterable
 
 _url_user_info = re.compile(r"(?i)([a-z][a-z0-9+.-]*://)([^/@\s]+@)")
@@ -35,6 +38,23 @@ def redact_argv(argv: Iterable[str]) -> tuple[str, ...]:
             hide_next = True
 
     return tuple(redacted)
+
+
+def redact_text(text: str) -> str:
+    """Hide URL user information and common secret headers in text."""
+
+    return _redact_token(text)
+
+
+def display_argv(argv: Iterable[str], *, redact: bool = True) -> str:
+    """Format command tokens for the current platform."""
+
+    values = tuple(argv)
+    if redact:
+        values = redact_argv(values)
+    if os.name == "nt":
+        return subprocess.list2cmdline(values)
+    return shlex.join(values)
 
 
 def _redact_token(token: str) -> str:
