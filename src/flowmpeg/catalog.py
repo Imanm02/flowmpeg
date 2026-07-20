@@ -577,6 +577,15 @@ _BASE_COMMAND_CATALOG = (
         capability_group="audio-processing",
     ),
     CommandSpec(
+        "detect-silence",
+        "inspect",
+        "Find silent ranges in an audio track",
+        ("silence-report", "find-silence"),
+        input_kind="audio",
+        output_kind="report",
+        capability_group="audio-processing",
+    ),
+    CommandSpec(
         "doctor",
         "inspect",
         "Check tools and media capabilities",
@@ -696,6 +705,7 @@ _COMMAND_TAGS = {
     "remux": ("archive", "copy", "delivery"),
     "probe": ("archive",),
     "analyze-loudness": ("archive",),
+    "detect-silence": ("archive",),
     "tag-media": ("archive", "copy"),
 }
 
@@ -931,6 +941,7 @@ _COMMAND_REQUIREMENTS = {
     "remux": ("muxer:matroska",),
     "tag-media": ("muxer:mp4",),
     "analyze-loudness": ("filter:loudnorm",),
+    "detect-silence": ("filter:silencedetect",),
 }
 
 COMMAND_CATALOG = tuple(

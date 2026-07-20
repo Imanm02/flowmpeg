@@ -61,6 +61,7 @@ from flowmpeg.recipes.video import (
     trim_video,
 )
 from flowmpeg.runner import RunResult, run
+from flowmpeg.silence import SilenceInterval, SilenceReport, detect_silence
 from flowmpeg.streams import (
     AudioStream,
     MediaInput,
@@ -102,6 +103,8 @@ __all__ = [
     "Progress",
     "Rational",
     "RunResult",
+    "SilenceInterval",
+    "SilenceReport",
     "StreamKind",
     "StreamInfo",
     "SubtitleStream",
@@ -118,6 +121,7 @@ __all__ = [
     "concat_clips",
     "crop_video",
     "delay_audio",
+    "detect_silence",
     "duck_audio",
     "expr",
     "fade_audio",

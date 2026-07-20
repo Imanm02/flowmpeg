@@ -35,6 +35,7 @@ from flowmpeg.probe import (
 )
 from flowmpeg.progress import Progress
 from flowmpeg.runner import RunResult
+from flowmpeg.silence import SilenceInterval, SilenceReport
 
 
 @pytest.mark.parametrize(
@@ -803,6 +804,35 @@ def test_loudness_json_has_schema_version(
     assert report["schema_version"] == 1
     assert report["integrated_lufs"] == -18.4
     assert report["target_true_peak_dbfs"] == -1.5
+
+
+def test_silence_report_prints_intervals(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    monkeypatch.setattr(cli, "detect_silence", lambda *args, **kwargs: _silence())
+
+    assert cli.main(["find-silence", "interview.wav", "--minimum", "0.4"]) == 0
+    output = capsys.readouterr().out
+
+    assert "Silence report: 2 intervals" in output
+    assert "Total silence: 2.970s" in output
+    assert "5.250s to 7.500s (2.250s)" in output
+
+
+def test_silence_report_json_includes_summary_values(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    monkeypatch.setattr(cli, "detect_silence", lambda *args, **kwargs: _silence())
+
+    assert cli.main(["silence-report", "interview.wav", "--json"]) == 0
+    report = json.loads(capsys.readouterr().out)
+
+    assert report["schema_version"] == 1
+    assert report["total_silence"] == pytest.approx(2.97)
+    assert report["longest_silence"] == 2.25
+    assert len(report["intervals"]) == 2
 
 
 def test_doctor_json_reports_ready(
@@ -2061,4 +2091,17 @@ def _loudness() -> LoudnessMeasurement:
         target_integrated_lufs=-16,
         target_true_peak_dbfs=-1.5,
         target_loudness_range_lu=11,
+    )
+
+
+def _silence() -> SilenceReport:
+    return SilenceReport(
+        source="interview.wav",
+        track=0,
+        noise_db=-40,
+        minimum_duration=0.5,
+        intervals=(
+            SilenceInterval(0, 0.72, 0.72),
+            SilenceInterval(5.25, 7.5, 2.25),
+        ),
     )

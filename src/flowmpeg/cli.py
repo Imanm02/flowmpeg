@@ -44,6 +44,7 @@ from flowmpeg.probe import (
 )
 from flowmpeg.processes import popen_group_options, stop_process_tree
 from flowmpeg.progress import Progress
+from flowmpeg.silence import SilenceReport, detect_silence
 
 _Factory = Callable[..., Plan]
 _Handler = Callable[[argparse.Namespace], int]
@@ -183,6 +184,7 @@ _BASE_EXAMPLES = (
     _Example("inspect", "flowmpeg audit input.mp4 --expect av"),
     _Example("inspect", "flowmpeg compare original.mp4 smaller.mp4"),
     _Example("inspect", "flowmpeg loudness episode.wav"),
+    _Example("inspect", "flowmpeg find-silence interview.wav"),
     _Example("inspect", "flowmpeg doctor"),
     _Example("inspect", "flowmpeg setup"),
     _Example("help", "flowmpeg errors"),
@@ -553,6 +555,7 @@ def build_parser() -> argparse.ArgumentParser:
     _add_audit(commands)
     _add_compare(commands)
     _add_loudness(commands)
+    _add_silence_detection(commands)
     _add_doctor(commands)
     _add_setup(commands)
     _add_errors(commands)
@@ -2200,6 +2203,38 @@ def _add_loudness(
     parser.set_defaults(handler=_run_loudness)
 
 
+def _add_silence_detection(
+    commands: argparse._SubParsersAction[argparse.ArgumentParser],
+) -> None:
+    parser = commands.add_parser(
+        "detect-silence",
+        aliases=["silence-report", "find-silence"],
+        help="Find silent ranges in an audio track.",
+        description="Find silent ranges without writing a media file.",
+        allow_abbrev=False,
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+    _source(parser)
+    parser.add_argument("--track", type=_nonnegative_int, default=0)
+    parser.add_argument(
+        "--noise-db",
+        type=_finite_float,
+        default=-40.0,
+        help="Maximum sound level treated as silence",
+    )
+    parser.add_argument(
+        "--minimum-duration",
+        "--minimum",
+        type=_positive_float,
+        default=0.5,
+        help="Shortest silence to report in seconds",
+    )
+    parser.add_argument("--ffmpeg", default="ffmpeg", help="FFmpeg executable")
+    parser.add_argument("--timeout", type=_positive_float)
+    parser.add_argument("--json", action="store_true", help="Print silence JSON")
+    parser.set_defaults(handler=_run_silence_detection)
+
+
 def _add_doctor(commands: argparse._SubParsersAction[argparse.ArgumentParser]) -> None:
     parser = commands.add_parser(
         "doctor",
@@ -2464,6 +2499,26 @@ def _run_loudness(args: argparse.Namespace) -> int:
         print(json.dumps(_redact_json(data), indent=2, sort_keys=True))
     else:
         print(redact_text(_format_loudness(result)))
+    return 0
+
+
+def _run_silence_detection(args: argparse.Namespace) -> int:
+    result = detect_silence(
+        cast(str, args.source),
+        track=cast(int, args.track),
+        noise_db=cast(float, args.noise_db),
+        minimum_duration=cast(float, args.minimum_duration),
+        ffmpeg=cast(str, args.ffmpeg),
+        timeout=cast(float | None, args.timeout),
+    )
+    if cast(bool, args.json):
+        data = asdict(result)
+        data["schema_version"] = _JSON_SCHEMA_VERSION
+        data["total_silence"] = result.total_silence
+        data["longest_silence"] = result.longest_silence
+        print(json.dumps(_redact_json(data), indent=2, sort_keys=True))
+    else:
+        print(redact_text(_format_silence(result)))
     return 0
 
 
@@ -2940,6 +2995,30 @@ def _format_loudness(result: LoudnessMeasurement) -> str:
             ),
         )
     )
+
+
+def _format_silence(result: SilenceReport) -> str:
+    count = len(result.intervals)
+    noun = "interval" if count == 1 else "intervals"
+    longest = (
+        "none" if result.longest_silence is None else f"{result.longest_silence:.3f}s"
+    )
+    lines = [
+        f"Silence report: {count} {noun}",
+        f"Source: {result.source}",
+        f"Audio track: {result.track}",
+        f"Threshold: {result.noise_db:g} dB",
+        f"Minimum duration: {result.minimum_duration:g}s",
+        f"Total silence: {result.total_silence:.3f}s",
+        f"Longest silence: {longest}",
+    ]
+    if result.intervals:
+        lines.extend(("", "Intervals:"))
+        lines.extend(
+            f"  {index}. {item.start:.3f}s to {item.end:.3f}s ({item.duration:.3f}s)"
+            for index, item in enumerate(result.intervals, start=1)
+        )
+    return "\n".join(lines)
 
 
 def _detect_installer() -> _Installer | None:
