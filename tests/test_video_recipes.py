@@ -191,6 +191,19 @@ def test_named_overlay_position_requires_text() -> None:
         named_overlay_position(cast(str, []))
 
 
+@pytest.mark.parametrize("value", [True, 1.5, "W-w"])
+def test_overlay_requires_typed_coordinates(value: object) -> None:
+    background = input("background.mp4").video()
+    foreground = input("foreground.mp4").video()
+
+    with pytest.raises(GraphError, match="integer or expression"):
+        overlay_video(
+            background,
+            foreground,
+            x=cast(int, value),
+        )
+
+
 @pytest.mark.integration
 def test_overlay_runs_with_generated_video(tmp_path: Path) -> None:
     ffmpeg = shutil.which("ffmpeg")

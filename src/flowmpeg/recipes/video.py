@@ -73,6 +73,8 @@ def overlay_video(
 ) -> VideoStream:
     """Place one video stream over another."""
 
+    _overlay_position("x", x)
+    _overlay_position("y", y)
     _range("opacity", opacity, 0, 1)
     _boolean("shortest", shortest)
     if not isinstance(eof_action, str) or eof_action not in {
@@ -263,3 +265,10 @@ def _nonnegative_position(name: str, value: int | Expression | None) -> None:
         return
     if isinstance(value, bool) or not isinstance(value, int) or value < 0:
         raise GraphError(f"{name} must be a nonnegative integer or expression")
+
+
+def _overlay_position(name: str, value: OverlayPosition) -> None:
+    if isinstance(value, Expression):
+        return
+    if isinstance(value, bool) or not isinstance(value, int):
+        raise GraphError(f"{name} must be an integer or expression")
