@@ -964,7 +964,8 @@ flowmpeg probe movie.mp4 --json
 ```
 
 Typed JSON follows the Python `MediaInfo` model. Values missing from FFprobe
-become `null`.
+become `null`. The top-level `schema_version` field identifies the report
+shape.
 
 ### Read raw FFprobe fields
 
@@ -1003,6 +1004,9 @@ The JSON form is suitable for scripts:
 ```console
 flowmpeg doctor --json
 ```
+
+Doctor and setup JSON include a top-level `schema_version`. Raw probe mode
+keeps FFprobe's own object shape and does not add this field.
 
 Core readiness means FFmpeg and FFprobe can both run. Feature groups say which
 parts of the command set are supported by the installed FFmpeg build:

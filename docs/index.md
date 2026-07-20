@@ -75,3 +75,5 @@ tools, or documentation checks:
 flowmpeg commands --json
 flowmpeg commands --category images --json
 ```
+
+The JSON object has a `schema_version` field and a `commands` array.

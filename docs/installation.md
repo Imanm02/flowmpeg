@@ -40,6 +40,9 @@ flowmpeg doctor --json
 flowmpeg setup --json
 ```
 
+Both reports include a top-level `schema_version` for scripts that validate
+their expected object shape.
+
 Require one group in CI when a job depends on it:
 
 ```console

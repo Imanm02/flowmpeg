@@ -569,6 +569,7 @@ def test_probe_typed_json(
 
     assert cli.main(["probe", "movie.mp4", "--json"]) == 0
     data = json.loads(capsys.readouterr().out)
+    assert data["schema_version"] == 1
     assert data["format"]["duration"] == 12.5
     assert data["format"]["filename"] == "https://<redacted>@example.com/movie.mp4"
     assert data["streams"][0]["width"] == 1920
@@ -622,6 +623,7 @@ def test_doctor_json_reports_ready(
 
     assert cli.main(["doctor", "--json"]) == 0
     report = json.loads(capsys.readouterr().out)
+    assert report["schema_version"] == 1
     assert report["ok"] is True
     assert report["flowmpeg_version"] == "0.1.0"
     assert report["python_version"]
@@ -1002,6 +1004,7 @@ def test_setup_json_describes_state_without_changes(
 
     assert cli.main(["setup", "--json"]) == 3
     report = json.loads(capsys.readouterr().out)
+    assert report["schema_version"] == 1
     assert report["changed"] is False
     assert report["installer"] is None
 
@@ -1256,7 +1259,9 @@ def test_commands_json_exposes_discovery_fields(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     assert cli.main(["commands", "--category", "subtitles", "--json"]) == 0
-    data = json.loads(capsys.readouterr().out)
+    report = json.loads(capsys.readouterr().out)
+    assert report["schema_version"] == 1
+    data = report["commands"]
     assert {item["name"] for item in data} == {
         "extract-subtitles",
         "add-subtitles",

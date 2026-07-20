@@ -42,6 +42,7 @@ from flowmpeg.progress import Progress
 
 _Factory = Callable[..., Plan]
 _Handler = Callable[[argparse.Namespace], int]
+_JSON_SCHEMA_VERSION = 1
 
 _CONTROL_NAMES = {
     "command",
@@ -1855,7 +1856,9 @@ def _run_probe(args: argparse.Namespace) -> int:
 
     info = probe(source, ffprobe=ffprobe, timeout=timeout)
     if cast(bool, args.json):
-        print(json.dumps(_redact_json(asdict(info)), indent=2, sort_keys=True))
+        data = asdict(info)
+        data["schema_version"] = _JSON_SCHEMA_VERSION
+        print(json.dumps(_redact_json(data), indent=2, sort_keys=True))
     else:
         print(redact_text(_format_media_info(info)))
     return 0
@@ -1877,6 +1880,7 @@ def _run_doctor(args: argparse.Namespace) -> int:
     )
     required_ready = required_state if required_group is not None else None
     report: dict[str, object] = {
+        "schema_version": _JSON_SCHEMA_VERSION,
         "ok": okay,
         "flowmpeg_version": __version__,
         "python_version": platform.python_version(),
@@ -1920,6 +1924,7 @@ def _run_setup(args: argparse.Namespace) -> int:
     ready = ffmpeg.get("ok") is True and ffprobe.get("ok") is True
     installer = _detect_installer()
     report: dict[str, object] = {
+        "schema_version": _JSON_SCHEMA_VERSION,
         "ok": ready,
         "platform": platform.platform(),
         "ffmpeg": ffmpeg,
@@ -2046,7 +2051,11 @@ def _run_commands(args: argparse.Namespace) -> int:
     categories = (selected,) if selected is not None else CATEGORIES
     specs = [spec for spec in COMMAND_CATALOG if spec.category in categories]
     if cast(bool, args.json):
-        print(json.dumps([asdict(spec) for spec in specs], indent=2, sort_keys=True))
+        report = {
+            "schema_version": _JSON_SCHEMA_VERSION,
+            "commands": [asdict(spec) for spec in specs],
+        }
+        print(json.dumps(report, indent=2, sort_keys=True))
         return 0
     for category in categories:
         category_specs = [spec for spec in specs if spec.category == category]

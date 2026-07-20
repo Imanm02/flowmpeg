@@ -109,12 +109,11 @@ Create `thumbs` first. A failed source name is appended to
 ### Read the command catalog as data
 
 ```powershell
-flowmpeg commands --json | ConvertFrom-Json | Where-Object category -eq audio | Select-Object name, aliases, summary
+(flowmpeg commands --json | ConvertFrom-Json).commands | Where-Object category -eq audio | Select-Object name, aliases, summary
 ```
 
 This prints only audio commands from the installed catalog. It does not start
-FFmpeg. The pre-alpha JSON shape is not versioned yet, so pin the Flowmpeg
-version before depending on this pipeline in automation.
+FFmpeg. The top-level object contains `schema_version` and `commands` fields.
 
 ## Bash
 
