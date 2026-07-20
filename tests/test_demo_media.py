@@ -50,6 +50,7 @@ def test_demo_media_script_generates_example_inputs(tmp_path: Path) -> None:
     grid = tmp_path / "grid.mp4"
     branded = tmp_path / "branded.mp4"
     square = tmp_path / "square.mp4"
+    preview = tmp_path / "preview.gif"
     assert cli.main(["probe", str(video)]) == 0
     assert (
         cli.main(
@@ -168,6 +169,23 @@ def test_demo_media_script_generates_example_inputs(tmp_path: Path) -> None:
         )
         == 0
     )
+    assert (
+        cli.main(
+            [
+                "gif",
+                str(video),
+                "--full-length",
+                "--width",
+                "240",
+                "--fps",
+                "6",
+                "--no-progress",
+                "-o",
+                str(preview),
+            ]
+        )
+        == 0
+    )
 
     for target in (
         clip,
@@ -178,6 +196,7 @@ def test_demo_media_script_generates_example_inputs(tmp_path: Path) -> None:
         grid,
         branded,
         square,
+        preview,
     ):
         assert target.stat().st_size > 0
     assert len(probe(captioned).subtitle_streams) == 1
@@ -196,3 +215,7 @@ def test_demo_media_script_generates_example_inputs(tmp_path: Path) -> None:
     square_video = square_info.video_streams[0]
     assert (square_video.width, square_video.height) == (1080, 1080)
     assert len(square_info.audio_streams) == 1
+    preview_info = probe(preview)
+    assert preview_info.video_streams[0].width == 240
+    assert preview_info.audio_streams == ()
+    assert preview_info.duration == pytest.approx(2.0, abs=0.2)
