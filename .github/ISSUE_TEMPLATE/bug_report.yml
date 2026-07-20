@@ -1,0 +1,42 @@
+name: Bug report
+description: Report incorrect Flowmpeg behavior
+title: "[Bug] "
+body:
+  - type: markdown
+    attributes:
+      value: Remove credentials and private media before submitting.
+  - type: input
+    id: version
+    attributes:
+      label: Flowmpeg version or commit
+      placeholder: 0.1.0 or a commit hash
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: Include Python, FFmpeg, and operating system versions.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Small reproduction
+      description: Include Python code and the redacted command from plan.command().
+      render: python
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: Include redacted stderr when it helps explain the failure.
+    validations:
+      required: true

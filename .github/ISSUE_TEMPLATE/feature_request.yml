@@ -1,0 +1,28 @@
+name: Feature request
+description: Propose a media operation or API change
+title: "[Feature] "
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Media task
+      description: Describe the result the caller needs to produce.
+    validations:
+      required: true
+  - type: textarea
+    id: command
+    attributes:
+      label: FFmpeg command or filter
+      description: Add a working command when one is available.
+      render: shell
+  - type: textarea
+    id: api
+    attributes:
+      label: Possible Python API
+      description: Show how the operation could fit a Plan, Clip, or recipe.
+      render: python
+  - type: textarea
+    id: tradeoffs
+    attributes:
+      label: Constraints
+      description: Note codec, format, platform, or FFmpeg version limits.

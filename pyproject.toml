@@ -40,6 +40,8 @@ dev = [
 ]
 
 [project.urls]
+Changelog = "https://github.com/Imanm02/flowmpeg/blob/main/CHANGELOG.md"
+Documentation = "https://github.com/Imanm02/flowmpeg#readme"
 Issues = "https://github.com/Imanm02/flowmpeg/issues"
 Repository = "https://github.com/Imanm02/flowmpeg"
 
@@ -48,8 +50,13 @@ packages = ["src/flowmpeg"]
 
 [tool.hatch.build.targets.sdist]
 include = [
+    "/CHANGELOG.md",
+    "/CONTRIBUTING.md",
     "/LICENSE",
     "/README.md",
+    "/SECURITY.md",
+    "/docs",
+    "/examples",
     "/pyproject.toml",
     "/src",
     "/tests",
@@ -58,7 +65,7 @@ include = [
 [tool.mypy]
 python_version = "3.10"
 strict = true
-files = ["src", "tests"]
+files = ["src", "tests", "examples"]
 
 [tool.pytest.ini_options]
 addopts = "-ra --strict-config --strict-markers"
