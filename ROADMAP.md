@@ -51,7 +51,7 @@ only a discussion or test placeholder.
 
 ## Product and discovery work
 
-- [ ] Add a central command catalog with category, alias, input, output, and
+- [x] Add a central command catalog with category, alias, input, output, and
   capability metadata.
 - [ ] Add `flowmpeg commands` with category filtering.
 - [ ] Add machine-readable command catalog output.

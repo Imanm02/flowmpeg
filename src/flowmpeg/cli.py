@@ -16,6 +16,7 @@ from dataclasses import asdict, dataclass
 from typing import TextIO, cast
 
 from flowmpeg import __version__, shortcuts
+from flowmpeg.catalog import CATEGORIES, COMMAND_CATALOG
 from flowmpeg.diagnostics import display_argv, redact_text
 from flowmpeg.errors import (
     BinaryNotFoundError,
@@ -353,6 +354,7 @@ def build_parser() -> argparse.ArgumentParser:
     _add_errors(commands)
     _add_explain_error(commands)
     _add_examples(commands)
+    _add_commands(commands)
     return parser
 
 
@@ -1688,6 +1690,18 @@ def _add_examples(
     parser.set_defaults(handler=_run_examples)
 
 
+def _add_commands(
+    commands: argparse._SubParsersAction[argparse.ArgumentParser],
+) -> None:
+    parser = commands.add_parser(
+        "commands",
+        help="List commands by task category.",
+        description="List commands by task category.",
+        allow_abbrev=False,
+    )
+    parser.set_defaults(handler=_run_commands)
+
+
 def _run_media(args: argparse.Namespace) -> int:
     values = vars(args).copy()
     factory = cast(_Factory, values["media_factory"])
@@ -1905,6 +1919,17 @@ def _run_explain_error(args: argparse.Namespace) -> int:
 def _run_examples(args: argparse.Namespace) -> int:
     del args
     print("\n".join(_EXAMPLES))
+    return 0
+
+
+def _run_commands(args: argparse.Namespace) -> int:
+    del args
+    for category in CATEGORIES:
+        specs = [spec for spec in COMMAND_CATALOG if spec.category == category]
+        print(f"{category.upper()} ({len(specs)})")
+        for spec in specs:
+            aliases = f" ({', '.join(spec.aliases)})" if spec.aliases else ""
+            print(f"  {spec.name}{aliases}: {spec.summary}")
     return 0
 
 

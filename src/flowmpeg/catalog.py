@@ -463,6 +463,13 @@ COMMAND_CATALOG = (
         input_kind="none",
         output_kind="text",
     ),
+    CommandSpec(
+        "commands",
+        "help",
+        "List commands by task category",
+        input_kind="none",
+        output_kind="text",
+    ),
 )
 
 CATEGORIES = tuple(dict.fromkeys(spec.category for spec in COMMAND_CATALOG))

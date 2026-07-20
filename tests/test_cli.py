@@ -1156,6 +1156,15 @@ def test_examples_are_ready_to_edit(capsys: pytest.CaptureFixture[str]) -> None:
     assert output.count("flowmpeg ") >= 10
 
 
+def test_commands_are_grouped_by_task(capsys: pytest.CaptureFixture[str]) -> None:
+    assert cli.main(["commands"]) == 0
+    output = capsys.readouterr().out
+    assert "VIDEO (" in output
+    assert "AUDIO (" in output
+    assert "transcode (convert):" in output
+    assert "crossfade-audio (crossfade):" in output
+
+
 def test_no_arguments_prints_help(capsys: pytest.CaptureFixture[str]) -> None:
     assert cli.main([]) == 0
     assert "usage: flowmpeg" in capsys.readouterr().out
