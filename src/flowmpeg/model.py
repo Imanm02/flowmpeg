@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections import deque
 from collections.abc import Iterable
 from dataclasses import dataclass
 from enum import Enum
@@ -10,7 +11,19 @@ from typing import TypeAlias
 
 from flowmpeg.errors import GraphError
 
-FilterValue: TypeAlias = str | int | float | bool
+
+@dataclass(frozen=True, slots=True)
+class Expression:
+    """An FFmpeg expression supplied as a filter value."""
+
+    value: str
+
+    def __post_init__(self) -> None:
+        if not self.value:
+            raise GraphError("Expressions cannot be empty")
+
+
+FilterValue: TypeAlias = str | int | float | bool | Expression
 
 _node_ids = count()
 
@@ -72,6 +85,8 @@ class InputNode:
     def __post_init__(self) -> None:
         if not self.source:
             raise GraphError("Input sources cannot be empty")
+        if not all(isinstance(value, str) for value in self.args):
+            raise GraphError("Input arguments must be strings")
 
 
 @dataclass(frozen=True, slots=True)
@@ -168,14 +183,27 @@ class MediaGraph:
 
     @staticmethod
     def _validate_acyclic(dependencies: dict[NodeKey, set[NodeKey]]) -> None:
-        remaining = {key: set(value) for key, value in dependencies.items()}
+        incoming = {key: len(value) for key, value in dependencies.items()}
+        dependents: dict[NodeKey, list[NodeKey]] = {key: [] for key in dependencies}
+        for node, upstream_keys in dependencies.items():
+            for upstream in upstream_keys:
+                dependents[upstream].append(node)
 
-        while remaining:
-            ready = {key for key, value in remaining.items() if not value}
-            if not ready:
-                raise GraphError("Media graphs cannot contain cycles")
-            remaining = {
-                key: value.difference(ready)
-                for key, value in remaining.items()
-                if key not in ready
-            }
+        ready = deque(key for key, degree in incoming.items() if degree == 0)
+        visited = 0
+        while ready:
+            key = ready.popleft()
+            visited += 1
+            for dependent in dependents[key]:
+                incoming[dependent] -= 1
+                if incoming[dependent] == 0:
+                    ready.append(dependent)
+
+        if visited != len(dependencies):
+            raise GraphError("Media graphs cannot contain cycles")
+
+
+def expr(value: str) -> Expression:
+    """Mark a string as an FFmpeg expression."""
+
+    return Expression(value)
