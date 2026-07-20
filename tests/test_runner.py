@@ -1,6 +1,7 @@
 import io
 import os
 import shutil
+import signal
 import subprocess
 import threading
 from math import inf, nan
@@ -21,6 +22,7 @@ from flowmpeg import (
 )
 from flowmpeg.runner import (
     _read_stderr,
+    _signal_process_tree,
     _stop_process,
     _TextTail,
     _warn_unconfirmed_cleanup,
@@ -256,6 +258,94 @@ def test_process_cleanup_reports_unconfirmed_exit() -> None:
 
     assert _stop_process(process, 0.0) is False
     assert value.killed
+
+
+def test_runner_configures_a_separate_process_group(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    captured: dict[str, object] = {}
+
+    class FinishedProcess:
+        def __init__(self) -> None:
+            self.stdout = io.StringIO()
+            self.stderr = io.StringIO()
+
+        def poll(self) -> int:
+            return 0
+
+        def wait(self, timeout: float | None = None) -> int:
+            del timeout
+            return 0
+
+    def start(*args: object, **kwargs: object) -> FinishedProcess:
+        del args
+        captured.update(kwargs)
+        return FinishedProcess()
+
+    monkeypatch.setattr(subprocess, "Popen", start)
+    plan = output(input("movie.mp4").video(), to=tmp_path / "copy.mp4")
+
+    plan.run()
+
+    if os.name == "nt":
+        assert captured["creationflags"] == subprocess.CREATE_NEW_PROCESS_GROUP
+    else:
+        assert captured["start_new_session"] is True
+
+
+def test_posix_cleanup_signals_the_process_group(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    signals: list[tuple[int, int]] = []
+
+    class Process:
+        pid = 123
+
+    monkeypatch.setattr("flowmpeg.runner._WINDOWS", False)
+    monkeypatch.setattr(os, "getpgid", lambda pid: pid + 1, raising=False)
+    monkeypatch.setattr(signal, "SIGKILL", 9, raising=False)
+    monkeypatch.setattr(
+        os,
+        "killpg",
+        lambda group, value: signals.append((group, value)),
+        raising=False,
+    )
+    process = cast(subprocess.Popen[str], Process())
+
+    assert _signal_process_tree(process, force=False, grace=0)
+    assert _signal_process_tree(process, force=True, grace=0)
+    assert signals == [
+        (124, signal.SIGTERM),
+        (124, 9),
+    ]
+
+
+def test_windows_cleanup_targets_descendants(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    commands: list[list[str]] = []
+
+    class Process:
+        pid = 456
+
+    def run_taskkill(
+        command: list[str], **kwargs: object
+    ) -> subprocess.CompletedProcess[str]:
+        del kwargs
+        commands.append(command)
+        return subprocess.CompletedProcess(command, 0)
+
+    monkeypatch.setattr("flowmpeg.runner._WINDOWS", True)
+    monkeypatch.setattr(subprocess, "run", run_taskkill)
+    process = cast(subprocess.Popen[str], Process())
+
+    assert _signal_process_tree(process, force=False, grace=1)
+    assert _signal_process_tree(process, force=True, grace=1)
+    assert commands == [
+        ["taskkill", "/PID", "456", "/T"],
+        ["taskkill", "/PID", "456", "/T", "/F"],
+    ]
 
 
 @pytest.mark.parametrize("failed_start", [1, 2])

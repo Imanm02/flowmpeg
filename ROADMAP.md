@@ -71,7 +71,7 @@ only a discussion or test placeholder.
 - [x] Normalize null outputs according to the current operating system.
 - [x] Reject unordered filter streams, arguments, and output kinds.
 - [x] Test the dependency versions recorded in `uv.lock` in CI.
-- [ ] Stop the full FFmpeg process tree after a timeout or callback failure.
+- [x] Stop the full FFmpeg process tree after a timeout or callback failure.
 - [ ] Bound or coalesce queued progress events when a callback is slow.
 - [ ] Make package-manager timeouts stop descendant processes.
 

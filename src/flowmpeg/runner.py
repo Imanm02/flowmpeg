@@ -5,6 +5,7 @@ from __future__ import annotations
 import math
 import os
 import queue
+import signal
 import subprocess
 import threading
 import time
@@ -26,6 +27,8 @@ from flowmpeg.errors import (
 from flowmpeg.pathing import local_path
 from flowmpeg.plan import Plan
 from flowmpeg.progress import Progress, ProgressParser
+
+_WINDOWS = os.name == "nt"
 
 
 @dataclass(frozen=True, slots=True)
@@ -76,6 +79,11 @@ def run(
         *compiled.argv[1:],
     )
     command = display_argv(argv)
+    popen_options: dict[str, Any] = {}
+    if _WINDOWS:
+        popen_options["creationflags"] = subprocess.CREATE_NEW_PROCESS_GROUP
+    else:
+        popen_options["start_new_session"] = True
 
     try:
         process = subprocess.Popen(
@@ -87,6 +95,7 @@ def run(
             encoding="utf-8",
             errors="replace",
             shell=False,
+            **popen_options,
         )
     except FileNotFoundError as error:
         raise BinaryNotFoundError(
@@ -219,29 +228,86 @@ def _stop_process(process: subprocess.Popen[str], grace: float) -> bool:
     try:
         stopped = process.poll() is not None
     except OSError:
-        return _kill_process(process, grace)
+        return _kill_process_tree(process, grace)
     if stopped:
         return True
-    try:
-        process.terminate()
-    except OSError:
-        return _kill_process(process, grace)
+    _signal_process_tree(process, force=False, grace=grace)
     try:
         process.wait(timeout=grace)
         return True
-    except (subprocess.TimeoutExpired, OSError):
-        return _kill_process(process, grace)
+    except (AttributeError, subprocess.TimeoutExpired, OSError):
+        return _kill_process_tree(process, grace)
 
 
-def _kill_process(process: subprocess.Popen[str], grace: float) -> bool:
-    try:
-        process.kill()
-    except OSError:
+def _kill_process_tree(process: subprocess.Popen[str], grace: float) -> bool:
+    if not _signal_process_tree(process, force=True, grace=grace):
         return False
     try:
         process.wait(timeout=grace)
         return True
-    except (subprocess.TimeoutExpired, OSError):
+    except (AttributeError, subprocess.TimeoutExpired, OSError):
+        return False
+
+
+def _signal_process_tree(
+    process: subprocess.Popen[str],
+    *,
+    force: bool,
+    grace: float,
+) -> bool:
+    if _WINDOWS:
+        return _signal_windows_process_tree(process, force=force, grace=grace)
+    posix_os: Any = os
+    posix_signal: Any = signal
+    try:
+        process_group = posix_os.getpgid(process.pid)
+        signal_value = posix_signal.SIGKILL if force else signal.SIGTERM
+        posix_os.killpg(process_group, signal_value)
+        return True
+    except (AttributeError, OSError):
+        return _signal_direct_process(process, force=force)
+
+
+def _signal_windows_process_tree(
+    process: subprocess.Popen[str],
+    *,
+    force: bool,
+    grace: float,
+) -> bool:
+    try:
+        pid = process.pid
+    except AttributeError:
+        return _signal_direct_process(process, force=force)
+    command = ["taskkill", "/PID", str(pid), "/T"]
+    if force:
+        command.append("/F")
+    try:
+        completed = subprocess.run(
+            command,
+            capture_output=True,
+            check=False,
+            shell=False,
+            timeout=max(grace, 0.1),
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return _signal_direct_process(process, force=force)
+    if completed.returncode == 0:
+        return True
+    return _signal_direct_process(process, force=force)
+
+
+def _signal_direct_process(
+    process: subprocess.Popen[str],
+    *,
+    force: bool,
+) -> bool:
+    try:
+        if force:
+            process.kill()
+        else:
+            process.terminate()
+        return True
+    except (AttributeError, OSError):
         return False
 
 
