@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import math
 import os
 import subprocess
 from collections.abc import Mapping
@@ -146,6 +147,10 @@ def probe_raw(
         raise BinaryNotFoundError(
             "The FFprobe executable cannot be empty", tool="ffprobe"
         )
+    if timeout is not None and (
+        isinstance(timeout, bool) or not math.isfinite(timeout) or timeout <= 0
+    ):
+        raise ValueError("Probe timeout must be positive and finite")
 
     argv = (
         ffprobe,

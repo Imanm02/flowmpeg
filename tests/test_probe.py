@@ -1,5 +1,6 @@
 import shutil
 import subprocess
+from math import inf, nan
 from pathlib import Path
 
 import pytest
@@ -104,6 +105,12 @@ def test_unusable_probe_binary_has_specific_error(
 
     with pytest.raises(BinaryUnusableError, match="could not be started"):
         probe_raw("sample.mp4", ffprobe="blocked-ffprobe")
+
+
+@pytest.mark.parametrize("timeout", [0.0, -1.0, inf, nan, True])
+def test_probe_rejects_invalid_timeouts(timeout: float) -> None:
+    with pytest.raises(ValueError, match="positive and finite"):
+        probe_raw("sample.mp4", timeout=timeout)
 
 
 @pytest.mark.integration
