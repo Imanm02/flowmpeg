@@ -14,7 +14,12 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
 from flowmpeg import shortcuts  # noqa: E402
-from flowmpeg.catalog import CATEGORIES, COMMAND_CATALOG, command_spec  # noqa: E402
+from flowmpeg.catalog import (  # noqa: E402
+    CATEGORIES,
+    COMMAND_CATALOG,
+    TAGS,
+    command_spec,
+)
 from flowmpeg.cli import _ERROR_GUIDE, _EXAMPLES, _FEATURE_REQUIREMENTS  # noqa: E402
 
 TARGET = ROOT / "docs" / "project-stats.md"
@@ -90,6 +95,8 @@ def render() -> str:
             for name in (spec.name, *spec.aliases)
         )
     )
+    command_tag_counts = Counter(tag for spec in COMMAND_CATALOG for tag in spec.tags)
+    example_tag_counts = Counter(tag for example in _EXAMPLES for tag in example.tags)
     lines = [
         "# Flowmpeg project statistics",
         "",
@@ -131,6 +138,22 @@ def render() -> str:
             f"| {category} | {count} | {alias_counts[category]} | "
             f"{example_counts[category]} | {covered}/{count} ({percent}%) | "
             f"{shortcut_counts[category]} | `{'#' * count}` |"
+        )
+    lines.extend(
+        (
+            "",
+            "## Use-case coverage",
+            "",
+            "The bar uses one `#` per canonical command carrying the tag.",
+            "",
+            "| Tag | Commands | Examples | Bar |",
+            "|---|---:|---:|---|",
+        )
+    )
+    for tag in TAGS:
+        count = command_tag_counts[tag]
+        lines.append(
+            f"| {tag} | {count} | {example_tag_counts[tag]} | `{'#' * count}` |"
         )
     lines.extend(
         (

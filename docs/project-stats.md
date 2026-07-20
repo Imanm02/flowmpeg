@@ -39,6 +39,23 @@ counts distinct canonical commands with at least one built-in example.
 | inspect | 3 | 1 | 3 | 3/3 (100%) | 0 | `###` |
 | help | 4 | 0 | 4 | 4/4 (100%) | 0 | `####` |
 
+## Use-case coverage
+
+The bar uses one `#` per canonical command carrying the tag.
+
+| Tag | Commands | Examples | Bar |
+|---|---:|---:|---|
+| accessibility | 3 | 3 | `###` |
+| archive | 9 | 9 | `#########` |
+| copy | 5 | 5 | `#####` |
+| creator | 37 | 38 | `#####################################` |
+| delivery | 14 | 15 | `##############` |
+| discover | 4 | 4 | `####` |
+| inspect | 3 | 3 | `###` |
+| podcast | 13 | 13 | `#############` |
+| privacy | 4 | 4 | `####` |
+| silent-input | 27 | 28 | `###########################` |
+
 ## What the counts mean
 
 Aliases are alternate terminal spellings, not separate operations.
