@@ -1361,7 +1361,6 @@ def test_compress_video_handles_odd_source_dimensions(tmp_path: Path) -> None:
     shortcuts.compress_video(
         source,
         target,
-        max_width=64,
         include_audio=False,
     ).run(ffmpeg=ffmpeg, timeout=10)
 

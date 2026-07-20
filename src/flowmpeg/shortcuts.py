@@ -199,11 +199,10 @@ def compress_video(
     video = _require_video(clip)
     if max_width is not None:
         _even_positive_integer("max_width", max_width)
-        video = video.filter(
-            "scale",
-            w=expr(f"trunc(min(iw,{max_width})/2)*2"),
-            h=-2,
-        )
+        even_width = expr(f"trunc(min(iw,{max_width})/2)*2")
+    else:
+        even_width = expr("trunc(iw/2)*2")
+    video = video.filter("scale", w=even_width, h=-2)
     _require_suffix(to, frozenset({".mp4"}), "Compressed video output")
     _validate_paths((source,), to)
     plan = output(

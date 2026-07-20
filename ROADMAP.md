@@ -22,7 +22,7 @@ only a discussion or test placeholder.
 - [x] Reject a local output that resolves to one of the plan inputs.
 - [ ] Make common video shortcuts work with silent input files without mapping
   a missing audio stream.
-- [ ] Guarantee even H.264 dimensions for compression, resize, crop, and grid
+- [x] Guarantee even H.264 dimensions for compression, resize, crop, and grid
   outputs.
 - [ ] Put a safe resource bound around two-pass edge-silence trimming.
 - [ ] Make doctor requirements cover every filter and output capability used by
