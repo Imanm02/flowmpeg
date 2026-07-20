@@ -10,7 +10,7 @@ source change.
 | Measure | Count | Source |
 |---|---:|---|
 | Canonical terminal commands | 59 | `COMMAND_CATALOG` |
-| Short command aliases | 53 | `COMMAND_CATALOG` |
+| Command aliases | 53 | `COMMAND_CATALOG` |
 | Python shortcut functions | 52 | `shortcuts.__all__` |
 | One-line terminal examples | 54 | CLI example catalog |
 | Stable error identifiers | 16 | CLI error guide |

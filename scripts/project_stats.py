@@ -83,7 +83,7 @@ def render() -> str:
         "| Measure | Count | Source |",
         "|---|---:|---|",
         f"| Canonical terminal commands | {len(COMMAND_CATALOG)} | `COMMAND_CATALOG` |",
-        f"| Short command aliases | {aliases} | `COMMAND_CATALOG` |",
+        f"| Command aliases | {aliases} | `COMMAND_CATALOG` |",
         f"| Python shortcut functions | {shortcut_functions} | `shortcuts.__all__` |",
         f"| One-line terminal examples | {len(_EXAMPLES)} | CLI example catalog |",
         f"| Stable error identifiers | {len(_ERROR_GUIDE)} | CLI error guide |",
