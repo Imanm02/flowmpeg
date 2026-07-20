@@ -209,6 +209,15 @@ _BASE_COMMAND_CATALOG = (
         capability_group="voice-cleanup",
     ),
     CommandSpec(
+        "trim-audio",
+        "audio",
+        "Cut one audio track",
+        ("cut-audio", "audio-clip"),
+        input_kind="audio",
+        output_kind="audio",
+        capability_group="audio-processing",
+    ),
+    CommandSpec(
         "mono-audio",
         "audio",
         "Downmix audio to mono",
@@ -711,6 +720,7 @@ _COMMAND_REQUIREMENTS = {
         "filter:atrim",
         "filter:silenceremove",
     ),
+    "trim-audio": _requirements(*_WAV, "filter:asetpts", "filter:atrim"),
     "mono-audio": _requirements(*_WAV, "filter:aformat"),
     "resample-audio": _requirements(*_WAV, "filter:aformat", "filter:aresample"),
     "crossfade-audio": _requirements(*_WAV, "filter:acrossfade"),

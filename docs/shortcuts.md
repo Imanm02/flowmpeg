@@ -1175,6 +1175,20 @@ held by FFmpeg's reverse filters. It must cover the source and cannot exceed
 ff.mono_audio("stereo.wav", "mono.wav").run()
 ```
 
+### Cut one audio track
+
+```python
+ff.trim_audio_file(
+    "interview.wav",
+    "answer.wav",
+    start=30,
+    duration=12,
+).run()
+```
+
+Set `end` or `duration`, not both. The audio timeline starts at zero in the
+output. Track, codec, and bitrate options match the other audio-file shortcuts.
+
 ### Downmix directly to MP3
 
 ```python
@@ -1493,6 +1507,7 @@ ff.trim("input.mp4", "clip.mp4", start=5, duration=20).run(
 | `compress_audio` | Controlled audio file | Applies dynamic-range compression |
 | `podcast_voice` | Finished voice file | Filters, compresses, and normalizes speech |
 | `trim_silence` | Tighter audio file | Removes silence from both edges |
+| `trim_audio_file` | Accurate audio clip | Cuts one track and resets timestamps |
 | `mono_audio` | Mono audio file | Downmixes one selected track |
 | `resample_audio` | Standardized audio file | Sets sample rate and mono or stereo layout |
 | `crossfade_audio` | Joined audio file | Transitions between two inputs |

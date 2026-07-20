@@ -84,6 +84,7 @@ def test_shortcuts_namespace_is_public() -> None:
         "transcode",
         "transcode_hevc",
         "trim",
+        "trim_audio_file",
         "trim_silence",
         "transcode_webm",
         "watermark",
@@ -848,6 +849,19 @@ def test_resample_audio_sets_rate_and_layout() -> None:
     )
 
 
+def test_trim_audio_file_accepts_start_and_duration() -> None:
+    plan = shortcuts.trim_audio_file(
+        "interview.wav",
+        "answer.wav",
+        start=30,
+        duration=12,
+    )
+
+    assert plan.filter_graph() == (
+        "[0:a:0]atrim=start=30:end=42[a0];[a0]asetpts=PTS-STARTPTS[a1]"
+    )
+
+
 def test_crossfade_audio_maps_two_inputs() -> None:
     plan = shortcuts.crossfade_audio(
         "first.wav",
@@ -1267,6 +1281,13 @@ def test_shortcuts_accept_path_objects_and_overwrite() -> None:
         ),
         lambda: shortcuts.remux_media("in.mp4", "out.avi"),
         lambda: shortcuts.remux_media("in.mp4", "in.mp4"),
+        lambda: shortcuts.trim_audio_file("in.wav", "out.wav"),
+        lambda: shortcuts.trim_audio_file(
+            "in.wav",
+            "out.wav",
+            end=2,
+            duration=1,
+        ),
     ],
 )
 def test_shortcuts_reject_invalid_requests(build: Callable[[], object]) -> None:
@@ -1793,6 +1814,7 @@ def test_new_audio_shortcuts_run(
     mono = source.parent / "mono.wav"
     mono_opus = source.parent / "mono.opus"
     resampled = source.parent / "resampled.wav"
+    trimmed = source.parent / "trimmed-audio.wav"
     crossfaded = source.parent / "crossfaded.wav"
 
     shortcuts.denoise_audio(voice, denoised).run(ffmpeg=ffmpeg, timeout=10)
@@ -1808,6 +1830,12 @@ def test_new_audio_shortcuts_run(
         sample_rate=32_000,
         layout="stereo",
     ).run(ffmpeg=ffmpeg, timeout=10)
+    shortcuts.trim_audio_file(
+        voice,
+        trimmed,
+        start=0.05,
+        duration=0.1,
+    ).run(ffmpeg=ffmpeg, timeout=10)
     shortcuts.crossfade_audio(
         voice,
         voice,
@@ -1822,6 +1850,7 @@ def test_new_audio_shortcuts_run(
     resampled_stream = probe(resampled).audio_streams[0]
     assert resampled_stream.sample_rate == 32_000
     assert resampled_stream.channels == 2
+    assert probe(trimmed).duration == pytest.approx(0.1, abs=0.03)
     assert probe(crossfaded).duration == pytest.approx(0.35, abs=0.1)
 
 

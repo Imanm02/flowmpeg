@@ -23,6 +23,9 @@ from flowmpeg.recipes.audio import (
 from flowmpeg.recipes.audio import (
     normalize_loudness as normalize_audio_stream,
 )
+from flowmpeg.recipes.audio import (
+    trim_audio as trim_audio_stream,
+)
 from flowmpeg.recipes.video import (
     Rotation,
     change_video_speed,
@@ -159,6 +162,7 @@ __all__ = [
     "spectrum_image",
     "still_image_video",
     "thumbnail",
+    "trim_audio_file",
     "trim_silence",
     "transcode",
     "transcode_hevc",
@@ -1795,6 +1799,31 @@ def trim_silence(
     audio = audio.filter("areverse")
     audio = audio.filter("silenceremove", **options)
     audio = audio.filter("areverse")
+    return _audio_plan(audio, to, (source,), codec, bitrate, overwrite)
+
+
+def trim_audio_file(
+    source: Pathish,
+    to: Pathish,
+    *,
+    start: float | None = None,
+    end: float | None = None,
+    duration: float | None = None,
+    track: int = 0,
+    codec: AudioCodec = "wav",
+    bitrate: str | None = None,
+    overwrite: bool = False,
+) -> Plan:
+    """Cut one audio track and reset its timeline."""
+
+    _nonnegative_integer("track", track)
+    if duration is not None:
+        if end is not None:
+            raise GraphError("Set audio trim end or duration, not both")
+        _positive_number("duration", duration)
+        start = 0 if start is None else start
+        end = start + duration
+    audio = trim_audio_stream(_audio_track(source, track), start=start, end=end)
     return _audio_plan(audio, to, (source,), codec, bitrate, overwrite)
 
 

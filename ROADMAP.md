@@ -134,6 +134,7 @@ only a discussion or test placeholder.
 - [x] Add sample-rate and channel-layout audio conversion.
 - [x] Add selective stream-copy container remuxing.
 - [x] Add typed EBU R128 loudness measurement reports.
+- [x] Add direct audio-track trimming with end or duration.
 
 ## Current limits
 

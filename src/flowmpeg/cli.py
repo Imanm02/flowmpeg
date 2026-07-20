@@ -106,6 +106,10 @@ _BASE_EXAMPLES = (
         "audio",
         "flowmpeg desilence take.wav --duration 120 --threshold-db -45 -o tight.wav",
     ),
+    _Example(
+        "audio",
+        "flowmpeg cut-audio interview.wav --start 30 --duration 12 -o answer.wav",
+    ),
     _Example("audio", "flowmpeg mono interview.wav --codec mp3 -o interview.mp3"),
     _Example(
         "audio",
@@ -509,6 +513,7 @@ def build_parser() -> argparse.ArgumentParser:
     _add_compress_audio(commands)
     _add_podcast_voice(commands)
     _add_trim_silence(commands)
+    _add_trim_audio(commands)
     _add_mono_audio(commands)
     _add_resample_audio(commands)
     _add_crossfade_audio(commands)
@@ -1675,6 +1680,26 @@ def _add_trim_silence(
     )
     parser.add_argument("--threshold-db", type=_finite_float, default=-45.0)
     parser.add_argument("--minimum", type=_positive_float, default=0.25)
+    _audio_file_options(parser)
+    _output(parser)
+
+
+def _add_trim_audio(
+    commands: argparse._SubParsersAction[argparse.ArgumentParser],
+) -> None:
+    parser = _command(
+        commands,
+        "trim-audio",
+        "Cut one audio track and reset its timeline.",
+        shortcuts.trim_audio_file,
+        ("source",),
+        aliases=("cut-audio", "audio-clip"),
+    )
+    _source(parser)
+    parser.add_argument("--start", type=_nonnegative_float)
+    timing = parser.add_mutually_exclusive_group()
+    timing.add_argument("--end", type=_positive_float)
+    timing.add_argument("--duration", type=_positive_float)
     _audio_file_options(parser)
     _output(parser)
 

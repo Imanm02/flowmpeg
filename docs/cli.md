@@ -136,6 +136,7 @@ The table below is a compact editing index for scanning this longer guide.
 | Compress audio dynamics | `compress-audio` | `dynamics` |
 | Finish spoken audio | `podcast-voice` | `voice` |
 | Trim silence from both ends | `trim-silence` | `desilence` |
+| Cut one audio track | `trim-audio` | `cut-audio`, `audio-clip` |
 | Downmix to mono | `mono-audio` | `mono` |
 | Set audio rate and layout | `resample-audio` | `resample`, `audio-standard` |
 | Crossfade two audio files | `crossfade-audio` | `crossfade` |
@@ -878,6 +879,7 @@ compression, loudness normalization, and 48 kHz resampling.
 
 ```console
 flowmpeg desilence take.wav --duration 120 --threshold-db -45 --minimum 0.3 -o tight.wav
+flowmpeg cut-audio interview.wav --start 30 --duration 12 -o answer.wav
 flowmpeg mono stereo.wav --codec mp3 --bitrate 128k -o mono.mp3
 flowmpeg resample field.wav --sample-rate 48000 --layout stereo -o standard.wav
 ```
@@ -887,6 +889,8 @@ cover the source and cannot exceed 600 seconds, which bounds reverse-filter
 memory. Mono accepts MP3, AAC, Opus, WAV, or FLAC output.
 `resample` accepts sample rates from 8000 through 192000 and writes mono or
 stereo. This is useful before joins, mixes, speech tools, and upload checks.
+`cut-audio` accepts an end time or a duration and resets the output timeline to
+zero. It can select another audio-only track with `--track`.
 
 ### Crossfade two audio files
 
