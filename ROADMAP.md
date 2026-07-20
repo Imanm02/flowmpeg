@@ -54,7 +54,7 @@ only a discussion or test placeholder.
 - [x] Add a central command catalog with category, alias, input, output, and
   capability metadata.
 - [x] Add `flowmpeg commands` with category filtering.
-- [ ] Add machine-readable command catalog output.
+- [x] Add machine-readable command catalog output.
 - [ ] Add category and search filters to `flowmpeg examples`.
 - [ ] Add `doctor --require GROUP` for scripts that depend on one feature
   group.

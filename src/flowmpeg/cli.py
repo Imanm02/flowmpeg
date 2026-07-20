@@ -1704,6 +1704,7 @@ def _add_commands(
         choices=CATEGORIES,
         help="Show one task category",
     )
+    parser.add_argument("--json", action="store_true", help="Print catalog JSON")
     parser.set_defaults(handler=_run_commands)
 
 
@@ -1930,10 +1931,14 @@ def _run_examples(args: argparse.Namespace) -> int:
 def _run_commands(args: argparse.Namespace) -> int:
     selected = cast(str | None, args.category)
     categories = (selected,) if selected is not None else CATEGORIES
+    specs = [spec for spec in COMMAND_CATALOG if spec.category in categories]
+    if cast(bool, args.json):
+        print(json.dumps([asdict(spec) for spec in specs], indent=2, sort_keys=True))
+        return 0
     for category in categories:
-        specs = [spec for spec in COMMAND_CATALOG if spec.category == category]
-        print(f"{category.upper()} ({len(specs)})")
-        for spec in specs:
+        category_specs = [spec for spec in specs if spec.category == category]
+        print(f"{category.upper()} ({len(category_specs)})")
+        for spec in category_specs:
             aliases = f" ({', '.join(spec.aliases)})" if spec.aliases else ""
             print(f"  {spec.name}{aliases}: {spec.summary}")
     return 0

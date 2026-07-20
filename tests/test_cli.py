@@ -1175,6 +1175,21 @@ def test_commands_filter_one_task_category(
     assert "VIDEO (" not in output
 
 
+def test_commands_json_exposes_discovery_fields(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    assert cli.main(["commands", "--category", "subtitles", "--json"]) == 0
+    data = json.loads(capsys.readouterr().out)
+    assert {item["name"] for item in data} == {
+        "extract-subtitles",
+        "add-subtitles",
+        "remove-subtitles",
+    }
+    assert data[0]["category"] == "subtitles"
+    assert "input_kind" in data[0]
+    assert "capability_group" in data[0]
+
+
 def test_no_arguments_prints_help(capsys: pytest.CaptureFixture[str]) -> None:
     assert cli.main([]) == 0
     assert "usage: flowmpeg" in capsys.readouterr().out
