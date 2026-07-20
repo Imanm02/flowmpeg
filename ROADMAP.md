@@ -8,7 +8,7 @@ only a discussion or test placeholder.
 
 ### P1
 
-- [ ] Redact secret query values in displayed URLs, including signed URL keys.
+- [x] Redact secret query values in displayed URLs, including signed URL keys.
 - [ ] Redact input and output values printed by `Plan.explain()`.
 - [ ] Redact completed destination paths before the CLI prints them.
 - [ ] Convert FFmpeg startup permission and operating-system failures into a

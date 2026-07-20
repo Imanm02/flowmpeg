@@ -12,6 +12,11 @@ _url_user_info = re.compile(r"(?i)([a-z][a-z0-9+.-]*://)([^/@\s]+@)")
 _header_secret = re.compile(
     r"(?im)^(authorization|cookie|proxy-authorization|x-api-key)(\s*:\s*).+$"
 )
+_query_secret = re.compile(
+    r"(?i)([?&](?:access_?token|api_?key|googleaccessid|key|key-pair-id|"
+    r"policy|sig|signature|token|x-amz-credential|x-amz-security-token|"
+    r"x-amz-signature|x-goog-signature)=)([^&#\s\"']+)"
+)
 _secret_options = {
     "-authorization",
     "-cookie",
@@ -72,4 +77,5 @@ def _windows_display_argv(argv: Iterable[str]) -> str:
 
 def _redact_token(token: str) -> str:
     token = _url_user_info.sub(r"\1<redacted>@", token)
+    token = _query_secret.sub(r"\1<redacted>", token)
     return _header_secret.sub(r"\1\2<redacted>", token)

@@ -95,6 +95,29 @@ def test_display_redacts_url_credentials_and_headers() -> None:
     assert "<redacted>" in command
 
 
+@pytest.mark.parametrize(
+    "query",
+    [
+        "token=REDACT_ME",
+        "access_token=REDACT_ME",
+        "api_key=REDACT_ME",
+        "sig=REDACT_ME",
+        "signature=REDACT_ME",
+        "X-Amz-Signature=REDACT_ME",
+        "X-Amz-Security-Token=REDACT_ME",
+        "X-Goog-Signature=REDACT_ME",
+        "Policy=REDACT_ME",
+    ],
+)
+def test_display_redacts_signed_url_queries(query: str) -> None:
+    source = input(f"https://example.com/live?quality=high&{query}")
+    command = output(source.video(), to="capture.mp4").command()
+
+    assert "REDACT_ME" not in command
+    assert "quality=high" in command
+    assert "<redacted>" in command
+
+
 def test_unconnected_split_output_is_rejected() -> None:
     first, _ = input("movie.mp4").video().split()
 
