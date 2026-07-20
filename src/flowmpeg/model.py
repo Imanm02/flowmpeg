@@ -110,6 +110,8 @@ class InputNode:
             raise GraphError("Input arguments must be an immutable tuple")
         if not all(isinstance(value, str) for value in self.args):
             raise GraphError("Input arguments must be strings")
+        if any(value == "-i" or value.startswith("-i=") for value in self.args):
+            raise GraphError("Input arguments cannot add another input")
 
 
 @dataclass(frozen=True, slots=True)

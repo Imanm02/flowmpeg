@@ -23,7 +23,6 @@ def test_direct_streams_compile_with_scoped_arguments() -> None:
         args=("-c:v", "libx264"),
         global_args=("-loglevel", "warning"),
     )
-
     assert plan.raw_argv() == (
         "ffmpeg",
         "-hide_banner",
@@ -43,6 +42,12 @@ def test_direct_streams_compile_with_scoped_arguments() -> None:
         "libx264",
         "output.mp4",
     )
+
+
+@pytest.mark.parametrize("option", ["-i", "-i=extra.mp4"])
+def test_input_arguments_cannot_change_input_order(option: str) -> None:
+    with pytest.raises(GraphError, match="cannot add another input"):
+        input("actual.mp4", option, "extra.mp4")
 
 
 def test_optional_input_audio_compiles_to_optional_map() -> None:
