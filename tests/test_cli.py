@@ -1187,6 +1187,19 @@ def test_example_catalog_parses_every_command() -> None:
         assert callable(args.handler), example.command
 
 
+def test_editing_examples_build_dry_run_plans(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    parser = cli.build_parser()
+    for example in cli._EXAMPLES:
+        values = shlex.split(example.command)[1:]
+        args = parser.parse_args(values)
+        if args.handler is not cli._run_media:
+            continue
+        assert cli.main([*values, "--dry-run"]) == 0, example.command
+        assert capsys.readouterr().out.startswith("ffmpeg "), example.command
+
+
 def test_examples_filter_by_category_and_search(
     capsys: pytest.CaptureFixture[str],
 ) -> None:

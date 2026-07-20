@@ -125,7 +125,7 @@ _EXAMPLES = (
     _Example("audio", "flowmpeg voice recording.wav -o finished.wav"),
     _Example("subtitles", "flowmpeg captions movie.mp4 subtitles.srt -o captioned.mp4"),
     _Example("subtitles", "flowmpeg subtitles film.mkv -o captions.srt"),
-    _Example("subtitles", "flowmpeg strip-subtitles film.mkv -o clean.mkv"),
+    _Example("subtitles", "flowmpeg strip-subtitles film.mkv -o clean.mp4"),
     _Example("metadata", "flowmpeg clean-metadata camera.mkv -o share.mkv"),
     _Example("images", "flowmpeg timelapse frames/frame-%04d.png -o timelapse.mp4"),
     _Example("composition", "flowmpeg audiogram episode.wav cover.jpg -o episode.mp4"),
@@ -140,6 +140,8 @@ _DURATION_FACTORIES = (
     shortcuts.fade_edges,
     shortcuts.reverse_clip,
 )
+
+_EXAMPLE_CATEGORIES = tuple(dict.fromkeys(example.category for example in _EXAMPLES))
 
 _FEATURE_REQUIREMENTS = {
     "web-video": (
@@ -1748,7 +1750,11 @@ def _add_examples(
         allow_abbrev=False,
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
-    parser.add_argument("--category", choices=CATEGORIES, help="Show one category")
+    parser.add_argument(
+        "--category",
+        choices=_EXAMPLE_CATEGORIES,
+        help="Show one category",
+    )
     parser.add_argument("--search", help="Find text in example commands")
     parser.set_defaults(handler=_run_examples)
 
