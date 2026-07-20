@@ -72,6 +72,7 @@ class _Example:
 
 _BASE_EXAMPLES = (
     _Example("video", "flowmpeg convert recording.mov -o recording.mp4"),
+    _Example("video", "flowmpeg webm recording.mov -o recording.webm"),
     _Example("video", "flowmpeg convert animation.mov --no-audio -o animation.mp4"),
     _Example("video", "flowmpeg cut input.mp4 --start 5 --duration 12 -o clip.mp4"),
     _Example("video", "flowmpeg resize input.mp4 --width 1280 -o smaller.mp4"),
@@ -184,6 +185,11 @@ _FEATURE_REQUIREMENTS = {
         "encoder:aac",
         "encoder:libx264",
         "muxer:mp4",
+    ),
+    "webm-video": (
+        "encoder:libopus",
+        "encoder:libvpx-vp9",
+        "muxer:webm",
     ),
     "audio-files": (
         "encoder:aac",
@@ -428,6 +434,7 @@ def build_parser() -> argparse.ArgumentParser:
     commands = parser.add_subparsers(dest="command", metavar="COMMAND")
 
     _add_transcode(commands)
+    _add_transcode_webm(commands)
     _add_trim(commands)
     _add_resize(commands)
     _add_remove_audio(commands)
@@ -636,6 +643,25 @@ def _add_transcode(
         aliases=("convert",),
     )
     _source(parser)
+    _audio_toggle(parser)
+    _output(parser)
+
+
+def _add_transcode_webm(
+    commands: argparse._SubParsersAction[argparse.ArgumentParser],
+) -> None:
+    parser = _command(
+        commands,
+        "transcode-webm",
+        "Encode VP9 video and Opus audio in WebM.",
+        shortcuts.transcode_webm,
+        ("source",),
+        aliases=("webm", "vp9"),
+    )
+    _source(parser)
+    parser.add_argument("--crf", type=_nonnegative_int, default=32)
+    parser.add_argument("--cpu-used", type=_nonnegative_int, default=2)
+    parser.add_argument("--audio-bitrate", default="128k")
     _audio_toggle(parser)
     _output(parser)
 

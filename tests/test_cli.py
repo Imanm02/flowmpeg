@@ -40,6 +40,7 @@ from flowmpeg.runner import RunResult
     "arguments",
     [
         ["transcode", "in.mov", "-o", "out.mp4"],
+        ["transcode-webm", "in.mov", "-o", "out.webm"],
         ["trim", "in.mp4", "--start", "2", "--duration", "5", "-o", "out.mp4"],
         ["resize", "in.mp4", "--width", "640", "-o", "out.mp4"],
         ["remove-audio", "in.mp4", "-o", "out.mp4"],
@@ -132,6 +133,7 @@ def test_every_media_command_builds_a_dry_run(
     "arguments",
     [
         ["convert", "in.mov", "-o", "out.mp4"],
+        ["webm", "in.mov", "-o", "out.webm"],
         ["cut", "in.mp4", "--duration", "2", "-o", "out.mp4"],
         ["mute", "in.mp4", "-o", "out.mp4"],
         ["strip-audio", "in.mp4", "-o", "out.mp4"],
@@ -774,11 +776,14 @@ def test_doctor_checks_filters_and_ass_subtitles(
         "asplit",
         "gblur",
         "ipod",
+        "libopus",
+        "libvpx-vp9",
         "setsar",
         "yadif",
         "ass",
         "matroska",
         "srt",
+        "webm",
     ):
         assert name in checked
     assert report["encoder:ass"] is True

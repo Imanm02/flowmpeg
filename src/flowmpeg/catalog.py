@@ -29,6 +29,13 @@ _BASE_COMMAND_CATALOG = (
         capability_group="web-video",
     ),
     CommandSpec(
+        "transcode-webm",
+        "video",
+        "Encode VP9 and Opus WebM",
+        ("webm", "vp9"),
+        capability_group="webm-video",
+    ),
+    CommandSpec(
         "trim",
         "video",
         "Cut an exact time range",
@@ -518,6 +525,7 @@ _CATEGORY_TAGS = {
 
 _COMMAND_TAGS = {
     "transcode": ("delivery", "silent-input"),
+    "transcode-webm": ("delivery", "silent-input"),
     "trim": ("delivery", "silent-input"),
     "resize": ("delivery", "silent-input"),
     "remove-audio": ("copy", "privacy", "silent-input"),
@@ -570,6 +578,11 @@ def _requirements(*names: str) -> tuple[str, ...]:
 
 _COMMAND_REQUIREMENTS = {
     "transcode": _MP4,
+    "transcode-webm": (
+        "encoder:libopus",
+        "encoder:libvpx-vp9",
+        "muxer:webm",
+    ),
     "trim": _requirements(
         *_MP4,
         "filter:asetpts",

@@ -90,6 +90,7 @@ only a discussion or test placeholder.
 - [x] Keep Windows process-group flags valid under POSIX type checking.
 - [x] Accept shortcut aliases in exact doctor command checks.
 - [x] Add a one-line command that burns external subtitles into video frames.
+- [x] Add VP9 and Opus WebM delivery shortcuts with explicit quality controls.
 - [x] Split doctor requirements by the exact encoders and muxers each command
   needs.
 - [x] Infer progress duration for start and end trims.

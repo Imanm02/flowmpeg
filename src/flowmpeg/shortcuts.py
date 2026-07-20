@@ -155,6 +155,7 @@ __all__ = [
     "thumbnail",
     "trim_silence",
     "transcode",
+    "transcode_webm",
     "trim",
     "strip_metadata",
     "tag_audio",
@@ -176,6 +177,56 @@ def transcode(
 
     clip = _media_with_optional_audio(source, include_audio)
     return _web_plan(clip, to, (source,), preset, overwrite)
+
+
+def transcode_webm(
+    source: Pathish,
+    to: Pathish,
+    *,
+    crf: int = 32,
+    cpu_used: int = 2,
+    audio_bitrate: str = "128k",
+    include_audio: bool = True,
+    overwrite: bool = False,
+) -> Plan:
+    """Encode VP9 video and optional Opus audio in WebM."""
+
+    if isinstance(crf, bool) or not isinstance(crf, int) or not 0 <= crf <= 63:
+        raise GraphError("VP9 CRF must be an integer between 0 and 63")
+    if (
+        isinstance(cpu_used, bool)
+        or not isinstance(cpu_used, int)
+        or not 0 <= cpu_used <= 8
+    ):
+        raise GraphError("VP9 CPU use must be an integer between 0 and 8")
+    clip = _media_with_optional_audio(source, include_audio)
+    if clip.audio is not None:
+        _validate_bitrate(audio_bitrate)
+    _require_suffix(to, frozenset({".webm"}), "WebM output")
+    _validate_paths((source,), to)
+    args: tuple[str, ...] = (
+        "-c:v",
+        "libvpx-vp9",
+        "-crf",
+        str(crf),
+        "-b:v",
+        "0",
+        "-cpu-used",
+        str(cpu_used),
+        "-row-mt",
+        "1",
+        "-pix_fmt",
+        "yuv420p",
+    )
+    if clip.audio is not None:
+        args += ("-c:a", "libopus", "-b:a", audio_bitrate)
+    plan = output(
+        _require_video(clip),
+        *(stream for stream in (clip.audio,) if stream is not None),
+        to=to,
+        args=args,
+    )
+    return _set_overwrite(plan, overwrite)
 
 
 def compress_video(

@@ -91,6 +91,7 @@ The table below is a compact editing index for scanning this longer guide.
 | Job | Main command | Short form |
 | --- | --- | --- |
 | Convert to web MP4 | `transcode` | `convert` |
+| Convert to VP9 WebM | `transcode-webm` | `webm`, `vp9` |
 | Cut a time range | `trim` | `cut` |
 | Resize by one side | `resize` | `scale` |
 | Remove the audio stream | `remove-audio` | `mute`, `strip-audio` |
@@ -169,6 +170,21 @@ Use `--no-audio` for a source with no audio stream:
 ```console
 flowmpeg convert animation.mov --no-audio -o animation.mp4
 ```
+
+### Convert to VP9 and Opus WebM
+
+**Input:** `recording.mov`
+
+**Output:** `recording.webm` with VP9 video and optional Opus audio.
+
+```console
+flowmpeg webm recording.mov --crf 30 --cpu-used 2 -o recording.webm
+```
+
+VP9 CRF accepts 0 through 63. Lower values retain more detail. `--cpu-used`
+accepts 0 through 8, where higher values trade compression work for speed.
+Use `--audio-bitrate 96k` to change the Opus bitrate or `--no-audio` for a
+video-only result.
 
 Commands that change audio timing inspect their sources when they run. `cut`,
 `join`, `speed`, `fade`, `freeze`, `reverse`, and `bounce` select a video-only
@@ -1038,6 +1054,7 @@ Core readiness means FFmpeg and FFprobe can both run. Feature groups say which
 parts of the command set are supported by the installed FFmpeg build:
 
 - `web-video`
+- `webm-video`
 - `audio-files`
 - `composition`
 - `video-effects`

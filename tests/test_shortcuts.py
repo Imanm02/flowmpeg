@@ -79,6 +79,7 @@ def test_shortcuts_namespace_is_public() -> None:
         "transcode",
         "trim",
         "trim_silence",
+        "transcode_webm",
         "watermark",
         "waveform_image",
         "crossfade_audio",
@@ -122,6 +123,28 @@ def test_transcode_can_select_video_only() -> None:
 
     assert "0:a:0" not in plan.raw_argv()
     assert "-c:a" not in plan.raw_argv()
+
+
+def test_webm_transcode_sets_vp9_and_opus() -> None:
+    plan = shortcuts.transcode_webm(
+        "source.mov",
+        "delivery.webm",
+        crf=28,
+        cpu_used=4,
+        audio_bitrate="96k",
+    )
+    argv = plan.raw_argv()
+
+    assert argv[argv.index("-c:v") : argv.index("-c:v") + 2] == (
+        "-c:v",
+        "libvpx-vp9",
+    )
+    assert argv[argv.index("-c:a") : argv.index("-c:a") + 2] == (
+        "-c:a",
+        "libopus",
+    )
+    assert argv[argv.index("-crf") : argv.index("-crf") + 2] == ("-crf", "28")
+    assert "0:a:0?" in argv
 
 
 @pytest.mark.parametrize(
@@ -962,6 +985,14 @@ def test_shortcuts_accept_path_objects_and_overwrite() -> None:
             "out.mp4",
             overwrite=cast(bool, "false"),
         ),
+        lambda: shortcuts.transcode_webm("in.mov", "out.mp4"),
+        lambda: shortcuts.transcode_webm("in.mov", "out.webm", crf=64),
+        lambda: shortcuts.transcode_webm("in.mov", "out.webm", cpu_used=9),
+        lambda: shortcuts.transcode_webm(
+            "in.mov",
+            "out.webm",
+            audio_bitrate="96k -map 0",
+        ),
         lambda: shortcuts.fit_canvas(
             "in.mp4",
             "out.mp4",
@@ -1496,6 +1527,7 @@ def test_video_filters_accept_a_source_without_audio(tmp_path: Path) -> None:
     )
     targets = (
         shortcuts.transcode(source, tmp_path / "converted.mp4"),
+        shortcuts.transcode_webm(source, tmp_path / "converted.webm"),
         shortcuts.resize(source, tmp_path / "resized.mp4", width=32),
         shortcuts.crop(source, tmp_path / "cropped.mp4", width=32, height=24),
     )

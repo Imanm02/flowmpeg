@@ -40,11 +40,13 @@ decoded frames or samples, so its stream must be encoded again.
 | Command | Video path | Audio path | Filter graph | Main reason to use it |
 |---|---|---|---|---|
 | `convert` | H.264 encode | AAC encode | No | Make a web MP4 |
+| `webm` | VP9 encode | Opus encode | No | Make an open-codec web video |
 | `mute` | Packet copy | Dropped | No | Remove audio without changing video packets |
 | `audio` | Dropped | Encode or copy by selected codec | No | Save one audio-only track index |
 | `join` | Encode | Encode | `concat` | Join matching decoded formats |
 | `clean-metadata` | Packet copy | Packet copy | No | Drop mapped metadata and chapters |
 | `captions` | H.264 encode | AAC encode | No | Add an encoded MP4 text track |
+| `burn-captions` | H.264 encode | AAC encode | `subtitles` | Render visible caption text |
 | `resize` | H.264 encode | AAC encode | `scale` | Change frame dimensions |
 | `voice` | Dropped | Encode | Voice filters | Prepare spoken audio |
 

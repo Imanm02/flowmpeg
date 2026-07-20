@@ -53,6 +53,7 @@ the result, then removes it.
 
 ```console
 flowmpeg cut input.mp4 --start 10 --duration 20 -o clip.mp4
+flowmpeg webm input.mov --crf 30 -o delivery.webm
 flowmpeg scale input.mp4 --width 1280 -o small.mp4
 flowmpeg audio input.mp4 -o audio.mp3
 flowmpeg pip input.mp4 camera.mp4 -o with-camera.mp4

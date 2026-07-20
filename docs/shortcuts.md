@@ -63,6 +63,24 @@ ff.transcode("recording.mov", "recording.mp4").run()
 ff.transcode("animation.mov", "animation.mp4", include_audio=False).run()
 ```
 
+### Encode VP9 and Opus WebM
+
+**Input:** `recording.mov`
+
+**Output:** `recording.webm` with VP9 video and optional Opus audio.
+
+```python
+ff.transcode_webm(
+    "recording.mov",
+    "recording.webm",
+    crf=30,
+    cpu_used=2,
+    audio_bitrate="96k",
+).run()
+```
+
+Set `include_audio=False` for a video-only source. The default VP9 CRF is 32.
+
 ### Keep an exact time range
 
 **Input:** `interview.mp4`
@@ -1341,6 +1359,7 @@ ff.trim("input.mp4", "clip.mp4", start=5, duration=20).run(
 | Shortcut | Main result | Stream behavior |
 | --- | --- | --- |
 | `transcode` | Web MP4 | Encodes selected video and optional audio |
+| `transcode_webm` | VP9 and Opus WebM | Encodes selected video and optional audio |
 | `trim` | Accurate time range | Filters paired timestamps, then encodes |
 | `resize` | New width or height | Encodes video and keeps optional audio |
 | `remove_audio` | Video-only file | Copies video and drops other streams |
