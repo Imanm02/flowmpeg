@@ -4,6 +4,33 @@ This page turns stream choices and output behavior into small tables and
 diagrams. I use it before a job when a short command name does not make the
 mapping or encoding choice obvious.
 
+## Before and after media comparison
+
+Use `compare` after any job when the result needs an evidence-based check:
+
+```console
+flowmpeg compare original.mp4 delivery.mp4
+flowmpeg compare original.mp4 delivery.mp4 --json
+```
+
+The terminal table places measured values in the same row:
+
+| Measure | Before | After | Change |
+|---|---:|---:|---:|
+| Size | 184.20 MiB | 47.80 MiB | -136.40 MiB (-74.0%) |
+| Duration | 600 seconds | 600 seconds | +0 seconds |
+| Bit rate | 2575 kb/s | 668 kb/s | |
+| Video codec | h264 | h264 | |
+| Audio codec | pcm_s16le | aac | |
+| Dimensions | 1920x1080 | 1280x720 | |
+| Frame rate | 30 fps | 30 fps | |
+| Streams | 1 video, 1 audio, 1 subtitle | 1 video, 1 audio, 0 subtitle | |
+
+These numbers show the report shape, not a promised compression result. The
+command probes both files each time. JSON output includes the original values,
+changed values, byte delta, percentage size change, and duration delta. That
+makes it suitable for a release check or a batch report.
+
 ## Copy, encode, or filter
 
 These are different kinds of work. Copying keeps encoded packet data and is
