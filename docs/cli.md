@@ -40,11 +40,12 @@ requested group returns exit code 3:
 
 ```console
 flowmpeg doctor --require web-video
-flowmpeg doctor --command make-gif
+flowmpeg doctor --command gif
 ```
 
-`--command` checks the encoder, muxer, and filters used by that command's
-default recipe. It cannot be combined with `--require`.
+`--command` accepts canonical names and shortcuts. It checks the encoder,
+muxer, and filters used by the canonical command's default recipe. It cannot
+be combined with `--require`.
 
 The module form runs the same program:
 

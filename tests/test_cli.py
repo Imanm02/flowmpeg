@@ -866,6 +866,32 @@ def test_doctor_required_command_checks_exact_capabilities(
     ]
 
 
+def test_doctor_command_accepts_shortcut_aliases(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    monkeypatch.setattr(
+        cli,
+        "_tool_report",
+        lambda *args: {"ok": True, "status": "ready", "path": "tool"},
+    )
+    monkeypatch.setattr(
+        cli,
+        "_capability_report",
+        lambda *args: {
+            "encoder:aac": True,
+            "encoder:libx264": True,
+            "filter:scale": True,
+            "muxer:mp4": True,
+        },
+    )
+
+    assert cli.main(["doctor", "--command", "scale", "--json"]) == 0
+    report = json.loads(capsys.readouterr().out)
+    assert report["required_command"] == "resize"
+    assert report["command_ready"] is True
+
+
 def test_doctor_rejects_two_requirement_modes() -> None:
     with pytest.raises(SystemExit) as raised:
         cli.main(
@@ -1734,6 +1760,7 @@ def test_commands_json_exposes_discovery_fields(
     assert data[0]["tags"] == ["accessibility", "archive", "copy"]
     assert "input_kind" in data[0]
     assert "capability_group" in data[0]
+    assert "requirements" in data[0]
 
 
 def test_no_arguments_prints_help(capsys: pytest.CaptureFixture[str]) -> None:

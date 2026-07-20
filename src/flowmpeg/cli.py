@@ -1780,7 +1780,12 @@ def _add_doctor(commands: argparse._SubParsersAction[argparse.ArgumentParser]) -
     required.add_argument(
         "--command",
         dest="required_command",
-        choices=tuple(spec.name for spec in COMMAND_CATALOG if spec.requirements),
+        choices=tuple(
+            name
+            for spec in COMMAND_CATALOG
+            if spec.requirements
+            for name in (spec.name, *spec.aliases)
+        ),
         help="Fail unless one command's default path is ready",
     )
     parser.add_argument("--json", action="store_true")
@@ -1995,16 +2000,19 @@ def _run_doctor(args: argparse.Namespace) -> int:
         features.get(required_group) if required_group is not None else None
     )
     required_ready = required_state if required_group is not None else None
-    required_command = cast(str | None, args.required_command)
+    requested_command = cast(str | None, args.required_command)
     command_specification = (
-        command_spec(required_command) if required_command is not None else None
+        command_spec(requested_command) if requested_command is not None else None
+    )
+    required_command = (
+        command_specification.name if command_specification is not None else None
     )
     command_requirements = (
         command_specification.requirements if command_specification is not None else ()
     )
     command_ready = (
         _requirements_state(capabilities, command_requirements)
-        if required_command is not None
+        if command_specification is not None
         else None
     )
     smoke_requested = cast(bool, args.smoke_test)

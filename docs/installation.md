@@ -54,9 +54,9 @@ flowmpeg doctor --smoke-test
 
 Without `--require`, limited optional groups do not change the exit code. A
 requested group that is limited or unknown returns exit code 3. `--command`
-checks the exact default path for one command and follows the same exit rule.
-It reports each required capability separately. Use either `--require` or
-`--command`, not both.
+accepts canonical names and shortcuts, checks the exact default path for that
+command, and follows the same exit rule. It reports each required capability
+separately. Use either `--require` or `--command`, not both.
 
 `--smoke-test` performs work instead of reading capability lists alone. It
 generates one 16 by 16 frame, encodes it as MPEG-4 in a temporary Matroska
