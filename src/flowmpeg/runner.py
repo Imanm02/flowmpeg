@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 import queue
 import subprocess
 import threading
@@ -50,14 +51,16 @@ def run(
 ) -> RunResult:
     """Run a plan and report machine-readable FFmpeg progress."""
 
-    if timeout is not None and timeout <= 0:
-        raise ValueError("Timeout must be positive")
-    if progress_interval <= 0:
-        raise ValueError("Progress interval must be positive")
+    if expected_duration is not None:
+        _require_positive_finite("Expected duration", expected_duration)
+    if timeout is not None:
+        _require_positive_finite("Timeout", timeout)
+    _require_positive_finite("Progress interval", progress_interval)
+    if isinstance(stderr_limit, bool) or not isinstance(stderr_limit, int):
+        raise ValueError("Stderr limit must be a positive integer")
     if stderr_limit <= 0:
-        raise ValueError("Stderr limit must be positive")
-    if termination_grace < 0:
-        raise ValueError("Termination grace cannot be negative")
+        raise ValueError("Stderr limit must be a positive integer")
+    _require_nonnegative_finite("Termination grace", termination_grace)
 
     _check_outputs(plan)
     _check_pipes(plan)
@@ -181,6 +184,22 @@ def _read_progress(
         event = parser.feed_line(line)
         if event is not None:
             events.put(event)
+
+
+def _require_positive_finite(name: str, value: float) -> None:
+    if not _is_finite_number(value) or value <= 0:
+        raise ValueError(f"{name} must be positive and finite")
+
+
+def _require_nonnegative_finite(name: str, value: float) -> None:
+    if not _is_finite_number(value) or value < 0:
+        raise ValueError(f"{name} must be nonnegative and finite")
+
+
+def _is_finite_number(value: object) -> bool:
+    if isinstance(value, bool) or not isinstance(value, int | float):
+        return False
+    return not isinstance(value, float) or math.isfinite(value)
 
 
 def _read_stderr(stream: TextIO, tail: _TextTail) -> None:

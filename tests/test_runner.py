@@ -2,6 +2,7 @@ import io
 import shutil
 import subprocess
 import threading
+from math import inf, nan
 from pathlib import Path
 from typing import cast
 
@@ -104,6 +105,58 @@ def test_stderr_reader_redacts_before_bounding() -> None:
 
     assert "hidden-value" not in tail.text()
     assert "token=<redacted>" in tail.text()
+
+
+@pytest.mark.parametrize("value", [0.0, -1.0, inf, nan, True, "1"])
+def test_runner_rejects_invalid_expected_duration(
+    tmp_path: Path,
+    value: object,
+) -> None:
+    plan = output(input("movie.mp4").video(), to=tmp_path / "copy.mp4")
+
+    with pytest.raises(ValueError, match="positive and finite"):
+        plan.run(expected_duration=cast(float, value))
+
+
+@pytest.mark.parametrize("value", [0.0, -1.0, inf, nan, True, "1"])
+def test_runner_rejects_invalid_timeout(tmp_path: Path, value: object) -> None:
+    plan = output(input("movie.mp4").video(), to=tmp_path / "copy.mp4")
+
+    with pytest.raises(ValueError, match="positive and finite"):
+        plan.run(timeout=cast(float, value))
+
+
+@pytest.mark.parametrize("value", [0.0, -1.0, inf, nan, True, "1"])
+def test_runner_rejects_invalid_progress_interval(
+    tmp_path: Path,
+    value: object,
+) -> None:
+    plan = output(input("movie.mp4").video(), to=tmp_path / "copy.mp4")
+
+    with pytest.raises(ValueError, match="positive and finite"):
+        plan.run(progress_interval=cast(float, value))
+
+
+@pytest.mark.parametrize("value", [-1.0, -inf, inf, nan, True, "1"])
+def test_runner_rejects_invalid_termination_grace(
+    tmp_path: Path,
+    value: object,
+) -> None:
+    plan = output(input("movie.mp4").video(), to=tmp_path / "copy.mp4")
+
+    with pytest.raises(ValueError, match="nonnegative and finite"):
+        plan.run(termination_grace=cast(float, value))
+
+
+@pytest.mark.parametrize("value", [0, -1, True, 1.5, "10"])
+def test_runner_rejects_invalid_stderr_limit(
+    tmp_path: Path,
+    value: object,
+) -> None:
+    plan = output(input("movie.mp4").video(), to=tmp_path / "copy.mp4")
+
+    with pytest.raises(ValueError, match="positive integer"):
+        plan.run(stderr_limit=cast(int, value))
 
 
 def test_process_cleanup_does_not_mask_a_job_error() -> None:
