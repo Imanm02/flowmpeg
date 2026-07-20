@@ -9,18 +9,18 @@ source change.
 
 | Measure | Count | Source |
 |---|---:|---|
-| Canonical terminal commands | 73 | `COMMAND_CATALOG` |
-| Command aliases | 77 | `COMMAND_CATALOG` |
-| Python shortcut functions | 63 | `shortcuts.__all__` |
-| One-line terminal examples | 74 | CLI example catalog |
+| Canonical terminal commands | 74 | `COMMAND_CATALOG` |
+| Command aliases | 79 | `COMMAND_CATALOG` |
+| Python shortcut functions | 64 | `shortcuts.__all__` |
+| One-line terminal examples | 75 | CLI example catalog |
 | Stable error identifiers | 16 | CLI error guide |
 | Stable audit findings | 12 | Media audit |
 | Doctor feature groups | 14 | Doctor requirements |
-| Test function definitions | 337 | `tests/test_*.py` |
+| Test function definitions | 338 | `tests/test_*.py` |
 | FFmpeg integration tests | 30 | Pytest markers |
 | Documentation pages | 15 | `docs/*.md` |
-| Documented command lines | 350 | Markdown code lines |
-| Completed roadmap items | 100 | `ROADMAP.md` |
+| Documented command lines | 352 | Markdown code lines |
+| Completed roadmap items | 101 | `ROADMAP.md` |
 | Open roadmap items | 0 | `ROADMAP.md` |
 
 ## Category matrix
@@ -31,7 +31,7 @@ counts distinct canonical commands with at least one built-in example.
 | Category | Commands | Aliases | Examples | Coverage | Python | Bar |
 |---|---:|---:|---:|---:|---:|---|
 | video | 18 | 20 | 19 | 18/18 (100%) | 18 | `##################` |
-| audio | 18 | 23 | 18 | 18/18 (100%) | 14 | `##################` |
+| audio | 19 | 25 | 19 | 19/19 (100%) | 14 | `###################` |
 | composition | 9 | 9 | 9 | 9/9 (100%) | 9 | `#########` |
 | effects | 5 | 4 | 5 | 5/5 (100%) | 5 | `#####` |
 | images | 6 | 7 | 6 | 6/6 (100%) | 6 | `######` |
@@ -49,11 +49,11 @@ The bar uses one `#` per canonical command carrying the tag.
 | accessibility | 4 | 4 | `####` |
 | archive | 13 | 13 | `#############` |
 | copy | 7 | 7 | `#######` |
-| creator | 40 | 41 | `########################################` |
-| delivery | 19 | 20 | `###################` |
+| creator | 41 | 42 | `#########################################` |
+| delivery | 20 | 21 | `####################` |
 | discover | 4 | 4 | `####` |
 | inspect | 6 | 6 | `######` |
-| podcast | 18 | 18 | `##################` |
+| podcast | 19 | 19 | `###################` |
 | privacy | 4 | 4 | `####` |
 | silent-input | 31 | 32 | `###############################` |
 

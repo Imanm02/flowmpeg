@@ -1268,6 +1268,20 @@ ff.crossfade_audio(
 ).run()
 ```
 
+### Join several audio files end to end
+
+```python
+ff.join_audio_files(
+    ("intro.wav", "body.wav", "outro.wav"),
+    "show.wav",
+    sample_rate=48000,
+    layout="stereo",
+).run()
+```
+
+Each input is resampled and given the same channel layout before concatenation.
+The shortcut accepts two or more files and resets every input timeline.
+
 ## Subtitle, sequence, and metadata shortcuts
 
 ### Extract the first subtitle track
@@ -1556,6 +1570,7 @@ ff.trim("input.mp4", "clip.mp4", start=5, duration=20).run(
 | `fade_audio_edges` | Faded audio file | Places optional fades at both edges |
 | `delay_audio_file` | Delayed audio file | Inserts leading silence on every channel |
 | `crossfade_audio` | Joined audio file | Transitions between two inputs |
+| `join_audio_files` | End-to-end audio file | Aligns formats and concatenates inputs |
 | `extract_subtitles` | SRT, WebVTT, or ASS | Maps and encodes one text subtitle track |
 | `add_subtitles` | MP4 with selectable text | Adds one `mov_text` subtitle stream |
 | `burn_subtitles` | MP4 with visible text | Renders an external subtitle track into video frames |

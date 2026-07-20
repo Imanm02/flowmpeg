@@ -124,6 +124,7 @@ _BASE_EXAMPLES = (
     _Example(
         "audio", "flowmpeg crossfade intro.wav main.wav --duration 2 -o program.wav"
     ),
+    _Example("audio", "flowmpeg audio-join intro.wav body.wav outro.wav -o show.wav"),
     _Example("audio", "flowmpeg music talk.mp4 music.mp3 -o scored.mp4"),
     _Example("audio", "flowmpeg duck talk.mp4 music.mp3 -o ducked.mp4"),
     _Example("audio", 'flowmpeg tag episode.m4a --title "Episode 12" -o tagged.m4a'),
@@ -526,6 +527,7 @@ def build_parser() -> argparse.ArgumentParser:
     _add_fade_audio(commands)
     _add_delay_audio(commands)
     _add_crossfade_audio(commands)
+    _add_join_audio(commands)
     _add_extract_subtitles(commands)
     _add_add_subtitles(commands)
     _add_burn_subtitles(commands)
@@ -1820,6 +1822,25 @@ def _add_crossfade_audio(
         choices=_AUDIO_CODEC_CHOICES,
         default="wav",
     )
+    parser.add_argument("--bitrate")
+    _output(parser)
+
+
+def _add_join_audio(
+    commands: argparse._SubParsersAction[argparse.ArgumentParser],
+) -> None:
+    parser = _command(
+        commands,
+        "join-audio",
+        "Normalize and join audio files end to end.",
+        shortcuts.join_audio_files,
+        ("sources",),
+        aliases=("concat-audio", "audio-join"),
+    )
+    parser.add_argument("sources", nargs="+", help="Input audio paths")
+    parser.add_argument("--sample-rate", type=_positive_int, default=48_000)
+    parser.add_argument("--layout", choices=("mono", "stereo"), default="stereo")
+    parser.add_argument("--codec", choices=_AUDIO_CODEC_CHOICES, default="wav")
     parser.add_argument("--bitrate")
     _output(parser)
 

@@ -141,6 +141,7 @@ __all__ = [
     "flip_video",
     "freeze_end",
     "grid",
+    "join_audio_files",
     "join_normalized",
     "join_matching",
     "image_sequence_video",
@@ -1016,6 +1017,44 @@ def mix_audio_files(
     _validate_paths(source_values, to)
     plan = output(mixed, to=to, args=_audio_args(to, codec, bitrate))
     return _set_overwrite(plan, overwrite)
+
+
+def join_audio_files(
+    sources: Sequence[Pathish],
+    to: Pathish,
+    *,
+    sample_rate: int = 48_000,
+    layout: AudioLayout = "stereo",
+    codec: AudioCodec = "wav",
+    bitrate: str | None = None,
+    overwrite: bool = False,
+) -> Plan:
+    """Normalize and join audio files end to end."""
+
+    source_values = _source_sequence(sources)
+    if len(source_values) < 2:
+        raise GraphError("Joining audio requires at least two sources")
+    if (
+        isinstance(sample_rate, bool)
+        or not isinstance(sample_rate, int)
+        or not 8_000 <= sample_rate <= 192_000
+    ):
+        raise GraphError("Sample rate must be an integer from 8000 through 192000")
+    if layout not in {"mono", "stereo"}:
+        raise GraphError(f"Unknown audio layout: {layout}")
+    streams: list[AudioStream] = []
+    for source in source_values:
+        audio = _audio_track(source).filter("aresample", sample_rate)
+        audio = audio.filter("aformat", channel_layouts=layout)
+        streams.append(audio.filter("asetpts", expr("PTS-STARTPTS")))
+    (joined,) = apply_filter(
+        streams,
+        "concat",
+        output_kinds=(StreamKind.AUDIO,),
+        options={"n": len(streams), "v": 0, "a": 1},
+    )
+    assert isinstance(joined, AudioStream)
+    return _audio_plan(joined, to, source_values, codec, bitrate, overwrite)
 
 
 def grid(

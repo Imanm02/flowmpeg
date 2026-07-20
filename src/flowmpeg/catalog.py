@@ -272,6 +272,15 @@ _BASE_COMMAND_CATALOG = (
         capability_group="audio-processing",
     ),
     CommandSpec(
+        "join-audio",
+        "audio",
+        "Join normalized audio files",
+        ("concat-audio", "audio-join"),
+        input_kind="audio files",
+        output_kind="audio",
+        capability_group="audio-processing",
+    ),
+    CommandSpec(
         "add-music",
         "audio",
         "Add a music bed to video",
@@ -638,6 +647,7 @@ _COMMAND_TAGS = {
     "podcast-voice": ("delivery",),
     "trim-silence": ("delivery",),
     "crossfade-audio": ("creator",),
+    "join-audio": ("creator", "delivery"),
     "tag-audio": ("archive",),
     "watermark": ("delivery", "silent-input"),
     "join-matching": ("archive",),
@@ -754,6 +764,13 @@ _COMMAND_REQUIREMENTS = {
     "fade-audio": _requirements(*_WAV, "filter:afade"),
     "delay-audio": _requirements(*_WAV, "filter:adelay"),
     "crossfade-audio": _requirements(*_WAV, "filter:acrossfade"),
+    "join-audio": _requirements(
+        *_WAV,
+        "filter:aformat",
+        "filter:aresample",
+        "filter:asetpts",
+        "filter:concat",
+    ),
     "add-music": _requirements(*_MP4, "filter:amix", "filter:volume"),
     "duck-music": _requirements(
         *_MP4,

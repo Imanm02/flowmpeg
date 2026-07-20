@@ -43,6 +43,7 @@ flowmpeg cut-audio demo-media/voice.wav --start 0.1 --duration 0.2 -o demo-media
 flowmpeg gain demo-media/voice.wav --gain-db 4 -o demo-media/voice-louder.wav
 flowmpeg audio-fade demo-media/music.wav --duration 2 --fade-in 0.2 --fade-out 0.4 -o demo-media/music-faded.wav
 flowmpeg sync-audio demo-media/voice.wav --seconds 0.25 -o demo-media/voice-delayed.wav
+flowmpeg audio-join demo-media/voice.wav demo-media/music.wav -o demo-media/program.wav
 flowmpeg captions demo-media/sample.mp4 demo-media/captions.srt -o demo-media/captioned.mp4
 flowmpeg burn-captions demo-media/sample.mp4 demo-media/captions.srt -o demo-media/open-captioned.mp4
 flowmpeg label-media demo-media/sample.mp4 --title "Camera master" -o demo-media/tagged.mp4
@@ -103,6 +104,7 @@ Paths can also be `pathlib.Path` objects.
 | A fixed audio gain change | `quiet.wav` | `louder.wav` |
 | Music with edge fades | `music.wav` | `music-faded.wav` |
 | Audio shifted later | `narration.wav` | `narration-synced.wav` |
+| Several recordings in sequence | WAV files | `show.wav` |
 | A loudness measurement report | `episode.wav` | Terminal text or JSON |
 | A video with a logo | `interview.mp4`, `logo.png` | `branded.mp4` |
 | A video with background music | `interview.mp4`, `music.mp3` | `with-music.mp4` |
