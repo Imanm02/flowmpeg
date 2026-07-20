@@ -913,7 +913,7 @@ def test_setup_install_yes_runs_fixed_argv(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     checks = iter((False, False, True, True))
-    calls: list[tuple[tuple[str, ...], dict[str, object]]] = []
+    calls: list[tuple[tuple[str, ...], float]] = []
 
     def tool_report(*args: object) -> dict[str, object]:
         ready = next(checks)
@@ -926,10 +926,10 @@ def test_setup_install_yes_runs_fixed_argv(
 
     def run(
         command: tuple[str, ...],
-        **kwargs: object,
-    ) -> subprocess.CompletedProcess[str]:
-        calls.append((command, kwargs))
-        return subprocess.CompletedProcess(command, 0)
+        timeout: float,
+    ) -> int:
+        calls.append((command, timeout))
+        return 0
 
     monkeypatch.setattr(cli, "_tool_report", tool_report)
     monkeypatch.setattr(
@@ -941,15 +941,10 @@ def test_setup_install_yes_runs_fixed_argv(
             "Test package source.",
         ),
     )
-    monkeypatch.setattr(subprocess, "run", run)
+    monkeypatch.setattr(cli, "_run_installer_command", run)
 
     assert cli.main(["setup", "--install", "--yes"]) == 0
-    assert calls == [
-        (
-            ("manager", "install", "ffmpeg"),
-            {"check": False, "shell": False, "timeout": 600.0},
-        )
-    ]
+    assert calls == [(("manager", "install", "ffmpeg"), 600.0)]
     assert "FFmpeg and FFprobe are ready" in capsys.readouterr().out
 
 
@@ -1033,11 +1028,7 @@ def test_setup_install_failure_returns_eight(
             "Test package source.",
         ),
     )
-    monkeypatch.setattr(
-        subprocess,
-        "run",
-        lambda *args, **kwargs: subprocess.CompletedProcess(args[0], 5),
-    )
+    monkeypatch.setattr(cli, "_run_installer_command", lambda *args: 5)
 
     assert cli.main(["setup", "--install", "--yes"]) == 8
     assert "FMG304" in capsys.readouterr().err
@@ -1066,12 +1057,72 @@ def test_setup_install_timeout_returns_eight(
         del args, kwargs
         raise subprocess.TimeoutExpired(("manager", "install", "ffmpeg"), 2.0)
 
-    monkeypatch.setattr(subprocess, "run", time_out)
+    monkeypatch.setattr(cli, "_run_installer_command", time_out)
 
     assert cli.main(["setup", "--install", "--yes", "--install-timeout", "2"]) == 8
     output = capsys.readouterr().err
     assert "timed out after 2 seconds" in output
     assert "FMG304" in output
+
+
+def test_installer_command_starts_a_process_group(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    captured: dict[str, object] = {}
+
+    class Process:
+        def wait(self, timeout: float | None = None) -> int:
+            captured["timeout"] = timeout
+            return 0
+
+    def start(*args: object, **kwargs: object) -> Process:
+        captured["args"] = args
+        captured["kwargs"] = kwargs
+        return Process()
+
+    monkeypatch.setattr(subprocess, "Popen", start)
+    monkeypatch.setattr(
+        cli,
+        "popen_group_options",
+        lambda: {"start_new_session": True},
+    )
+
+    assert cli._run_installer_command(("manager", "install"), 12) == 0
+    assert captured["args"] == (("manager", "install"),)
+    assert captured["kwargs"] == {
+        "shell": False,
+        "start_new_session": True,
+    }
+    assert captured["timeout"] == 12
+
+
+def test_installer_timeout_stops_descendants(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    stopped: list[tuple[object, float]] = []
+
+    class Process:
+        def wait(self, timeout: float | None = None) -> int:
+            assert timeout is not None
+            raise subprocess.TimeoutExpired("manager", timeout)
+
+    process = Process()
+    monkeypatch.setattr(subprocess, "Popen", lambda *args, **kwargs: process)
+
+    def stop_tree(value: object, grace: float) -> bool:
+        stopped.append((value, grace))
+        return True
+
+    monkeypatch.setattr(
+        cli,
+        "stop_process_tree",
+        stop_tree,
+    )
+
+    with pytest.raises(subprocess.TimeoutExpired):
+        cli._run_installer_command(("manager", "install"), 10)
+
+    assert stopped == [(process, 2.0)]
 
 
 def test_setup_json_describes_state_without_changes(

@@ -73,7 +73,7 @@ only a discussion or test placeholder.
 - [x] Test the dependency versions recorded in `uv.lock` in CI.
 - [x] Stop the full FFmpeg process tree after a timeout or callback failure.
 - [x] Bound or coalesce queued progress events when a callback is slow.
-- [ ] Make package-manager timeouts stop descendant processes.
+- [x] Make package-manager timeouts stop descendant processes.
 
 ## Product and discovery work
 

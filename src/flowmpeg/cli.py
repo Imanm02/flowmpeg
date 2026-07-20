@@ -39,6 +39,7 @@ from flowmpeg.probe import (
     probe,
     probe_raw,
 )
+from flowmpeg.processes import popen_group_options, stop_process_tree
 from flowmpeg.progress import Progress
 
 _Factory = Callable[..., Plan]
@@ -2053,12 +2054,7 @@ def _run_setup(args: argparse.Namespace) -> int:
 
     for command in installer.commands:
         try:
-            completed = subprocess.run(
-                command,
-                check=False,
-                shell=False,
-                timeout=install_timeout,
-            )
+            returncode = _run_installer_command(command, install_timeout)
         except subprocess.TimeoutExpired:
             return _error(
                 FlowmpegError(
@@ -2069,11 +2065,9 @@ def _run_setup(args: argparse.Namespace) -> int:
             )
         except OSError as error:
             return _error(error, 8, "FMG304")
-        if completed.returncode != 0:
+        if returncode != 0:
             return _error(
-                FlowmpegError(
-                    f"{installer.manager} exited with code {completed.returncode}"
-                ),
+                FlowmpegError(f"{installer.manager} exited with code {returncode}"),
                 8,
                 "FMG304",
             )
@@ -2088,6 +2082,19 @@ def _run_setup(args: argparse.Namespace) -> int:
         "Open a new terminal and run flowmpeg doctor."
     )
     return 3
+
+
+def _run_installer_command(command: tuple[str, ...], timeout: float) -> int:
+    process = subprocess.Popen(
+        command,
+        shell=False,
+        **popen_group_options(),
+    )
+    try:
+        return process.wait(timeout=timeout)
+    except subprocess.TimeoutExpired:
+        stop_process_tree(process, min(timeout, 2.0))
+        raise
 
 
 def _run_errors(args: argparse.Namespace) -> int:
