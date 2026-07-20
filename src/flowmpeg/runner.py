@@ -88,9 +88,13 @@ def run(
             shell=False,
         )
     except FileNotFoundError as error:
-        raise BinaryNotFoundError(f"FFmpeg was not found: {ffmpeg}") from error
+        raise BinaryNotFoundError(
+            f"FFmpeg was not found: {ffmpeg}", tool="ffmpeg"
+        ) from error
     except OSError as error:
-        raise BinaryUnusableError(f"FFmpeg could not be started: {ffmpeg}") from error
+        raise BinaryUnusableError(
+            f"FFmpeg could not be started: {ffmpeg}", tool="ffmpeg"
+        ) from error
 
     assert process.stdout is not None
     assert process.stderr is not None

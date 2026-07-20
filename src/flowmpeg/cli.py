@@ -372,7 +372,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     except (GraphError, CompilationError) as error:
         return _error(error, 2, "FMG200")
     except BinaryNotFoundError as error:
-        error_id = "FMG301" if "probe" in str(error).lower() else "FMG300"
+        error_id = "FMG301" if error.tool == "ffprobe" else "FMG300"
         return _error(error, 3, error_id)
     except BinaryUnusableError as error:
         return _error(error, 3, "FMG302")

@@ -483,6 +483,24 @@ def test_graph_error_returns_usage_code(capsys: pytest.CaptureFixture[str]) -> N
     assert "Combined fades" in capsys.readouterr().err
 
 
+def test_ffmpeg_path_containing_probe_uses_ffmpeg_error_id(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    error = BinaryNotFoundError(
+        "FFmpeg was not found: C:/probe-tools/ffmpeg.exe", tool="ffmpeg"
+    )
+
+    def fail_run(self: Plan, **kwargs: object) -> RunResult:
+        del self, kwargs
+        raise error
+
+    monkeypatch.setattr(Plan, "run", fail_run)
+
+    assert cli.main(["mute", "in.mp4", "-o", "out.mp4"]) == 3
+    assert "FMG300" in capsys.readouterr().err
+
+
 def test_shortcut_dash_input_returns_usage_code(
     capsys: pytest.CaptureFixture[str],
 ) -> None:

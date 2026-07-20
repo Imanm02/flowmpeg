@@ -143,7 +143,9 @@ def probe_raw(
     if source_text.startswith("-"):
         raise ProbeError("Probe sources cannot start with a dash")
     if not ffprobe:
-        raise BinaryNotFoundError("The FFprobe executable cannot be empty")
+        raise BinaryNotFoundError(
+            "The FFprobe executable cannot be empty", tool="ffprobe"
+        )
 
     argv = (
         ffprobe,
@@ -166,9 +168,13 @@ def probe_raw(
             check=False,
         )
     except FileNotFoundError as error:
-        raise BinaryNotFoundError(f"FFprobe was not found: {ffprobe}") from error
+        raise BinaryNotFoundError(
+            f"FFprobe was not found: {ffprobe}", tool="ffprobe"
+        ) from error
     except OSError as error:
-        raise BinaryUnusableError(f"FFprobe could not be started: {ffprobe}") from error
+        raise BinaryUnusableError(
+            f"FFprobe could not be started: {ffprobe}", tool="ffprobe"
+        ) from error
     except subprocess.TimeoutExpired as error:
         raise ProbeError(f"FFprobe timed out: {display_argv(argv)}") from error
 

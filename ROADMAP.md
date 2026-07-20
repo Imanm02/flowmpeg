@@ -30,7 +30,7 @@ only a discussion or test placeholder.
 
 ### P2
 
-- [ ] Store the executable kind on missing and unusable binary errors so
+- [x] Store the executable kind on missing and unusable binary errors so
   FFmpeg paths containing the word `probe` are classified correctly.
 - [ ] Keep `ExecutionError` messages short while retaining bounded stderr in
   the structured field.

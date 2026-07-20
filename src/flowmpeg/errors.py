@@ -8,9 +8,17 @@ class FlowmpegError(Exception):
 class BinaryNotFoundError(FlowmpegError):
     """Raised when FFmpeg or FFprobe cannot be found."""
 
+    def __init__(self, message: str, *, tool: str | None = None) -> None:
+        super().__init__(message)
+        self.tool = tool
+
 
 class BinaryUnusableError(FlowmpegError):
     """Raised when FFmpeg or FFprobe exists but cannot be started."""
+
+    def __init__(self, message: str, *, tool: str | None = None) -> None:
+        super().__init__(message)
+        self.tool = tool
 
 
 class GraphError(FlowmpegError):
