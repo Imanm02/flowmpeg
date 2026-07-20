@@ -1,7 +1,10 @@
+from typing import cast
+
 import pytest
 
 from flowmpeg import GraphError, input
 from flowmpeg.model import (
+    Expression,
     FilterNode,
     MediaGraph,
     NodeKey,
@@ -17,6 +20,11 @@ def test_input_selects_typed_streams() -> None:
     assert isinstance(source.video(), VideoStream)
     assert isinstance(source.audio(1), AudioStream)
     assert source.audio(1).ref.pad == 1
+
+
+def test_expressions_reject_non_text_values() -> None:
+    with pytest.raises(GraphError, match="nonempty text"):
+        Expression(cast(str, 12))
 
 
 @pytest.mark.parametrize("selector", ["video", "audio", "subtitle"])

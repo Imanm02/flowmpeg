@@ -19,8 +19,8 @@ class Expression:
     value: str
 
     def __post_init__(self) -> None:
-        if not self.value:
-            raise GraphError("Expressions cannot be empty")
+        if not isinstance(self.value, str) or not self.value:
+            raise GraphError("Expressions must be nonempty text")
 
 
 FilterValue: TypeAlias = str | int | float | bool | Expression
