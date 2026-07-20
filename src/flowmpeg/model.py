@@ -58,6 +58,8 @@ class StreamRef:
     kind: StreamKind
 
     def __post_init__(self) -> None:
+        if isinstance(self.pad, bool) or not isinstance(self.pad, int):
+            raise GraphError("Stream indexes must be integers")
         if self.pad < 0:
             raise GraphError("Stream indexes cannot be negative")
 

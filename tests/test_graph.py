@@ -19,6 +19,14 @@ def test_input_selects_typed_streams() -> None:
     assert source.audio(1).ref.pad == 1
 
 
+@pytest.mark.parametrize("selector", ["video", "audio", "subtitle"])
+def test_stream_selectors_reject_boolean_indexes(selector: str) -> None:
+    source = input("movie.mp4")
+
+    with pytest.raises(GraphError, match="must be integers"):
+        getattr(source, selector)(True)
+
+
 def test_filter_keeps_the_source_graph_unchanged() -> None:
     source = input("movie.mp4")
     original = source.video()

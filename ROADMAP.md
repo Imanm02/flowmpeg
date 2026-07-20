@@ -40,7 +40,7 @@ only a discussion or test placeholder.
   timed out.
 - [ ] Validate audio bitrate syntax before building a command.
 - [ ] Ignore audio bitrate controls when audio output is disabled.
-- [ ] Reject Boolean audio, video, and subtitle stream indexes.
+- [x] Reject Boolean audio, video, and subtitle stream indexes.
 - [ ] Reject unordered filter option collections.
 - [ ] Reject duplicate filter option names.
 - [ ] Strengthen runtime validation for graph model values.
