@@ -622,6 +622,17 @@ def test_compress_video_rejects_invalid_audio_bitrates(bitrate: str) -> None:
         shortcuts.compress_video("source.mov", "small.mp4", audio_bitrate=bitrate)
 
 
+def test_compress_video_ignores_bitrate_without_audio() -> None:
+    plan = shortcuts.compress_video(
+        "silent.mov",
+        "small.mp4",
+        include_audio=False,
+        audio_bitrate="not-used",
+    )
+
+    assert "-b:a" not in plan.raw_argv()
+
+
 def test_reframe_and_social_targets_build_expected_frames() -> None:
     reframed = shortcuts.reframe(
         "wide.mp4",

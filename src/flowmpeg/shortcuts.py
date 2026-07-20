@@ -193,8 +193,9 @@ def compress_video(
     if isinstance(crf, bool) or not isinstance(crf, int) or not 0 <= crf <= 51:
         raise GraphError("CRF must be an integer between 0 and 51")
     _validate_encoder_preset(encoder_preset)
-    _validate_bitrate(audio_bitrate)
     clip = media(source, audio=include_audio)
+    if clip.audio is not None:
+        _validate_bitrate(audio_bitrate)
     video = _require_video(clip)
     if max_width is not None:
         _even_positive_integer("max_width", max_width)

@@ -39,7 +39,7 @@ only a discussion or test placeholder.
 - [ ] Distinguish missing capabilities from capability checks that failed or
   timed out.
 - [x] Validate audio bitrate syntax before building a command.
-- [ ] Ignore audio bitrate controls when audio output is disabled.
+- [x] Ignore audio bitrate controls when audio output is disabled.
 - [x] Reject Boolean audio, video, and subtitle stream indexes.
 - [ ] Reject unordered filter option collections.
 - [ ] Reject duplicate filter option names.
