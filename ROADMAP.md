@@ -13,7 +13,7 @@ only a discussion or test placeholder.
 - [x] Redact completed destination paths before the CLI prints them.
 - [x] Convert FFmpeg startup permission and operating-system failures into a
   typed Flowmpeg error instead of a traceback.
-- [ ] Convert FFprobe startup permission and operating-system failures into a
+- [x] Convert FFprobe startup permission and operating-system failures into a
   typed Flowmpeg error instead of a traceback.
 - [x] Reject `-` as a synchronous runner input or output because the runner
   reserves stdin and stdout.

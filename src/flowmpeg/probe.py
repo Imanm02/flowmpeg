@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from typing import cast
 
 from flowmpeg.diagnostics import display_argv, redact_text
-from flowmpeg.errors import BinaryNotFoundError, ProbeError
+from flowmpeg.errors import BinaryNotFoundError, BinaryUnusableError, ProbeError
 
 
 @dataclass(frozen=True, slots=True)
@@ -167,6 +167,8 @@ def probe_raw(
         )
     except FileNotFoundError as error:
         raise BinaryNotFoundError(f"FFprobe was not found: {ffprobe}") from error
+    except OSError as error:
+        raise BinaryUnusableError(f"FFprobe could not be started: {ffprobe}") from error
     except subprocess.TimeoutExpired as error:
         raise ProbeError(f"FFprobe timed out: {display_argv(argv)}") from error
 

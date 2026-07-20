@@ -4,7 +4,13 @@ from pathlib import Path
 
 import pytest
 
-from flowmpeg import BinaryNotFoundError, ProbeError, probe
+from flowmpeg import (
+    BinaryNotFoundError,
+    BinaryUnusableError,
+    ProbeError,
+    probe,
+    probe_raw,
+)
 from flowmpeg.probe import AudioStreamInfo, Rational, parse_probe_data
 
 
@@ -66,6 +72,18 @@ def test_invalid_stream_collection_is_rejected() -> None:
 def test_missing_probe_binary_has_specific_error() -> None:
     with pytest.raises(BinaryNotFoundError, match="was not found"):
         probe("sample.mp4", ffprobe="missing-flowmpeg-ffprobe")
+
+
+def test_unusable_probe_binary_has_specific_error(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def deny_start(*args: object, **kwargs: object) -> None:
+        raise PermissionError("denied")
+
+    monkeypatch.setattr(subprocess, "run", deny_start)
+
+    with pytest.raises(BinaryUnusableError, match="could not be started"):
+        probe_raw("sample.mp4", ffprobe="blocked-ffprobe")
 
 
 @pytest.mark.integration
