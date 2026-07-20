@@ -199,10 +199,10 @@ the exit code.
 
 ## Use a custom executable path
 
-Every editing command accepts `--ffmpeg`:
+Every editing command accepts custom FFmpeg and FFprobe paths:
 
 ```console
-flowmpeg convert input.mov -o output.mp4 --ffmpeg C:\tools\ffmpeg\bin\ffmpeg.exe
+flowmpeg convert input.mov -o output.mp4 --ffmpeg C:\tools\ffmpeg\bin\ffmpeg.exe --ffprobe C:\tools\ffmpeg\bin\ffprobe.exe
 ```
 
 Probe accepts `--ffprobe`:

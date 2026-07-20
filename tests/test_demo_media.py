@@ -55,6 +55,7 @@ def test_demo_media_script_generates_example_inputs(tmp_path: Path) -> None:
     blend = tmp_path / "blend.wav"
     clean = tmp_path / "clean.mp4"
     sequence = tmp_path / "sequence.mp4"
+    silent_speed = tmp_path / "silent-speed.mp4"
     assert cli.main(["probe", str(video)]) == 0
     video_info = probe(video)
     assert video_info.format is not None
@@ -251,6 +252,20 @@ def test_demo_media_script_generates_example_inputs(tmp_path: Path) -> None:
     assert (
         cli.main(
             [
+                "speed",
+                str(tmp_path / "silent.mp4"),
+                "--factor",
+                "2",
+                "--no-progress",
+                "-o",
+                str(silent_speed),
+            ]
+        )
+        == 0
+    )
+    assert (
+        cli.main(
+            [
                 "timelapse",
                 str(tmp_path / "frame-%03d.png"),
                 "--fps",
@@ -279,6 +294,7 @@ def test_demo_media_script_generates_example_inputs(tmp_path: Path) -> None:
         blend,
         clean,
         sequence,
+        silent_speed,
     ):
         assert target.stat().st_size > 0
     assert len(probe(captioned).subtitle_streams) == 1
@@ -319,3 +335,6 @@ def test_demo_media_script_generates_example_inputs(tmp_path: Path) -> None:
     assert (sequence_video.width, sequence_video.height) == (1920, 1080)
     assert sequence_info.duration == pytest.approx(2.0, abs=0.2)
     assert sequence_info.audio_streams == ()
+    silent_speed_info = probe(silent_speed)
+    assert silent_speed_info.duration == pytest.approx(1.0, abs=0.2)
+    assert silent_speed_info.audio_streams == ()

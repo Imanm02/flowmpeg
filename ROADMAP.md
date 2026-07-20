@@ -37,7 +37,7 @@ only a discussion or test placeholder.
 - [x] Put a safe resource bound around two-pass edge-silence trimming.
 - [ ] Make doctor requirements cover every filter and output capability used by
   each public command.
-- [ ] Let audio-transforming timeline shortcuts detect a missing input audio
+- [x] Let audio-transforming timeline shortcuts detect a missing input audio
   stream without a separate probe or `--no-audio` choice.
 
 ### P2
@@ -125,8 +125,8 @@ only a discussion or test placeholder.
 ## Current limits
 
 - Shortcuts select explicit first streams unless a track option says otherwise.
-- Audio-transforming video shortcuts require `include_audio=False` or
-  `--no-audio` when the source has no audio stream.
+- Timeline shortcuts inspect audio streams at run time and use a video-only
+  fallback when a source is silent.
 - Fixed-region blur does not track a moving face, plate, or screen area.
 - Compression quality settings do not guarantee a smaller file than every
   possible input. Measure the result before choosing a delivery setting.

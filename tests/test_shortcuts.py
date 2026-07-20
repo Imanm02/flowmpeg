@@ -135,6 +135,35 @@ def test_video_only_filters_map_audio_optionally(plan: Plan) -> None:
     assert "0:a:0?" in plan.raw_argv()
 
 
+def test_timeline_shortcuts_attach_video_only_fallbacks() -> None:
+    plans = (
+        shortcuts.trim("movie.mp4", "trim.mp4", duration=2),
+        shortcuts.join_matching(("one.mp4", "two.mp4"), "join.mp4"),
+        shortcuts.change_speed("movie.mp4", "speed.mp4", factor=2),
+        shortcuts.fade_edges("movie.mp4", "fade.mp4", duration=2),
+        shortcuts.freeze_end("movie.mp4", "freeze.mp4"),
+        shortcuts.reverse_clip("movie.mp4", "reverse.mp4", duration=2),
+        shortcuts.boomerang("movie.mp4", "bounce.mp4", duration=2),
+    )
+
+    for plan in plans:
+        assert plan.audio_probe_sources
+        assert plan.missing_audio_fallback is not None
+        assert "0:a:0" not in plan.missing_audio_fallback.raw_argv()
+
+
+def test_explicit_video_only_timeline_plan_skips_probe() -> None:
+    plan = shortcuts.change_speed(
+        "silent.mp4",
+        "fast.mp4",
+        factor=2,
+        include_audio=False,
+    )
+
+    assert plan.audio_probe_sources == ()
+    assert plan.missing_audio_fallback is None
+
+
 def test_trim_accepts_duration() -> None:
     plan = shortcuts.trim("in.mp4", "clip.mp4", start=2, duration=3)
 

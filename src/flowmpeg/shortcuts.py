@@ -441,7 +441,18 @@ def freeze_end(
     audio = clip.audio
     if audio is not None:
         audio = audio.filter("apad", pad_dur=seconds)
-    return _web_plan(Clip(video, audio), to, (source,), preset, overwrite)
+    plan = _web_plan(Clip(video, audio), to, (source,), preset, overwrite)
+    if not include_audio:
+        return plan
+    fallback = freeze_end(
+        source,
+        to,
+        seconds=seconds,
+        include_audio=False,
+        preset=preset,
+        overwrite=overwrite,
+    )
+    return plan.with_missing_audio_fallback(fallback, source)
 
 
 def mute_section(
@@ -537,7 +548,19 @@ def boomerang(
             Clip(forward_video, forward_audio),
             Clip(reverse_video, reverse_audio),
         )
-    return _web_plan(joined, to, (source,), preset, overwrite)
+    plan = _web_plan(joined, to, (source,), preset, overwrite)
+    if not include_audio:
+        return plan
+    fallback = boomerang(
+        source,
+        to,
+        duration=duration,
+        start=start,
+        include_audio=False,
+        preset=preset,
+        overwrite=overwrite,
+    )
+    return plan.with_missing_audio_fallback(fallback, source)
 
 
 def trim(
@@ -560,7 +583,19 @@ def trim(
         start = 0 if start is None else start
         end = start + duration
     clip = media(source, audio=include_audio).trim(start=start, end=end)
-    return _web_plan(clip, to, (source,), preset, overwrite)
+    plan = _web_plan(clip, to, (source,), preset, overwrite)
+    if not include_audio:
+        return plan
+    fallback = trim(
+        source,
+        to,
+        start=start,
+        end=end,
+        include_audio=False,
+        preset=preset,
+        overwrite=overwrite,
+    )
+    return plan.with_missing_audio_fallback(fallback, source)
 
 
 def resize(
@@ -754,7 +789,17 @@ def join_matching(
         raise GraphError("Joining requires at least two sources")
     clips = tuple(media(source, audio=include_audio) for source in source_values)
     joined = concat_clips(*clips)
-    return _web_plan(joined, to, source_values, preset, overwrite)
+    plan = _web_plan(joined, to, source_values, preset, overwrite)
+    if not include_audio:
+        return plan
+    fallback = join_matching(
+        source_values,
+        to,
+        include_audio=False,
+        preset=preset,
+        overwrite=overwrite,
+    )
+    return plan.with_missing_audio_fallback(fallback, *source_values)
 
 
 def mix_audio_files(
@@ -960,7 +1005,18 @@ def change_speed(
     clip = media(source, audio=include_audio)
     video = change_video_speed(_require_video(clip), factor)
     audio = change_audio_speed(clip.audio, factor) if clip.audio is not None else None
-    return _web_plan(Clip(video, audio), to, (source,), preset, overwrite)
+    plan = _web_plan(Clip(video, audio), to, (source,), preset, overwrite)
+    if not include_audio:
+        return plan
+    fallback = change_speed(
+        source,
+        to,
+        factor=factor,
+        include_audio=False,
+        preset=preset,
+        overwrite=overwrite,
+    )
+    return plan.with_missing_audio_fallback(fallback, source)
 
 
 def normalize_loudness(
@@ -1339,7 +1395,21 @@ def fade_edges(
             start=duration - fade_out,
             duration=fade_out,
         )
-    return _web_plan(Clip(video, audio), to, (source,), preset, overwrite)
+    plan = _web_plan(Clip(video, audio), to, (source,), preset, overwrite)
+    if not include_audio:
+        return plan
+    fallback = fade_edges(
+        source,
+        to,
+        duration=duration,
+        start=start,
+        fade_in=fade_in,
+        fade_out=fade_out,
+        include_audio=False,
+        preset=preset,
+        overwrite=overwrite,
+    )
+    return plan.with_missing_audio_fallback(fallback, source)
 
 
 def blurred_background(
@@ -1411,7 +1481,19 @@ def reverse_clip(
     if audio is not None:
         audio = audio.filter("areverse")
         audio = audio.filter("asetpts", expr("PTS-STARTPTS"))
-    return _web_plan(Clip(video, audio), to, (source,), preset, overwrite)
+    plan = _web_plan(Clip(video, audio), to, (source,), preset, overwrite)
+    if not include_audio:
+        return plan
+    fallback = reverse_clip(
+        source,
+        to,
+        duration=duration,
+        start=start,
+        include_audio=False,
+        preset=preset,
+        overwrite=overwrite,
+    )
+    return plan.with_missing_audio_fallback(fallback, source)
 
 
 def denoise_audio(

@@ -20,17 +20,20 @@ writes `clip.mp4`.
 3. Video shortcuts use the tested `web` MP4 preset.
 4. Stream selection is explicit. Most shortcuts select the first stream of the
    required kind.
-5. A missing stream is reported by FFmpeg at execution time. Building a plan
-   does not probe the input.
+5. Building a plan does not probe the input. Timeline plans inspect audio only
+   when `.run()` selects an execution path.
 
-Shortcuts that only pass audio through use an optional map. Shortcuts that
-filter audio need the stream to exist. For a silent source, set
-`include_audio=False` on `trim`, `join_matching`, `change_speed`, `freeze_end`,
-`fade_edges`, `reverse_clip`, or `boomerang`.
+Shortcuts that only pass audio through use an optional map. Timeline shortcuts
+build an audio-filtering plan and a video-only fallback. Silent sources work
+without a separate probe call. Set `include_audio=False` to skip inspection and
+request video-only output directly.
 
 ```python
-ff.change_speed("silent-demo.mp4", "fast.mp4", factor=2, include_audio=False).run()
+ff.change_speed("silent-demo.mp4", "fast.mp4", factor=2).run()
 ```
+
+Pass `ffprobe` or `probe_timeout` to `.run()` when the defaults do not match the
+local tool path or source response time.
 
 The examples below assume this import:
 
