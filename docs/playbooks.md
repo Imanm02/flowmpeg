@@ -1,4 +1,4 @@
-# Five media playbooks
+# Six media playbooks
 
 These playbooks connect several one-line jobs into a deliverable. Every stage
 uses a new path so the original and each useful intermediate remain protected.
@@ -254,6 +254,55 @@ ff.blur_region("work/meeting-muted.mp4", "work/meeting-blurred.mp4", x=1320, y=8
 ff.strip_metadata("work/meeting-blurred.mp4", "deliver/meeting-share.mp4").run()
 ```
 
+## Accessible lesson release kit
+
+### Inputs and results
+
+| File | Role |
+|---|---|
+| `class-recording.mp4` | Full lesson recording |
+| `lesson-captions.srt` | Checked captions timed from the selected start |
+| `work/lesson-cut.mp4` | Ten-minute lesson segment |
+| `deliver/lesson.mp4` | Captioned lesson |
+| `deliver/lesson-cover.jpg` | Cover frame for a course page |
+| `deliver/lesson-vertical.mp4` | Vertical copy with the full image visible |
+
+Run broad checks for each output family:
+
+```console
+flowmpeg doctor --require web-video
+flowmpeg doctor --require subtitles
+flowmpeg doctor --require analysis-images
+```
+
+Create the primary lesson first, inspect its subtitle stream, then derive the
+cover and vertical copy:
+
+```console
+flowmpeg cut class-recording.mp4 --start 300 --duration 600 -o work/lesson-cut.mp4
+flowmpeg captions work/lesson-cut.mp4 lesson-captions.srt --language eng -o deliver/lesson.mp4
+flowmpeg probe deliver/lesson.mp4 --json
+flowmpeg thumb deliver/lesson.mp4 --at 15 --width 1280 -o deliver/lesson-cover.jpg
+flowmpeg social deliver/lesson.mp4 --target vertical --fill fit -o deliver/lesson-vertical.mp4
+flowmpeg compare work/lesson-cut.mp4 deliver/lesson.mp4
+```
+
+The subtitle file starts at zero because it is added after the trim. The cover
+frame does not include subtitle text because the captions remain selectable.
+The vertical copy keeps that subtitle stream only if the selected command maps
+it, so probe the derived file before publishing it as the accessible version.
+
+Python can build the editing stages:
+
+```python
+from flowmpeg import shortcuts as ff
+
+ff.trim("class-recording.mp4", "work/lesson-cut.mp4", start=300, duration=600).run()
+ff.add_subtitles("work/lesson-cut.mp4", "lesson-captions.srt", "deliver/lesson.mp4", language="eng").run()
+ff.thumbnail("deliver/lesson.mp4", "deliver/lesson-cover.jpg", at=15, width=1280).run()
+ff.social_video("deliver/lesson.mp4", "deliver/lesson-vertical.mp4", target="vertical", fill="fit").run()
+```
+
 ## File flow at a glance
 
 ```mermaid
@@ -271,6 +320,7 @@ flowchart LR
 | Tape review | Progressive MP4 | 2 | Field handling and sampled frames |
 | Product demo | Landscape MP4 | 3 | Audio source and social framing |
 | Meeting export | Metadata-cleaned MP4 | 2 | Muted range and fixed blur area |
+| Lesson kit | Captioned MP4 | 2 | Subtitle retention in each delivery file |
 
 Use `--dry-run --explain` on any editing stage to inspect its inputs, filters,
 stream maps, and output without starting FFmpeg.
