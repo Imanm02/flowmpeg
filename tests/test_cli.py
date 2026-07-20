@@ -1285,7 +1285,7 @@ def test_example_categories_match_the_command_catalog() -> None:
         assert commands[command].category == example.category, example.command
 
 
-def test_examples_cover_every_editing_command() -> None:
+def test_examples_cover_every_catalog_command() -> None:
     commands = {
         name: spec
         for spec in COMMAND_CATALOG
@@ -1294,13 +1294,8 @@ def test_examples_cover_every_editing_command() -> None:
     covered = {
         commands[shlex.split(example.command)[1]].name for example in cli._EXAMPLES
     }
-    editing = {
-        spec.name
-        for spec in COMMAND_CATALOG
-        if spec.category not in {"help", "inspect"}
-    }
 
-    assert editing <= covered
+    assert {spec.name for spec in COMMAND_CATALOG} <= covered
 
 
 def test_editing_examples_build_dry_run_plans(

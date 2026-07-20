@@ -138,6 +138,10 @@ _EXAMPLES = (
     _Example("inspect", "flowmpeg probe input.mp4"),
     _Example("inspect", "flowmpeg doctor"),
     _Example("inspect", "flowmpeg setup"),
+    _Example("help", "flowmpeg errors"),
+    _Example("help", "flowmpeg explain-error FMG610"),
+    _Example("help", "flowmpeg examples --category video"),
+    _Example("help", "flowmpeg commands --category audio"),
 )
 
 _DURATION_FACTORIES = (

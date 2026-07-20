@@ -96,7 +96,7 @@ only a discussion or test placeholder.
 - [x] Parse documented terminal options, not only command names.
 - [ ] Build safe graph examples without starting FFmpeg.
 - [ ] Execute CMD, PowerShell, and Bash loop examples in documentation tests.
-- [ ] Add built-in examples for every editing, inspection, and help command.
+- [x] Add built-in examples for every editing, inspection, and help command.
 - [ ] Keep built-in example categories aligned with the command catalog.
 - [ ] Add creator, podcast, privacy, archive, copy, inspect, and silent-input
   tags to commands and examples.

@@ -12,15 +12,15 @@ source change.
 | Canonical terminal commands | 59 | `COMMAND_CATALOG` |
 | Command aliases | 53 | `COMMAND_CATALOG` |
 | Python shortcut functions | 52 | `shortcuts.__all__` |
-| One-line terminal examples | 56 | CLI example catalog |
+| One-line terminal examples | 60 | CLI example catalog |
 | Stable error identifiers | 16 | CLI error guide |
 | Doctor feature groups | 12 | Doctor requirements |
 | Test functions | 273 | `tests/test_*.py` |
 | FFmpeg integration tests | 24 | Pytest markers |
 | Documentation pages | 12 | `docs/*.md` |
 | Documented command lines | 268 | Markdown code lines |
-| Completed roadmap items | 62 | `ROADMAP.md` |
-| Open roadmap items | 21 | `ROADMAP.md` |
+| Completed roadmap items | 63 | `ROADMAP.md` |
+| Open roadmap items | 20 | `ROADMAP.md` |
 
 ## Commands by task
 
