@@ -8,8 +8,12 @@ Building a plan does not start FFmpeg. A file is written only after
 `plan.run()` is called.
 
 For compact path-to-path calls, the [Python shortcut guide](shortcuts.md)
-contains more than 80 variants. The [command guide](cli.md) covers installed
+contains more than 100 variants. The [command guide](cli.md) covers installed
 `flowmpeg` calls for CMD and other terminals.
+
+The [real-world workflow guide](workflows.md) adds 30 terminal and Python pairs
+for social video, privacy edits, voice cleanup, subtitles, metadata, image
+sequences, and podcast audiograms.
 
 ```text
 input files -> media graph -> plan -> FFmpeg process -> output files
@@ -45,6 +49,15 @@ Paths can also be `pathlib.Path` objects.
 | A file that keeps subtitles | `film.mkv` | `film-copy.mkv` |
 | A grayscale video | `scene.mp4` | `grayscale.mp4` |
 | A video and cover image | `source.mp4` | `web.mp4`, `cover.jpg` |
+| A vertical social video | `talk.mp4` | `vertical.mp4` |
+| A smaller upload copy | `camera-master.mov` | `upload.mp4` |
+| A muted private sentence | `meeting.mp4` | `redacted.mp4` |
+| A fixed privacy blur | `driveway.mp4` | `private-driveway.mp4` |
+| A finished voice recording | `raw-episode.wav` | `episode.wav` |
+| Two tracks with a crossfade | Two WAV files | `program.wav` |
+| Selectable MP4 subtitles | MP4 and SRT | `lesson-captioned.mp4` |
+| A numbered-frame animation | PNG sequence | `animation.mp4` |
+| A podcast audiogram | WAV and cover image | `audiogram.mp4` |
 
 ## 1. Inspect a plan before running it
 

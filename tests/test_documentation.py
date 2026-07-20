@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import ast
+import inspect
 import re
 from pathlib import Path
 
@@ -70,7 +71,7 @@ def test_shortcut_guide_examples_build(monkeypatch: pytest.MonkeyPatch) -> None:
         exec(code, namespace)
 
 
-def test_command_guide_uses_known_commands() -> None:
+def test_documentation_uses_known_commands() -> None:
     parser = build_parser()
     subparsers = next(
         action
@@ -78,14 +79,42 @@ def test_command_guide_uses_known_commands() -> None:
         if isinstance(action, argparse._SubParsersAction)
     )
     known = {*subparsers.choices, "--help", "--version"}
-    path = _ROOT / "docs" / "cli.md"
-    command_lines = [
-        line
-        for line in path.read_text(encoding="utf-8").splitlines()
-        if line.startswith("flowmpeg ")
-    ]
+    command_lines: list[str] = []
+    for path in _MARKDOWN_FILES:
+        command_lines.extend(
+            line
+            for line in path.read_text(encoding="utf-8").splitlines()
+            if line.startswith("flowmpeg ") and not line.startswith("flowmpeg [")
+        )
 
-    assert len(command_lines) >= 80
+    assert len(command_lines) >= 150
     for line in command_lines:
         command = line.split(maxsplit=2)[1]
         assert command in known, line
+
+
+def test_workflow_guide_examples_build(monkeypatch: pytest.MonkeyPatch) -> None:
+    def skip_run(self: Plan, **kwargs: object) -> None:
+        return None
+
+    monkeypatch.setattr(Plan, "run", skip_run)
+    path = _ROOT / "docs" / "workflows.md"
+    text = path.read_text(encoding="utf-8")
+    namespace: dict[str, object] = {"ff": shortcuts}
+    for match in _PYTHON_BLOCK.finditer(text):
+        line = text.count("\n", 0, match.start()) + 1
+        code = compile(match.group(1), f"{path.name}:{line}", "exec")
+        exec(code, namespace)
+
+
+def test_shortcut_reference_names_every_factory() -> None:
+    text = (_ROOT / "docs" / "shortcuts.md").read_text(encoding="utf-8")
+    factories = {
+        name
+        for name in shortcuts.__all__
+        if inspect.isfunction(getattr(shortcuts, name))
+    }
+
+    assert len(factories) == 52
+    for name in factories:
+        assert f"`{name}`" in text

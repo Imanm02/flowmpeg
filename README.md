@@ -17,16 +17,27 @@ installed command is there when I want to run the same kind of job from CMD.
 
 ## Install from GitHub
 
-Flowmpeg needs Python 3.10 or newer. FFmpeg and FFprobe must be installed
-separately and available on `PATH`.
+Flowmpeg needs Python 3.10 or newer. FFmpeg and FFprobe must also be available
+on `PATH`.
 
 ```console
 python -m pip install "git+https://github.com/Imanm02/flowmpeg.git"
 flowmpeg --version
-flowmpeg doctor
+flowmpeg setup
 ```
 
-The package has no required Python dependencies.
+`flowmpeg setup` checks the tools without changing the machine. If either tool
+is missing, it prints an exact package manager command. Installation is opt-in
+with `flowmpeg setup --install` and requires confirmation. The
+[installation guide](docs/installation.md) explains Windows, macOS, Linux, CI,
+custom executable paths, and every setup status.
+
+The package has no required Python dependencies. After setup, run the broader
+capability report:
+
+```console
+flowmpeg doctor
+```
 
 ## One-line terminal jobs
 
@@ -36,11 +47,15 @@ flowmpeg scale input.mp4 --width 1280 -o small.mp4
 flowmpeg audio input.mp4 -o audio.mp3
 flowmpeg pip input.mp4 camera.mp4 -o with-camera.mp4
 flowmpeg waveform audio.mp3 -o waveform.png
+flowmpeg social input.mp4 --target vertical -o vertical.mp4
+flowmpeg voice recording.wav -o finished.wav
+flowmpeg captions movie.mp4 subtitles.srt -o captioned.mp4
+flowmpeg audiogram episode.wav cover.jpg -o episode.mp4
 ```
 
 Editing commands run immediately, protect existing outputs, and report
 progress. `--dry-run` prints the redacted FFmpeg command without starting it.
-The [command guide](docs/cli.md) covers all 27 jobs, their short forms, inputs,
+The [command guide](docs/cli.md) covers all 52 jobs, their short forms, inputs,
 outputs, and exit codes.
 
 The module form runs the same interface:
@@ -60,11 +75,14 @@ ff.extract_audio("input.mp4", "audio.mp3").run()
 ff.watermark("input.mp4", "logo.png", "branded.mp4").run()
 ff.contact_sheet("input.mp4", "sheet.jpg").run()
 ff.duck_music("talk.mp4", "music.mp3", "ducked.mp4").run()
+ff.social_video("input.mp4", "vertical.mp4", target="vertical").run()
+ff.podcast_voice("recording.wav", "finished.wav").run()
+ff.add_subtitles("movie.mp4", "subtitles.srt", "captioned.mp4").run()
 ```
 
 Shortcuts still return normal plans. They support command inspection,
 overwrite protection, progress callbacks, and timeouts. The
-[Python shortcut guide](docs/shortcuts.md) contains more than 80 copyable calls.
+[Python shortcut guide](docs/shortcuts.md) contains more than 100 copyable calls.
 
 ## One plan from several inputs
 
@@ -115,6 +133,12 @@ outputs for common jobs:
 - Copy subtitles and call raw FFmpeg filters
 - Produce multiple outputs, inspect metadata, and report progress
 
+The [real-world workflow guide](docs/workflows.md) adds 30 paired terminal and
+Python examples. It covers social formats, privacy edits, voice cleanup,
+subtitles, metadata, image sequences, and podcast audiograms. The
+[error guide](docs/errors.md) explains every `FMG` identifier and process exit
+code.
+
 For terminal calls, see the [command guide](docs/cli.md). For one-call Python
 plans, see the [shortcut guide](docs/shortcuts.md).
 
@@ -124,9 +148,15 @@ plans, see the [shortcut guide](docs/shortcuts.md).
 - Deterministic `filter_complex` labels and argv compilation
 - Typed FFprobe container and stream results
 - Synchronous execution with progress callbacks and timeouts
-- An installed `flowmpeg` command with aliases, dry runs, probe, and doctor
+- An installed `flowmpeg` command with 52 editing jobs and short aliases
+- Read-only setup checks with confirmed package manager installation
+- Stable CLI error identifiers with bounded failure output
 - Audio gain, delay, fades, mixing, and sidechain ducking
 - Video trim, canvas fitting, overlays, grids, and compatible concatenation
+- Social reframing, privacy blur, boomerang, and frame-rate conversion
+- Voice cleanup, audio crossfades, silence trimming, and mono output
+- Selectable subtitle extraction, addition, and removal
+- Image sequences, podcast audiograms, metadata removal, and audio tags
 - Waveform, spectrum, thumbnail, GIF, and contact sheet output
 - Paired `Clip` operations that keep audio with video
 - A web MP4 preset and ordered raw argument escape hatches
@@ -177,6 +207,7 @@ fanout before starting FFmpeg.
 - Existing local outputs are not replaced unless `.overwrite()` or the CLI
   `--overwrite` flag is used.
 - Commands run as argv with `shell=False`.
+- Tool installation requires `setup --install` and confirmation.
 - Displayed commands and captured errors redact URL user information and known
   secret-bearing headers.
 - The synchronous runner reserves process pipes for progress and logs.

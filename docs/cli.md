@@ -22,11 +22,17 @@ and must be available on `PATH`.
 ```console
 python -m pip install "git+https://github.com/Imanm02/flowmpeg.git"
 flowmpeg --version
+flowmpeg setup
 flowmpeg doctor
 ```
 
-`doctor` checks both executables, 51 filters and output capabilities, then
-groups the results by the kind of job they support.
+`setup` checks both executables without changing the machine. If a tool is
+missing, it prints the supported package manager command. Installation only
+runs with `flowmpeg setup --install` and confirmation. See the
+[installation guide](installation.md) for each supported system.
+
+`doctor` checks both executables and the required filters and output
+capabilities, then groups the results by the kind of job they support.
 
 The module form runs the same program:
 
@@ -85,6 +91,31 @@ flowmpeg resize input.mp4 --width 1280 -o smaller.mp4 --overwrite
 | Trim and fade a clip | `fade-edges` | `fade` |
 | Fill a wide canvas with blur | `blurred-background` | `blur-bg` |
 | Reverse a bounded clip | `reverse-clip` | `reverse` |
+| Compress a web video | `compress-video` | `compress`, `smaller` |
+| Fill a custom frame | `reframe` | `fill-frame` |
+| Prepare a social frame | `social-video` | `social` |
+| Set a constant frame rate | `set-frame-rate` | `fps` |
+| Deinterlace video | `deinterlace` | `deinterlace` |
+| Mirror video | `flip-video` | `flip`, `mirror` |
+| Adjust color levels | `adjust-colors` | `color` |
+| Sharpen video | `sharpen` | `sharpen` |
+| Hold the last frame | `freeze-end` | `freeze` |
+| Mute one time range | `mute-section` | `silence-section` |
+| Blur a fixed rectangle | `blur-region` | `privacy-blur` |
+| Play forward and backward | `boomerang` | `bounce` |
+| Reduce background noise | `denoise-audio` | `denoise` |
+| Compress audio dynamics | `compress-audio` | `dynamics` |
+| Finish spoken audio | `podcast-voice` | `voice` |
+| Trim silence from both ends | `trim-silence` | `desilence` |
+| Downmix to mono | `mono-audio` | `mono` |
+| Crossfade two audio files | `crossfade-audio` | `crossfade` |
+| Extract a subtitle track | `extract-subtitles` | `subtitles` |
+| Add selectable subtitles | `add-subtitles` | `captions` |
+| Remove subtitle tracks | `remove-subtitles` | `strip-subtitles` |
+| Encode numbered images | `image-sequence-video` | `timelapse`, `image-sequence` |
+| Make a podcast audiogram | `podcast-audiogram` | `audiogram` |
+| Remove metadata | `strip-metadata` | `clean-metadata` |
+| Tag an audio file | `tag-audio` | `tag` |
 
 Run help for the full option list and current defaults:
 
@@ -647,6 +678,180 @@ Choose another canvas or audio track:
 flowmpeg still-image-video cover.png album.mka --track 1 --width 1280 --height 720 --color white -o track-video.mp4
 ```
 
+## Creator and delivery jobs
+
+### Compress an upload copy
+
+**Input:** `master.mov`
+
+**Output:** `upload.mp4`, no wider than 1920 pixels at CRF 30.
+
+```console
+flowmpeg compress master.mov --crf 30 --max-width 1920 -o upload.mp4
+```
+
+Use a lower CRF for more retained quality or a higher CRF for a smaller file.
+The accepted range is 0 through 51.
+
+### Prepare common social frames
+
+```console
+flowmpeg social input.mp4 --target vertical --fill blur -o vertical.mp4
+flowmpeg social input.mp4 --target portrait --fill crop -o portrait.mp4
+flowmpeg social input.mp4 --target square --fill fit -o square.mp4
+flowmpeg social input.mp4 --target landscape --fill fit -o landscape.mp4
+```
+
+Targets are 1080 by 1920, 1080 by 1350, 1080 by 1080, and 1920 by 1080.
+Fill modes use a blurred copy, centered crop, or padded fit.
+
+### Reframe to another size
+
+```console
+flowmpeg reframe input.mp4 --width 720 --height 1280 -o custom.mp4
+```
+
+The image fills the frame and is cropped in the center. Both dimensions must
+be even for the web output preset.
+
+### Set frame rate or deinterlace
+
+```console
+flowmpeg fps phone.mp4 --fps 30 -o constant.mp4
+flowmpeg deinterlace tape.mpg --mode bwdif -o progressive.mp4
+```
+
+Frame-rate conversion can drop or repeat frames. Deinterlacing should only be
+used on material known to be interlaced.
+
+### Flip, color, or sharpen video
+
+```console
+flowmpeg mirror selfie.mp4 -o corrected.mp4
+flowmpeg color flat.mp4 --contrast 1.1 --saturation 1.2 -o graded.mp4
+flowmpeg sharpen soft.mp4 --amount 1.2 --matrix-size 5 -o sharp.mp4
+```
+
+These jobs encode H.264 video and retain the first audio track by default.
+
+### Hold the end or mute a section
+
+```console
+flowmpeg freeze announcement.mp4 --seconds 3 -o held.mp4
+flowmpeg silence-section meeting.mp4 --start 40 --end 47.5 -o redacted.mp4
+```
+
+Freeze adds a still-frame tail and silence. Mute changes only the selected
+audio time range.
+
+### Blur a fixed rectangle
+
+```console
+flowmpeg privacy-blur street.mp4 --x 800 --y 600 --width 240 --height 100 --radius 18 -o private.mp4
+```
+
+The rectangle does not follow motion. Check the full output when the job is
+used for privacy.
+
+### Build a boomerang
+
+```console
+flowmpeg bounce jump.mp4 --start 2 --duration 2.5 -o bounce.mp4
+```
+
+The selected section is played forward and backward. The selection is limited
+to 15 seconds because reverse filters buffer it.
+
+## Voice and audio finishing
+
+### Reduce steady noise
+
+```console
+flowmpeg denoise room.wav --reduction 10 --noise-floor -52 -o clean.wav
+```
+
+### Control dynamic range
+
+```console
+flowmpeg dynamics uneven.wav --threshold 0.1 --ratio 4 -o controlled.wav
+```
+
+### Run the spoken-word chain
+
+```console
+flowmpeg voice recording.wav -o finished.wav
+flowmpeg voice mastered.wav --no-denoise --no-compress -o level.wav
+```
+
+The default chain applies high-pass and low-pass filters, noise reduction,
+compression, loudness normalization, and 48 kHz resampling.
+
+### Trim edge silence or create mono output
+
+```console
+flowmpeg desilence take.wav --threshold-db -45 --minimum 0.3 -o tight.wav
+flowmpeg mono stereo.wav --codec mp3 --bitrate 128k -o mono.mp3
+```
+
+Silence trimming keeps pauses inside the recording. Mono accepts MP3, AAC,
+WAV, or FLAC output.
+
+### Crossfade two audio files
+
+```console
+flowmpeg crossfade intro.wav episode.wav --duration 2 --curve qsin -o program.wav
+```
+
+Both inputs must be longer than the crossfade. The supported curves are
+`tri`, `qsin`, and `exp`.
+
+## Subtitle and metadata jobs
+
+### Extract, add, or remove subtitles
+
+```console
+flowmpeg subtitles film.mkv --track 0 -o captions.srt
+flowmpeg captions film.mp4 captions.srt --language eng -o captioned.mp4
+flowmpeg strip-subtitles film.mkv -o plain.mp4
+```
+
+Extraction supports SRT, WebVTT, and ASS text outputs. Addition creates a
+selectable `mov_text` track in MP4. It does not burn text into video frames.
+
+### Remove metadata or tag audio
+
+```console
+flowmpeg clean-metadata camera.mkv -o share.mkv
+flowmpeg tag episode.m4a --title "Episode 12" --artist "Example Host" -o tagged.m4a
+```
+
+Both commands copy selected streams, so input and output extensions must match.
+Metadata removal selects the first video, optional first audio, and optional
+first subtitle stream.
+
+## Image sequences and audiograms
+
+### Encode numbered images
+
+```console
+flowmpeg timelapse frames/frame-%04d.png --fps 24 --start-number 1 -o animation.mp4
+```
+
+The pattern must contain `%d` or a padded form such as `%04d`. In a Windows
+batch file, write `%%04d` because the batch parser treats `%` specially.
+
+### Create a podcast audiogram
+
+```console
+flowmpeg audiogram episode.wav cover.jpg --wave-color DodgerBlue -o episode.mp4
+```
+
+The image loops until the selected audio ends. The waveform is centered near
+the bottom of the frame.
+
+The [real-world workflow guide](workflows.md) shows matching Python calls and
+more input and output details for every command in these sections.
+
 ## Inspection and control
 
 ### Preview a command
@@ -762,6 +967,15 @@ flowmpeg probe movie.mp4 --ffprobe "C:\Tools\ffmpeg\bin\ffprobe.exe" --timeout 1
 
 ## Diagnose an installation
 
+Start with the read-only setup check:
+
+```console
+flowmpeg setup
+```
+
+It reports tool status, the detected package manager, and its exact suggested
+command. No installation runs without `--install` and confirmation.
+
 The human report is suitable for a bug report:
 
 ```console
@@ -785,6 +999,10 @@ parts of the command set are supported by the installed FFmpeg build:
 - `analysis-images`
 - `audio-processing`
 - `reverse`
+- `creator-video`
+- `voice-cleanup`
+- `subtitles`
+- `audiogram`
 
 A limited feature group does not make `doctor` fail when both core tools work.
 The detailed JSON report contains every tested capability.
@@ -818,9 +1036,19 @@ flowmpeg thumb "C:\Media\گفتگو.mp4" --at 5 -o "C:\Media\تصویر.jpg"
 | 5 | FFprobe could not inspect the input |
 | 6 | FFmpeg exited with an error |
 | 7 | The FFmpeg job reached its timeout |
+| 8 | A package manager command failed |
 | 130 | The command was interrupted |
 
 Argparse also uses code 2 for missing flags and invalid choices.
+
+Failures also include an identifier such as `FMG612`. List or explain them:
+
+```console
+flowmpeg errors
+flowmpeg explain-error FMG612
+```
+
+The [error guide](errors.md) maps every identifier to likely causes and checks.
 
 ## Print built-in examples
 
@@ -832,4 +1060,5 @@ flowmpeg examples
 
 This file is the longer reference. The [Python shortcut guide](shortcuts.md)
 shows the same kinds of jobs as one-call `Plan` builders, while the
-[graph examples](examples.md) cover custom stream work.
+[graph examples](examples.md) cover custom stream work. The
+[workflow guide](workflows.md) pairs 30 terminal commands with Python calls.

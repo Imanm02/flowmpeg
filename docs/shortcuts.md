@@ -881,6 +881,367 @@ ff.reverse_clip(
 Reverse filters buffer the selected media. The shortcut requires a duration
 and limits it to 60 seconds.
 
+## Delivery and creator shortcuts
+
+### Compress a smaller MP4
+
+**Input:** `master.mov`
+
+**Output:** `upload.mp4`, H.264 at CRF 30 with a maximum width of 1920.
+
+```python
+ff.compress_video(
+    "master.mov",
+    "upload.mp4",
+    crf=30,
+    max_width=1920,
+    audio_bitrate="96k",
+).run()
+```
+
+### Choose a slower encoder preset
+
+```python
+ff.compress_video(
+    "master.mov",
+    "upload.mp4",
+    crf=26,
+    encoder_preset="slow",
+).run()
+```
+
+A slower preset can spend more time finding an efficient H.264 representation.
+It does not change the meaning of CRF.
+
+### Fill a vertical frame
+
+```python
+ff.reframe(
+    "wide.mp4",
+    "vertical.mp4",
+    width=1080,
+    height=1920,
+).run()
+```
+
+The source is scaled until it fills the frame, then cropped in the center.
+
+### Create a square padded version
+
+```python
+ff.social_video(
+    "wide.mp4",
+    "square.mp4",
+    target="square",
+    fill="fit",
+).run()
+```
+
+### Create a vertical version with blurred fill
+
+```python
+ff.social_video(
+    "wide.mp4",
+    "vertical.mp4",
+    target="vertical",
+    fill="blur",
+    blur=24,
+).run()
+```
+
+### Set a constant frame rate
+
+```python
+ff.set_frame_rate("phone.mp4", "constant.mp4", fps=30).run()
+```
+
+### Deinterlace an archive recording
+
+```python
+ff.deinterlace("tape.mpg", "progressive.mp4", mode="bwdif").run()
+```
+
+### Mirror a camera image
+
+```python
+ff.flip_video("selfie.mp4", "normal.mp4", direction="horizontal").run()
+```
+
+### Adjust color levels
+
+```python
+ff.adjust_colors(
+    "flat.mp4",
+    "graded.mp4",
+    brightness=0.03,
+    contrast=1.12,
+    saturation=1.18,
+    gamma=1.03,
+).run()
+```
+
+### Sharpen a soft recording
+
+```python
+ff.sharpen("soft.mp4", "sharp.mp4", amount=1.2, matrix_size=5).run()
+```
+
+### Hold the final frame
+
+```python
+ff.freeze_end("announcement.mp4", "held.mp4", seconds=3).run()
+```
+
+Audio is padded with silence when it is included.
+
+### Mute one range
+
+```python
+ff.mute_section(
+    "meeting.mp4",
+    "redacted.mp4",
+    start=73.2,
+    end=81.5,
+).run()
+```
+
+### Blur one fixed rectangle
+
+```python
+ff.blur_region(
+    "street.mp4",
+    "private.mp4",
+    x=820,
+    y=700,
+    width=260,
+    height=90,
+    radius=18,
+).run()
+```
+
+The rectangle stays at the same coordinates. It does not track objects.
+
+### Play a clip forward and backward
+
+```python
+ff.boomerang(
+    "jump.mp4",
+    "bounce.mp4",
+    start=2,
+    duration=2.5,
+).run()
+```
+
+The selected range is limited to 15 seconds because reverse filters buffer it.
+
+## Voice and audio cleanup shortcuts
+
+### Reduce steady background noise
+
+```python
+ff.denoise_audio(
+    "room.wav",
+    "clean.wav",
+    reduction=10,
+    noise_floor=-52,
+).run()
+```
+
+### Compress uneven audio
+
+```python
+ff.compress_audio(
+    "uneven.wav",
+    "controlled.wav",
+    threshold=0.1,
+    ratio=4,
+    attack=15,
+    release=220,
+).run()
+```
+
+### Run the podcast voice chain
+
+```python
+ff.podcast_voice("raw.wav", "finished.wav").run()
+```
+
+### Skip stages on an already processed voice
+
+```python
+ff.podcast_voice(
+    "mastered.wav",
+    "level.wav",
+    denoise=False,
+    compress=False,
+).run()
+```
+
+### Trim silence from both ends
+
+```python
+ff.trim_silence(
+    "take.wav",
+    "tight.wav",
+    threshold_db=-45,
+    minimum=0.3,
+).run()
+```
+
+Pauses inside the recording are retained.
+
+### Downmix to mono WAV
+
+```python
+ff.mono_audio("stereo.wav", "mono.wav").run()
+```
+
+### Downmix directly to MP3
+
+```python
+ff.mono_audio(
+    "stereo.wav",
+    "mono.mp3",
+    codec="mp3",
+    bitrate="128k",
+).run()
+```
+
+### Crossfade two tracks
+
+```python
+ff.crossfade_audio(
+    "intro.wav",
+    "episode.wav",
+    "program.wav",
+    duration=2,
+    curve="qsin",
+).run()
+```
+
+## Subtitle, sequence, and metadata shortcuts
+
+### Extract the first subtitle track
+
+```python
+ff.extract_subtitles("film.mkv", "captions.srt").run()
+```
+
+SRT, WebVTT, and ASS text outputs are supported.
+
+### Extract another subtitle track
+
+```python
+ff.extract_subtitles("film.mkv", "commentary.vtt", track=1).run()
+```
+
+### Add selectable subtitles
+
+```python
+ff.add_subtitles(
+    "lesson.mp4",
+    "captions.srt",
+    "captioned.mp4",
+    language="eng",
+).run()
+```
+
+The subtitle stream is encoded as `mov_text` in MP4. It is not burned into the
+video picture.
+
+### Remove subtitle tracks
+
+```python
+ff.remove_subtitles("screening.mkv", "plain.mp4").run()
+```
+
+### Encode numbered images
+
+```python
+ff.image_sequence_video(
+    "frames/frame-%04d.png",
+    "animation.mp4",
+    fps=24,
+    start_number=1,
+).run()
+```
+
+### Change the image-sequence canvas
+
+```python
+ff.image_sequence_video(
+    "renders/shot-%03d.jpg",
+    "shot.mp4",
+    fps=30,
+    width=1280,
+    height=720,
+    color="white",
+).run()
+```
+
+### Create a podcast audiogram
+
+```python
+ff.podcast_audiogram(
+    "episode.wav",
+    "cover.jpg",
+    "audiogram.mp4",
+    wave_color="DodgerBlue",
+).run()
+```
+
+### Use a compact audiogram frame
+
+```python
+ff.podcast_audiogram(
+    "episode.wav",
+    "cover.jpg",
+    "square-audiogram.mp4",
+    width=1080,
+    height=1080,
+    wave_width=900,
+    wave_height=180,
+).run()
+```
+
+### Remove metadata and chapters
+
+```python
+ff.strip_metadata("camera.mkv", "share.mkv").run()
+```
+
+The first video and optional first audio streams are copied. Input and output
+extensions must match.
+
+### Retain one subtitle while removing metadata
+
+```python
+ff.strip_metadata(
+    "film.mkv",
+    "film-clean.mkv",
+    include_subtitles=True,
+).run()
+```
+
+### Tag an audio file without re-encoding it
+
+```python
+ff.tag_audio(
+    "episode.m4a",
+    "episode-tagged.m4a",
+    title="Episode 12",
+    artist="Example Host",
+    album="Example Show",
+    date="2026",
+).run()
+```
+
+At least one metadata field is required. Input and output extensions must
+match.
+
+The [workflow guide](workflows.md) pairs these calls with installed terminal
+commands and explains the expected output of each job.
+
 ## Inspect or control any shortcut
 
 Every shortcut returns the same `Plan` used by the graph API.
@@ -975,6 +1336,31 @@ ff.trim("input.mp4", "clip.mp4", start=5, duration=20).run(
 | `fade_edges` | Trimmed MP4 with paired fades | Fades selected video and optional audio |
 | `blurred_background` | Fixed canvas MP4 | Composes sharp and blurred source copies |
 | `reverse_clip` | Reversed MP4 section | Buffers at most 60 seconds |
+| `compress_video` | Smaller H.264 MP4 | Encodes selected video and optional audio |
+| `reframe` | Filled custom frame | Scales up and takes a centered crop |
+| `social_video` | Common social frame | Uses blur, crop, or padded fit |
+| `set_frame_rate` | Constant-rate MP4 | Drops or repeats video frames |
+| `deinterlace` | Progressive MP4 | Applies bwdif or yadif |
+| `flip_video` | Mirrored MP4 | Flips one axis or both axes |
+| `adjust_colors` | Corrected MP4 | Applies one `eq` filter |
+| `sharpen` | Sharpened MP4 | Applies bounded luma unsharp filtering |
+| `freeze_end` | MP4 with a held ending | Clones the last frame and pads audio |
+| `mute_section` | MP4 with a muted range | Applies an enabled audio volume filter |
+| `blur_region` | MP4 with a fixed blur | Crops, blurs, and overlays one rectangle |
+| `boomerang` | Forward and reverse MP4 | Buffers at most 15 seconds |
+| `denoise_audio` | Cleaner audio file | Applies frequency-domain noise reduction |
+| `compress_audio` | Controlled audio file | Applies dynamic-range compression |
+| `podcast_voice` | Finished voice file | Filters, compresses, and normalizes speech |
+| `trim_silence` | Tighter audio file | Removes silence from both edges |
+| `mono_audio` | Mono audio file | Downmixes one selected track |
+| `crossfade_audio` | Joined audio file | Transitions between two inputs |
+| `extract_subtitles` | SRT, WebVTT, or ASS | Maps and encodes one text subtitle track |
+| `add_subtitles` | MP4 with selectable text | Adds one `mov_text` subtitle stream |
+| `remove_subtitles` | MP4 without subtitles | Selects first video and optional first audio |
+| `image_sequence_video` | MP4 from numbered images | Sets input frame rate and fits a canvas |
+| `podcast_audiogram` | Cover video with waveform | Loops an image until audio ends |
+| `strip_metadata` | Copy without metadata | Copies selected first streams |
+| `tag_audio` | Tagged audio copy | Copies one track and adds supplied fields |
 
 When a task needs custom stream selection, filter expressions, more than one
 output, or another container, use the [full example guide](examples.md) and the
