@@ -369,20 +369,21 @@ flowmpeg voice mastered.wav --no-denoise --no-compress -o level.wav
 inside the recording remain.
 
 ```console
-flowmpeg desilence take.wav --threshold-db -45 --minimum 0.3 -o tight.wav
+flowmpeg desilence take.wav --duration 120 --threshold-db -45 --minimum 0.3 -o tight.wav
 ```
 
 ```python
 ff.trim_silence(
     "take.wav",
     "tight.wav",
+    duration=120,
     threshold_db=-45,
     minimum=0.3,
 ).run()
 ```
 
 The audio is processed forward and in reverse so the same leading-silence rule
-can trim both ends.
+can trim both ends. The explicit duration keeps reverse-filter memory bounded.
 
 ### 19. Downmix an interview to mono MP3
 

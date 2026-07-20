@@ -742,7 +742,7 @@ def test_audio_cleanup_shortcuts_build_expected_chains() -> None:
     denoised = shortcuts.denoise_audio("voice.wav", "clean.wav")
     compressed = shortcuts.compress_audio("voice.wav", "level.wav")
     podcast = shortcuts.podcast_voice("voice.wav", "podcast.wav")
-    trimmed = shortcuts.trim_silence("voice.wav", "trimmed.wav")
+    trimmed = shortcuts.trim_silence("voice.wav", "trimmed.wav", duration=120)
     mono = shortcuts.mono_audio("voice.wav", "mono.wav")
 
     assert "afftdn=nr=12:nf=-50" in (denoised.filter_graph() or "")
@@ -751,7 +751,9 @@ def test_audio_cleanup_shortcuts_build_expected_chains() -> None:
     assert "highpass=f=80" in podcast_graph
     assert "lowpass=f=12000" in podcast_graph
     assert "loudnorm=I=-16:LRA=11:TP=-1.5" in podcast_graph
-    assert (trimmed.filter_graph() or "").count("silenceremove=") == 2
+    trimmed_graph = trimmed.filter_graph() or ""
+    assert "atrim=end=120" in trimmed_graph
+    assert trimmed_graph.count("silenceremove=") == 2
     assert "aformat=channel_layouts=mono" in (mono.filter_graph() or "")
 
 
@@ -999,7 +1001,13 @@ def test_shortcuts_accept_path_objects_and_overwrite() -> None:
         lambda: shortcuts.trim_silence(
             "in.wav",
             "out.wav",
+            duration=120,
             threshold_db=-100,
+        ),
+        lambda: shortcuts.trim_silence(
+            "in.wav",
+            "out.wav",
+            duration=601,
         ),
         lambda: shortcuts.crossfade_audio(
             "one.wav",
@@ -1184,6 +1192,24 @@ def test_speed_shortcut_runs_with_chained_atempo(
     assert source_duration is not None
     assert output_duration is not None
     assert output_duration < source_duration
+
+
+@pytest.mark.integration
+def test_trim_silence_runs_with_bounded_audio(
+    shortcut_media: tuple[str, Path, Path, Path],
+) -> None:
+    ffmpeg, _, voice, _ = shortcut_media
+    target = voice.parent / "trimmed.wav"
+
+    shortcuts.trim_silence(
+        voice,
+        target,
+        duration=0.2,
+        threshold_db=-80,
+        minimum=0.01,
+    ).run(ffmpeg=ffmpeg, timeout=10)
+
+    assert probe(target).duration == pytest.approx(0.2, abs=0.1)
 
 
 @pytest.mark.integration

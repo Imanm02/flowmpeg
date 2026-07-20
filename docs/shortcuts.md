@@ -1092,12 +1092,15 @@ ff.podcast_voice(
 ff.trim_silence(
     "take.wav",
     "tight.wav",
+    duration=120,
     threshold_db=-45,
     minimum=0.3,
 ).run()
 ```
 
-Pauses inside the recording are retained.
+Pauses inside the recording are retained. `duration` bounds the decoded audio
+held by FFmpeg's reverse filters. It must cover the source and cannot exceed
+600 seconds. Longer recordings should be split into bounded sections first.
 
 ### Downmix to mono WAV
 

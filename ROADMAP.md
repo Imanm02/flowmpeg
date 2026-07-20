@@ -34,7 +34,7 @@ only a discussion or test placeholder.
   programs.
 - [x] Normalize Windows extended path prefixes before checking new output
   aliases.
-- [ ] Put a safe resource bound around two-pass edge-silence trimming.
+- [x] Put a safe resource bound around two-pass edge-silence trimming.
 - [ ] Make doctor requirements cover every filter and output capability used by
   each public command.
 - [ ] Let audio-transforming timeline shortcuts detect a missing input audio

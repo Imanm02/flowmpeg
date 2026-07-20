@@ -818,12 +818,13 @@ compression, loudness normalization, and 48 kHz resampling.
 ### Trim edge silence or create mono output
 
 ```console
-flowmpeg desilence take.wav --threshold-db -45 --minimum 0.3 -o tight.wav
+flowmpeg desilence take.wav --duration 120 --threshold-db -45 --minimum 0.3 -o tight.wav
 flowmpeg mono stereo.wav --codec mp3 --bitrate 128k -o mono.mp3
 ```
 
-Silence trimming keeps pauses inside the recording. Mono accepts MP3, AAC,
-WAV, or FLAC output.
+Silence trimming keeps pauses inside the recording. Its required duration must
+cover the source and cannot exceed 600 seconds, which bounds reverse-filter
+memory. Mono accepts MP3, AAC, WAV, or FLAC output.
 
 ### Crossfade two audio files
 

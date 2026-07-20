@@ -1516,6 +1516,7 @@ def trim_silence(
     source: Pathish,
     to: Pathish,
     *,
+    duration: float,
     track: int = 0,
     threshold_db: float = -45,
     minimum: float = 0.25,
@@ -1523,8 +1524,9 @@ def trim_silence(
     bitrate: str | None = None,
     overwrite: bool = False,
 ) -> Plan:
-    """Remove silence from both ends while retaining pauses inside."""
+    """Remove edge silence within an explicit source-duration bound."""
 
+    _bounded_number("duration", duration, 0.01, 600)
     _nonnegative_integer("track", track)
     _bounded_number("threshold_db", threshold_db, -90, 0)
     _bounded_number("minimum", minimum, 0.01, 10)
@@ -1533,7 +1535,9 @@ def trim_silence(
         "start_duration": minimum,
         "start_threshold": f"{threshold_db:g}dB",
     }
-    audio = _audio_track(source, track).filter("silenceremove", **options)
+    audio = _audio_track(source, track).filter("atrim", end=duration)
+    audio = audio.filter("asetpts", expr("PTS-STARTPTS"))
+    audio = audio.filter("silenceremove", **options)
     audio = audio.filter("areverse")
     audio = audio.filter("silenceremove", **options)
     audio = audio.filter("areverse")

@@ -95,7 +95,10 @@ _BASE_EXAMPLES = (
     _Example("audio", "flowmpeg normalize voice.wav --integrated -23 -o broadcast.wav"),
     _Example("audio", "flowmpeg denoise room.wav --reduction 10 -o clean.wav"),
     _Example("audio", "flowmpeg dynamics uneven.wav --ratio 4 -o controlled.wav"),
-    _Example("audio", "flowmpeg desilence take.wav --threshold-db -45 -o tight.wav"),
+    _Example(
+        "audio",
+        "flowmpeg desilence take.wav --duration 120 --threshold-db -45 -o tight.wav",
+    ),
     _Example("audio", "flowmpeg mono interview.wav --codec mp3 -o interview.mp3"),
     _Example(
         "audio", "flowmpeg crossfade intro.wav main.wav --duration 2 -o program.wav"
@@ -1531,6 +1534,12 @@ def _add_trim_silence(
         aliases=("desilence",),
     )
     _source(parser)
+    parser.add_argument(
+        "--duration",
+        type=_positive_float,
+        required=True,
+        help="Maximum source duration to inspect, up to 600 seconds",
+    )
     parser.add_argument("--threshold-db", type=_finite_float, default=-45.0)
     parser.add_argument("--minimum", type=_positive_float, default=0.25)
     _audio_file_options(parser)

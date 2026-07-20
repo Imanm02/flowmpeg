@@ -103,7 +103,7 @@ from flowmpeg.runner import RunResult
         ["denoise-audio", "in.wav", "-o", "out.wav"],
         ["compress-audio", "in.wav", "-o", "out.wav"],
         ["podcast-voice", "in.wav", "-o", "out.wav"],
-        ["trim-silence", "in.wav", "-o", "out.wav"],
+        ["trim-silence", "in.wav", "--duration", "120", "-o", "out.wav"],
         ["mono-audio", "in.wav", "-o", "out.wav"],
         ["crossfade-audio", "one.wav", "two.wav", "-o", "out.wav"],
         ["extract-subtitles", "in.mkv", "-o", "out.srt"],
