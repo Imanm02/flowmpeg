@@ -2,7 +2,12 @@ from pathlib import Path
 
 import pytest
 
-from flowmpeg.ui.files import DirectoryListing, FileEntry, list_directory
+from flowmpeg.ui.files import (
+    DirectoryListing,
+    FileEntry,
+    create_directory,
+    list_directory,
+)
 
 
 def test_ui_directory_listing_distinguishes_files_and_folders() -> None:
@@ -44,3 +49,16 @@ def test_ui_directory_listing_reports_truncation(tmp_path: Path) -> None:
 
     assert len(listing.entries) == 1
     assert listing.truncated is True
+
+
+def test_ui_creates_a_direct_child_folder(tmp_path: Path) -> None:
+    created = create_directory(str(tmp_path), "exports")
+
+    assert Path(created) == tmp_path / "exports"
+    assert Path(created).is_dir()
+
+
+@pytest.mark.parametrize("name", ["", ".", "..", "a/b", "a\\b", "bad\nname"])
+def test_ui_rejects_unsafe_new_folder_names(tmp_path: Path, name: str) -> None:
+    with pytest.raises(ValueError, match="plain path component"):
+        create_directory(str(tmp_path), name)

@@ -73,9 +73,31 @@ def list_directory(
     )
 
 
+def create_directory(parent_path: str, name: str) -> str:
+    """Create one direct child folder after strict name checks."""
+
+    if (
+        not name
+        or name in {".", ".."}
+        or "/" in name
+        or "\\" in name
+        or any(ord(character) < 32 for character in name)
+    ):
+        raise ValueError("folder name must be one plain path component")
+    parent = Path(parent_path).expanduser().resolve()
+    if not parent.is_dir():
+        raise ValueError("parent path is not a directory")
+    target = parent / name
+    if target.exists():
+        raise ValueError("folder already exists")
+    target.mkdir()
+    return str(target.resolve())
+
+
 __all__ = [
     "DirectoryListing",
     "FileEntry",
     "MAX_DIRECTORY_ENTRIES",
+    "create_directory",
     "list_directory",
 ]
