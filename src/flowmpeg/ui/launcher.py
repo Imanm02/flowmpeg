@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from collections.abc import Callable
+from dataclasses import dataclass
+from typing import TextIO
 import webbrowser
 
 from flowmpeg.ui.application import UiApplication
@@ -40,4 +41,22 @@ def open_ui_browser(
     opener(launch.address.url)
 
 
-__all__ = ["UiLaunch", "open_ui_browser", "prepare_ui"]
+def serve_ui(
+    options: UiLaunchOptions,
+    output: TextIO,
+    *,
+    opener: Callable[[str], object] = webbrowser.open,
+) -> None:
+    """Run the UI until interrupted and always release its port."""
+
+    launch = prepare_ui(options)
+    try:
+        print(f"Flowmpeg UI: {launch.address.url}", file=output, flush=True)
+        if options.open_browser:
+            open_ui_browser(launch, opener)
+        launch.server.serve_forever()
+    finally:
+        launch.close()
+
+
+__all__ = ["UiLaunch", "open_ui_browser", "prepare_ui", "serve_ui"]
