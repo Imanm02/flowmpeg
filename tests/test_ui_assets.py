@@ -67,3 +67,12 @@ def test_ui_index_and_script_expose_preset_files() -> None:
     assert 'id="preset-file"' in index
     assert "flowmpeg-presets.json" in script
     assert "Preset file could not be imported." in script
+
+
+def test_ui_script_exposes_job_copy_actions() -> None:
+    script = load_asset("app.js").data.decode()
+
+    assert "Copy command" in script
+    assert "Job command copied." in script
+    assert "Copy output" in script
+    assert "Job output copied." in script
