@@ -453,3 +453,15 @@ Output: a new container file that copies selected streams when compatible.
 
 Why I use it: the UI keeps this separate from transcoding, so I do not choose a
 slower encode by mistake.
+
+### Remove shareable metadata
+
+Input: `camera.mkv`.
+
+```console
+flowmpeg clean-metadata camera.mkv -o share.mkv
+```
+
+Output: a copied media file with standard metadata fields cleared.
+
+Why I use it: I can make a sharing copy without changing the original file.
