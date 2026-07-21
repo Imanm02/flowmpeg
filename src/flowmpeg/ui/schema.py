@@ -75,7 +75,9 @@ class UiCommand:
             character not in "abcdefghijklmnopqrstuvwxyz0123456789-"
             for character in self.name
         ):
-            raise ValueError("command name must use lowercase letters, digits, or hyphens")
+            raise ValueError(
+                "command name must use lowercase letters, digits, or hyphens"
+            )
         if not self.category or not self.summary:
             raise ValueError("command category and summary are required")
         names = [field.name for field in self.fields]
