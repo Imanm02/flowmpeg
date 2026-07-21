@@ -44,6 +44,8 @@ flowmpeg loop demo-media/sample.mp4 --duration 3 -o demo-media/looped.mp4
 flowmpeg webm demo-media/sample.mp4 -o demo-media/sample.webm
 flowmpeg hevc demo-media/sample.mp4 -o demo-media/sample-hevc.mp4
 flowmpeg av1 demo-media/sample.mp4 --speed 10 -o demo-media/sample-av1.webm
+flowmpeg hls demo-media/sample.mp4 --segment-duration 1 -o demo-media/sample-hls
+flowmpeg dash demo-media/sample.mp4 --segment-duration 1 -o demo-media/sample-dash
 flowmpeg waveform demo-media/voice.wav -o demo-media/waveform.png
 flowmpeg audio demo-media/sample.mp4 --codec opus -o demo-media/audio.opus
 flowmpeg resample demo-media/voice.wav --sample-rate 48000 --layout mono -o demo-media/voice-standard.wav
@@ -108,6 +110,8 @@ Paths can also be `pathlib.Path` objects.
 | An open-codec web video | `interview.mp4` | `delivery.webm` |
 | A compact HEVC delivery file | `camera-master.mov` | `camera-hevc.mp4` |
 | An AV1 delivery file | `camera-master.mov` | `camera-av1.webm` |
+| An owned HLS package | `camera-master.mov` | Manifest and segment directory |
+| An owned DASH package | `camera-master.mov` | MPD and fragmented MP4 directory |
 | A silent video | `interview.mp4` | `silent.mp4` |
 | An MP3 from a video | `interview.mp4` | `voice.mp3` |
 | Standard-rate mono audio | `field.wav` | `field-standard.wav` |

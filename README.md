@@ -49,6 +49,8 @@ flowmpeg find-silence interview.wav
 flowmpeg find-black tape.mp4
 flowmpeg scenes interview.mp4
 flowmpeg crop-report letterboxed.mp4 --duration 30
+flowmpeg hls input.mp4 -o delivery-hls
+flowmpeg dash input.mp4 -o delivery-dash
 ```
 
 The second check accepts the `cut` shortcut and verifies the default encoders,
@@ -80,6 +82,8 @@ flowmpeg loop motion.mp4 --duration 30 -o background.mp4
 flowmpeg webm input.mov --crf 30 -o delivery.webm
 flowmpeg hevc input.mov --crf 28 -o archive.mp4
 flowmpeg av1 input.mov --crf 35 --speed 8 -o delivery-av1.webm
+flowmpeg hls input.mp4 --segment-duration 4 -o delivery-hls
+flowmpeg dash input.mp4 --segment-duration 2 -o delivery-dash
 flowmpeg remux input.mp4 -o archive.mkv
 flowmpeg scale input.mp4 --width 1280 -o small.mp4
 flowmpeg audio input.mp4 -o audio.mp3
@@ -178,6 +182,10 @@ outputs for common jobs:
 - Copy subtitles and call raw FFmpeg filters
 - Produce multiple outputs, inspect metadata, and report progress
 - Find silent ranges and read analysis reports
+- Create owned HLS and DASH artifact directories
+
+The [streaming package guide](docs/streaming.md) explains manifests, segment
+files, staged replacement, and the marker that protects unrelated directories.
 
 The [real-world workflow guide](docs/workflows.md) adds 30 paired terminal and
 Python examples. It covers social formats, privacy edits, voice cleanup,
@@ -197,6 +205,7 @@ plans, see the [shortcut guide](docs/shortcuts.md).
 - Immutable audio, video, and subtitle stream references
 - Deterministic `filter_complex` labels and argv compilation
 - Typed FFprobe container and stream results
+- Owned HLS and DASH artifact sets with failure cleanup
 - Synchronous execution with progress callbacks and timeouts
 - An installed `flowmpeg` command with editing, inspection, and help groups
 - Read-only setup checks with confirmed package manager installation

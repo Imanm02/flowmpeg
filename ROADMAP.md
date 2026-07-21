@@ -156,8 +156,8 @@ only a discussion or test placeholder.
 - Metadata removal copies selected first streams. It does not claim to remove
   every private byte from every container format.
 - Reverse video and reverse audio filters buffer decoded media in memory.
-- HLS, DASH, frame directories, and other multi-file outputs need explicit
-  artifact ownership before they become shortcuts.
+- HLS and DASH own dedicated marked directories. Frame extraction directories
+  still need the same ownership contract before they become shortcuts.
 - Batch orchestration, cancellation groups, and temporary-file cleanup are not
   part of the current single-process runner.
 
@@ -169,7 +169,7 @@ only a discussion or test placeholder.
 - [x] Suggest crop rectangles from measured border data.
 - [x] Check delivery constraints such as duration, dimensions, and codecs.
 - [x] Add measured two-pass loudness normalization as a workflow.
-- [ ] Define owned artifact sets for HLS and DASH outputs.
+- [x] Define owned artifact sets for HLS and DASH outputs.
 - [ ] Define batch cancellation and temporary-file cleanup rules.
 
 ## Release gates

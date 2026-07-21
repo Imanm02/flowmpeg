@@ -39,6 +39,7 @@ flowmpeg examples --search subtitle
 | See source-backed project counts | [Project statistics](project-stats.md) | Commands, examples, tests, task distribution |
 | Compare stream and encoding behavior | [Visual guide](visual-guide.md) | Matrices and data-flow diagrams |
 | Find cut points from measured media | [Analysis guide](analysis.md) | Silence intervals, JSON reports, timelines |
+| Create streaming media packages | [HLS and DASH](streaming.md) | Manifests, segments, owned replacement rules |
 
 ## Pick an interface
 

@@ -28,3 +28,4 @@
 - Stable CLI error identifiers with focused failure output
 - Installation, error, and real-world workflow guides
 - Measured two-pass loudness normalization with an inspectable workflow
+- Owned HLS and DASH packages with staged replacement

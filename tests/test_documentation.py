@@ -16,9 +16,11 @@ import pytest
 
 import flowmpeg
 from flowmpeg import cli, shortcuts
+from flowmpeg.artifacts import ArtifactSet, SegmentWorkflow
 from flowmpeg.catalog import COMMAND_CATALOG
 from flowmpeg.cli import build_parser
 from flowmpeg.plan import Plan
+from flowmpeg.runner import RunResult
 from flowmpeg.workflows import LoudnessWorkflow
 
 _ROOT = Path(__file__).parents[1]
@@ -138,6 +140,17 @@ def test_python_documentation_examples_build(
         lambda *args, **kwargs: SimpleNamespace(
             measurement=SimpleNamespace(integrated_lufs=-18.4),
             encoding=SimpleNamespace(outputs=("program-exact.wav",), elapsed=0.0),
+        ),
+    )
+    monkeypatch.setattr(
+        SegmentWorkflow,
+        "run",
+        lambda self, **kwargs: ArtifactSet(
+            self.kind,
+            self.destination,
+            f"{self.destination}/{self.manifest_name}",
+            (f"{self.destination}/{self.manifest_name}",),
+            RunResult(0, 0.0, "", None, (f"{self.destination}/{self.manifest_name}",)),
         ),
     )
     monkeypatch.setattr(flowmpeg, "probe", lambda *args, **kwargs: info)

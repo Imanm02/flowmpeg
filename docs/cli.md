@@ -94,6 +94,8 @@ The table below is a compact editing index for scanning this longer guide.
 | Convert to VP9 WebM | `transcode-webm` | `webm`, `vp9` |
 | Convert to HEVC MP4 | `transcode-hevc` | `hevc`, `h265` |
 | Convert to AV1 WebM | `transcode-av1` | `av1`, `svt-av1` |
+| Create an HLS package | `package-hls` | `hls`, `hls-vod` |
+| Create a DASH package | `package-dash` | `dash`, `mpeg-dash` |
 | Cut a time range | `trim` | `cut` |
 | Repeat to a duration | `loop-video` | `loop`, `repeat-video` |
 | Resize by one side | `resize` | `scale` |
