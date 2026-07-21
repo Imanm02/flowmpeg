@@ -77,6 +77,32 @@ scene-change scores, and ranked crop rectangles. The
 [analysis guide](docs/analysis.md) shows text reports, JSON fields, visual
 timelines, and threshold choices for different recordings.
 
+## Local browser UI
+
+```console
+flowmpeg ui
+```
+
+This opens a local media workbench with searchable forms for the installed
+commands. I can browse to input files, preview the exact one-line command, run
+it on my computer, follow its output, and cancel it from the job panel.
+
+The server binds only to a loopback address. Media stays on the computer, and
+commands run as Python argument lists without a shell. Existing output and
+package installation choices receive separate confirmation prompts.
+
+Favorites and named form presets stay in the browser profile. Light, dark,
+and system themes are included. The [UI guide](docs/ui.md) covers setup, local
+file browsing, keyboard controls, job states, security choices, and examples
+across each media domain.
+
+Use a fixed local port or keep the browser closed at startup when needed:
+
+```console
+flowmpeg ui --port 8123
+flowmpeg ui --no-browser
+```
+
 ## One-line terminal jobs
 
 ```console
