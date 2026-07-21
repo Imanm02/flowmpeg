@@ -70,6 +70,9 @@ const elements = {
   presetSelect: document.querySelector("#preset-select"),
   savePreset: document.querySelector("#save-preset"),
   deletePreset: document.querySelector("#delete-preset"),
+  exportPresets: document.querySelector("#export-presets"),
+  importPresets: document.querySelector("#import-presets"),
+  presetFile: document.querySelector("#preset-file"),
 };
 
 async function api(path, options = {}) {
@@ -260,6 +263,21 @@ elements.deletePreset.addEventListener("click", () => {
   savePresets();
   renderPresetOptions();
   showToast("Preset deleted.");
+});
+
+elements.exportPresets.addEventListener("click", () => {
+  const blob = new Blob([JSON.stringify(state.presets, null, 2)], {
+    type: "application/json",
+  });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "flowmpeg-presets.json";
+  document.body.append(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+  showToast(`${state.presets.length} presets exported.`);
 });
 
 function applyFormValues(values) {
