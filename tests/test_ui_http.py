@@ -17,3 +17,11 @@ def test_ui_json_response_uses_utf8_and_requested_status() -> None:
     assert response.status == 201
     assert response.content_type.startswith("application/json")
     assert json.loads(response.body) == {"message": "café"}
+
+
+def test_ui_response_adds_security_headers_once() -> None:
+    response = json_response({}).with_security_headers().with_security_headers()
+    names = [name for name, _ in response.headers]
+
+    assert names.count("Content-Security-Policy") == 1
+    assert names.count("X-Content-Type-Options") == 1

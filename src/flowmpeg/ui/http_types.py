@@ -6,6 +6,18 @@ import json
 from dataclasses import dataclass
 from typing import Any
 
+SECURITY_HEADERS = (
+    (
+        "Content-Security-Policy",
+        "default-src 'self'; script-src 'self'; style-src 'self'; "
+        "img-src 'self' data:; connect-src 'self'; object-src 'none'; "
+        "base-uri 'none'; frame-ancestors 'none'; form-action 'self'",
+    ),
+    ("Referrer-Policy", "no-referrer"),
+    ("X-Content-Type-Options", "nosniff"),
+    ("X-Frame-Options", "DENY"),
+)
+
 
 @dataclass(frozen=True, slots=True)
 class ApiResponse:
@@ -15,6 +27,20 @@ class ApiResponse:
     body: bytes
     content_type: str
     headers: tuple[tuple[str, str], ...] = ()
+
+    def with_security_headers(self) -> ApiResponse:
+        """Return this response with browser isolation headers."""
+
+        existing = {name.lower() for name, _ in self.headers}
+        headers = (
+            *self.headers,
+            *(
+                (name, value)
+                for name, value in SECURITY_HEADERS
+                if name.lower() not in existing
+            ),
+        )
+        return ApiResponse(self.status, self.body, self.content_type, headers)
 
 
 def json_response(data: Any, *, status: int = 200) -> ApiResponse:
@@ -28,4 +54,4 @@ def json_response(data: Any, *, status: int = 200) -> ApiResponse:
     )
 
 
-__all__ = ["ApiResponse", "json_response"]
+__all__ = ["ApiResponse", "SECURITY_HEADERS", "json_response"]
