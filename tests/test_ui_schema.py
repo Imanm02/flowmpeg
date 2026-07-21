@@ -119,3 +119,16 @@ def test_ui_schema_records_version_categories_and_commands() -> None:
 def test_ui_schema_rejects_nonpositive_versions() -> None:
     with pytest.raises(ValueError, match="version must be positive"):
         UiSchema(version=0, categories=(), commands=())
+
+
+@pytest.mark.parametrize("categories", [("video", "video"), ("",)])
+def test_ui_schema_rejects_invalid_categories(categories: tuple[str, ...]) -> None:
+    with pytest.raises(ValueError, match="schema categories"):
+        UiSchema(version=1, categories=categories, commands=())
+
+
+def test_ui_schema_rejects_unknown_command_categories() -> None:
+    command = UiCommand(name="trim", category="video", summary="Cut video")
+
+    with pytest.raises(ValueError, match="command category"):
+        UiSchema(version=1, categories=("audio",), commands=(command,))

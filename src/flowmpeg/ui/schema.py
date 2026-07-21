@@ -94,9 +94,20 @@ class UiSchema:
     def __post_init__(self) -> None:
         if self.version < 1:
             raise ValueError("schema version must be positive")
+        if any(not category for category in self.categories):
+            raise ValueError("schema categories cannot be empty")
+        if len(self.categories) != len(set(self.categories)):
+            raise ValueError("schema categories must be unique")
         names = [command.name for command in self.commands]
         if len(names) != len(set(names)):
             raise ValueError("schema command names must be unique")
+        unknown = {
+            command.category
+            for command in self.commands
+            if command.category not in self.categories
+        }
+        if unknown:
+            raise ValueError("every command category must appear in the schema")
 
 
 __all__ = [
