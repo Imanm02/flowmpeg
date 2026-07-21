@@ -1,0 +1,19 @@
+"""Validated command submissions from the local browser."""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+from typing import TypeAlias
+
+SubmittedValue: TypeAlias = str | int | float | bool | None | tuple[str, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class UiValue:
+    """One named value submitted for a command field."""
+
+    name: str
+    value: SubmittedValue
+
+
+__all__ = ["SubmittedValue", "UiValue"]
