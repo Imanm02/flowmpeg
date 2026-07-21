@@ -7,6 +7,7 @@ import inspect
 import io
 import re
 import shlex
+import struct
 import subprocess
 import sys
 from pathlib import Path
@@ -41,6 +42,8 @@ _BATCH_OPTION = re.compile(
     r"--(crf|codec|bitrate|factor|columns|rows|interval|target|fill|at)\s+"
     r"([^\s;|}]+)"
 )
+_JPEG_SIGNATURE = b"\xff\xd8"
+_JPEG_SIZE_MARKERS = {0xC0, 0xC1, 0xC2, 0xC3}
 
 
 def _code_cases() -> list[tuple[str, str]]:
@@ -101,6 +104,36 @@ def _github_anchor(heading: str) -> str:
     heading = re.sub(r"[`*_~]", "", heading).strip().lower()
     heading = re.sub(r"[^\w\- ]", "", heading)
     return re.sub(r"\s+", "-", heading)
+
+
+def _jpeg_size(path: Path) -> tuple[int, int]:
+    data = path.read_bytes()
+    assert data.startswith(_JPEG_SIGNATURE)
+    index = 2
+    while index + 4 < len(data):
+        if data[index] != 0xFF:
+            index += 1
+            continue
+        while index < len(data) and data[index] == 0xFF:
+            index += 1
+        marker = data[index]
+        index += 1
+        if marker in {0xD8, 0xD9}:
+            continue
+        segment_length = struct.unpack(">H", data[index : index + 2])[0]
+        if marker in _JPEG_SIZE_MARKERS:
+            height, width = struct.unpack(">HH", data[index + 3 : index + 7])
+            return width, height
+        index += segment_length
+    raise AssertionError(f"missing JPEG size marker in {path}")
+
+
+def test_ui_screenshot_assets_are_documentation_sized() -> None:
+    for name in ("ui-home.jpg", "ui-command.jpg", "ui-job.jpg"):
+        width, height = _jpeg_size(_ROOT / "docs" / "assets" / name)
+
+        assert width >= 1000
+        assert height >= 600
 
 
 @pytest.mark.parametrize("path", _BUILD_PATHS, ids=lambda path: path.name)

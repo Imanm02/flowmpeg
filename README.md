@@ -83,7 +83,7 @@ timelines, and threshold choices for different recordings.
 flowmpeg ui
 ```
 
-![Flowmpeg UI home](docs/assets/ui-home.png)
+![Flowmpeg UI home](docs/assets/ui-home.jpg)
 
 This opens a local media workbench with searchable forms for the installed
 commands. I can browse to input files, preview the exact one-line command, run

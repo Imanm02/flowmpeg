@@ -45,15 +45,15 @@ Then copy the printed local address into a browser on the same computer.
 
 Home view with readiness and starter actions:
 
-![Flowmpeg UI home](assets/ui-home.png)
+![Flowmpeg UI home](assets/ui-home.jpg)
 
 Command form with built-in one-line examples:
 
-![Flowmpeg UI command form](assets/ui-command.png)
+![Flowmpeg UI command form](assets/ui-command.jpg)
 
 Completed local demo-media job:
 
-![Flowmpeg UI job output](assets/ui-job.png)
+![Flowmpeg UI job output](assets/ui-job.jpg)
 
 ## First run
 
