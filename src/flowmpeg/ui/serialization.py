@@ -6,6 +6,7 @@ import json
 from typing import Any
 
 from flowmpeg.ui.schema import UiCommand, UiField, UiSchema
+from flowmpeg.ui.preview import UiPreview
 from flowmpeg.ui.validation import UiValidationIssue
 
 
@@ -73,9 +74,19 @@ def validation_issue_data(issue: UiValidationIssue) -> dict[str, str | None]:
     }
 
 
+def preview_data(preview: UiPreview) -> dict[str, Any]:
+    """Return a command preview as JSON-compatible data."""
+
+    return {
+        "arguments": list(preview.arguments),
+        "display": preview.display,
+    }
+
+
 __all__ = [
     "command_data",
     "field_data",
+    "preview_data",
     "schema_data",
     "schema_json",
     "validation_issue_data",

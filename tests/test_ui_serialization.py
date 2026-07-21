@@ -1,8 +1,15 @@
 import json
 
 from flowmpeg.ui.schema import FieldKind, PathRole, UiCommand, UiField, UiSchema
-from flowmpeg.ui.serialization import command_data, field_data, schema_data, schema_json
-from flowmpeg.ui.serialization import validation_issue_data
+from flowmpeg.ui.preview import UiPreview
+from flowmpeg.ui.serialization import (
+    command_data,
+    field_data,
+    preview_data,
+    schema_data,
+    schema_json,
+    validation_issue_data,
+)
 from flowmpeg.ui.validation import UiValidationIssue
 
 
@@ -80,4 +87,13 @@ def test_validation_issue_data_keeps_field_context() -> None:
         "code": "required",
         "message": "Source is required",
         "field": "source",
+    }
+
+
+def test_preview_data_keeps_tokens_and_display_separate() -> None:
+    preview = UiPreview(("trim", "input file.mp4"), "flowmpeg trim input.mp4")
+
+    assert preview_data(preview) == {
+        "arguments": ["trim", "input file.mp4"],
+        "display": "flowmpeg trim input.mp4",
     }
