@@ -11,6 +11,7 @@ const state = {
   query: "",
   preview: null,
   favorites: new Set(),
+  jobs: new Map(),
 };
 
 const elements = {
@@ -37,6 +38,8 @@ const elements = {
   themeSelect: document.querySelector("#theme-select"),
   toastRegion: document.querySelector("#toast-region"),
   favoriteButton: document.querySelector("#favorite-button"),
+  jobList: document.querySelector("#job-list"),
+  clearJobs: document.querySelector("#clear-jobs"),
 };
 
 async function api(path, options = {}) {
@@ -120,6 +123,11 @@ function selectCommand(command) {
     );
   }
   updateFavoriteButton();
+  elements.runButton.disabled = command.name === "ui";
+  elements.runButton.title =
+    command.name === "ui"
+      ? "The interface is already running"
+      : "Run this command on the current computer";
   renderForm(command);
   history.replaceState(null, "", `#command=${encodeURIComponent(command.name)}`);
   renderNavigation();
@@ -401,7 +409,73 @@ elements.form.addEventListener("input", () => {
 });
 elements.form.addEventListener("submit", (event) => {
   event.preventDefault();
+  startJob();
 });
+
+async function startJob() {
+  if (!state.selectedCommand || elements.runButton.disabled) {
+    return;
+  }
+  clearFormErrors();
+  elements.runButton.disabled = true;
+  elements.runButton.textContent = "Starting...";
+  try {
+    const job = await api("/api/jobs", {
+      method: "POST",
+      body: JSON.stringify({
+        command: state.selectedCommand.name,
+        values: collectValues(),
+      }),
+    });
+    state.jobs.set(job.id, job);
+    renderJobs();
+    showToast("Local job started.");
+  } catch (error) {
+    if (error.data?.issues) {
+      showFormIssues(error.data.issues);
+    } else {
+      showFormIssues([{message: error.message, field: null}]);
+    }
+  } finally {
+    elements.runButton.disabled = state.selectedCommand?.name === "ui";
+    elements.runButton.textContent = "Run locally";
+  }
+}
+
+function renderJobs() {
+  elements.jobList.replaceChildren();
+  const jobs = [...state.jobs.values()].sort(
+    (first, second) => second.createdAt - first.createdAt,
+  );
+  if (!jobs.length) {
+    const empty = document.createElement("p");
+    empty.className = "empty-state";
+    empty.textContent = "No jobs in this session.";
+    elements.jobList.append(empty);
+    return;
+  }
+  for (const job of jobs) {
+    const card = document.createElement("article");
+    card.className = "job-card";
+    card.dataset.status = job.status;
+    const header = document.createElement("header");
+    const status = document.createElement("span");
+    status.className = "job-status";
+    status.textContent = job.status;
+    const command = document.createElement("code");
+    command.textContent = job.display;
+    header.append(status, command);
+    card.append(header);
+    if (job.output) {
+      const output = document.createElement("pre");
+      output.className = "job-output";
+      output.textContent = job.output;
+      output.tabIndex = 0;
+      card.append(output);
+    }
+    elements.jobList.append(card);
+  }
+}
 
 function showToast(message) {
   const toast = document.createElement("div");

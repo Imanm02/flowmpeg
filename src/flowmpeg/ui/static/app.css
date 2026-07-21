@@ -561,6 +561,61 @@ pre {
   box-shadow: var(--shadow);
 }
 
+.job-list {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.job-card {
+  padding: 0.8rem;
+  background: var(--surface-soft);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-small);
+}
+
+.job-card header {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.job-card code {
+  overflow: hidden;
+  color: var(--text-soft);
+  font-size: 0.72rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.job-status {
+  width: max-content;
+  padding: 0.2rem 0.45rem;
+  color: var(--warning);
+  background: #fff4d6;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.job-card[data-status="succeeded"] .job-status {
+  color: var(--accent-strong);
+  background: var(--accent-soft);
+}
+
+.job-card[data-status="failed"] .job-status,
+.job-card[data-status="cancelled"] .job-status {
+  color: var(--danger);
+  background: var(--danger-soft);
+}
+
+.job-output {
+  max-height: 12rem;
+  margin-top: 0.7rem;
+  color: #dce8e2;
+  background: #13231d;
+}
+
 :focus-visible {
   outline: 3px solid #39a983;
   outline-offset: 2px;
