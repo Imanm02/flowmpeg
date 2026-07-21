@@ -93,3 +93,15 @@ def test_ui_command_requires_category_and_summary(
 ) -> None:
     with pytest.raises(ValueError, match="category and summary"):
         UiCommand(name="trim", category=category, summary=summary)
+
+
+def test_ui_command_rejects_duplicate_field_names() -> None:
+    field = UiField(name="source", label="Source", kind=FieldKind.TEXT)
+
+    with pytest.raises(ValueError, match="field names must be unique"):
+        UiCommand(
+            name="trim",
+            category="video",
+            summary="Cut video",
+            fields=(field, field),
+        )

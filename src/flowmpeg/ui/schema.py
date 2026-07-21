@@ -78,6 +78,9 @@ class UiCommand:
             raise ValueError("command name must use lowercase letters, digits, or hyphens")
         if not self.category or not self.summary:
             raise ValueError("command category and summary are required")
+        names = [field.name for field in self.fields]
+        if len(names) != len(set(names)):
+            raise ValueError("command field names must be unique")
 
 
 __all__ = ["FieldKind", "FieldValue", "PathRole", "UiCommand", "UiField"]
