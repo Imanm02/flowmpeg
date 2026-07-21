@@ -38,6 +38,15 @@ _BASE_COMMAND_CATALOG = (
         capability_group="web-video",
     ),
     CommandSpec(
+        "batch-shrink",
+        "video",
+        "Shrink local videos as one ordered batch",
+        ("shrink-batch", "shrink-folder", "shrink-all"),
+        input_kind="files, directories, or patterns",
+        output_kind="media directory",
+        capability_group="size-video",
+    ),
+    CommandSpec(
         "transcode-webm",
         "video",
         "Encode VP9 and Opus WebM",
@@ -759,6 +768,7 @@ _CATEGORY_TAGS = {
 _COMMAND_TAGS = {
     "transcode": ("delivery", "silent-input"),
     "batch-transcode": ("delivery", "silent-input"),
+    "batch-shrink": ("delivery", "silent-input"),
     "transcode-webm": ("delivery", "silent-input"),
     "transcode-hevc": ("archive", "delivery", "silent-input"),
     "transcode-av1": ("archive", "delivery", "silent-input"),
@@ -831,6 +841,15 @@ def _requirements(*names: str) -> tuple[str, ...]:
 _COMMAND_REQUIREMENTS = {
     "transcode": _MP4,
     "batch-transcode": _MP4,
+    "batch-shrink": _requirements(
+        "encoder:aac",
+        "encoder:libopus",
+        "encoder:libx264",
+        "encoder:libx265",
+        "filter:fps",
+        "filter:scale",
+        "muxer:mp4",
+    ),
     "transcode-webm": (
         "encoder:libopus",
         "encoder:libvpx-vp9",

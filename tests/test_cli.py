@@ -787,6 +787,73 @@ def test_batch_json_dry_run_lists_commands(
     assert report["jobs"][0]["command"].startswith("ffmpeg ")
 
 
+def test_batch_shrink_dry_run_uses_size_controls(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    source = tmp_path / "IMG_9357.MOV"
+    source.touch()
+
+    code = cli.main(
+        [
+            "shrink-batch",
+            str(source),
+            "-o",
+            str(tmp_path / "small"),
+            "--codec",
+            "hevc",
+            "--max-height",
+            "720",
+            "--fps",
+            "30",
+            "--crf",
+            "28",
+            "--audio-codec",
+            "opus",
+            "--audio-bitrate",
+            "32k",
+            "--dry-run",
+        ]
+    )
+
+    output = capsys.readouterr().out
+    assert code == 0
+    assert "IMG_9357-small.mp4" in output
+    assert "scale=w=-2:h=trunc(min(ih\\,720)/2)*2" in output
+    assert "fps=fps=30" in output
+    assert "-c:v libx265" in output
+    assert "-c:a libopus" in output
+    assert "-b:a 32k" in output
+
+
+def test_batch_shrink_json_dry_run_lists_commands(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    source = tmp_path / "clip.mov"
+    source.touch()
+
+    code = cli.main(
+        [
+            "batch-shrink",
+            str(source),
+            "-o",
+            str(tmp_path / "small"),
+            "--keep-size",
+            "--keep-fps",
+            "--json",
+            "--dry-run",
+        ]
+    )
+
+    report = json.loads(capsys.readouterr().out)
+    assert code == 0
+    assert report["jobs"][0]["name"] == "clip.mov"
+    assert "clip-small.mp4" in report["jobs"][0]["outputs"][0]
+    assert "--keep-size" not in report["jobs"][0]["command"]
+    assert "fps=fps=" not in report["jobs"][0]["command"]
+
+
 def test_gif_full_omits_trim_filter(capsys: pytest.CaptureFixture[str]) -> None:
     assert cli.main(["gif", "in.mp4", "--full", "-o", "out.gif", "--dry-run"]) == 0
     assert "trim=" not in capsys.readouterr().out

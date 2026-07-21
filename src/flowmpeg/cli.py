@@ -120,6 +120,7 @@ class _Example:
 _BASE_EXAMPLES = (
     _Example("video", "flowmpeg convert recording.mov -o recording.mp4"),
     _Example("video", 'flowmpeg batch "recordings/*.mov" -o converted'),
+    _Example("video", 'flowmpeg shrink-batch "clips/*.MOV" -o small-clips'),
     _Example("video", "flowmpeg webm recording.mov -o recording.webm"),
     _Example("video", "flowmpeg hevc recording.mov -o recording-hevc.mp4"),
     _Example("video", "flowmpeg av1 recording.mov -o recording-av1.webm"),
@@ -568,6 +569,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     _add_transcode(commands)
     _add_batch_transcode(commands)
+    _add_batch_shrink(commands)
     _add_transcode_webm(commands)
     _add_transcode_hevc(commands)
     _add_transcode_av1(commands)
@@ -874,6 +876,103 @@ def _add_batch_transcode(
         help="Show FFmpeg progress",
     )
     parser.set_defaults(handler=_run_batch_transcode)
+
+
+def _add_batch_shrink(
+    commands: argparse._SubParsersAction[argparse.ArgumentParser],
+) -> None:
+    parser = commands.add_parser(
+        "batch-shrink",
+        aliases=["shrink-batch", "shrink-folder", "shrink-all"],
+        help="Shrink several local videos to small MP4 files.",
+        description=(
+            "Shrink local files, directories, or quoted patterns to small MP4 files."
+        ),
+        allow_abbrev=False,
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+    parser.add_argument(
+        "sources",
+        nargs="+",
+        help="Input files, directories, or quoted wildcard patterns",
+    )
+    parser.add_argument(
+        "-o",
+        "--output-dir",
+        required=True,
+        help="Directory for small MP4 files",
+    )
+    parser.add_argument(
+        "--recursive",
+        action="store_true",
+        help="Search directory inputs and double-star patterns recursively",
+    )
+    parser.add_argument(
+        "--name-suffix",
+        default="-small",
+        help="Text added after each source stem",
+    )
+    parser.add_argument("--codec", choices=("h264", "hevc"), default="hevc")
+    parser.add_argument("--crf", type=_nonnegative_int, default=28)
+    parser.add_argument(
+        "--encoder-preset",
+        choices=(
+            "ultrafast",
+            "superfast",
+            "veryfast",
+            "faster",
+            "fast",
+            "medium",
+            "slow",
+            "slower",
+            "veryslow",
+        ),
+        default="medium",
+    )
+    parser.add_argument("--max-width", type=_positive_int)
+    parser.add_argument("--max-height", type=_positive_int, default=720)
+    parser.add_argument("--fps", type=_positive_int, default=30)
+    parser.add_argument(
+        "--keep-size",
+        action="store_true",
+        help="Keep source dimensions apart from even-pixel rounding",
+    )
+    parser.add_argument(
+        "--keep-fps",
+        action="store_true",
+        help="Keep the original frame rate",
+    )
+    parser.add_argument("--audio-codec", choices=("aac", "opus"), default="aac")
+    parser.add_argument("--audio-bitrate", default="96k")
+    _audio_toggle(parser)
+    parser.add_argument(
+        "--continue-on-error",
+        action="store_true",
+        help="Run later files after one conversion fails",
+    )
+    parser.add_argument("--overwrite", action="store_true")
+    parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument("--json", action="store_true", help="Print result JSON")
+    parser.add_argument("--ffmpeg", default="ffmpeg", help="FFmpeg executable")
+    parser.add_argument("--ffprobe", default="ffprobe", help="FFprobe executable")
+    parser.add_argument(
+        "--probe-timeout",
+        type=_positive_float,
+        default=10.0,
+        help="Maximum seconds for each audio stream check",
+    )
+    parser.add_argument(
+        "--timeout",
+        type=_positive_float,
+        help="Maximum run time per file in seconds",
+    )
+    parser.add_argument(
+        "--progress",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Show FFmpeg progress",
+    )
+    parser.set_defaults(handler=_run_batch_shrink)
 
 
 def _add_transcode_webm(
@@ -3029,6 +3128,48 @@ def _run_batch_transcode(args: argparse.Namespace) -> int:
         overwrite=overwrite,
         timeout=cast(float | None, args.timeout),
     )
+    return _run_batch_jobs(args, jobs, output_dir=output_dir, overwrite=overwrite)
+
+
+def _run_batch_shrink(args: argparse.Namespace) -> int:
+    sources = _discover_batch_sources(
+        cast(Sequence[str], args.sources),
+        recursive=cast(bool, args.recursive),
+    )
+    output_value = cast(str, args.output_dir)
+    if not output_value:
+        raise GraphError("Batch output directories cannot be empty")
+    output_dir = Path(output_value)
+    name_suffix = _batch_name_suffix(cast(str, args.name_suffix))
+    overwrite = cast(bool, args.overwrite)
+    jobs = _batch_shrink_jobs(
+        sources,
+        output_dir,
+        name_suffix=name_suffix,
+        codec=cast(shortcuts.ShrinkVideoCodec, args.codec),
+        crf=cast(int, args.crf),
+        encoder_preset=cast(shortcuts.EncoderPreset, args.encoder_preset),
+        max_width=cast(int | None, args.max_width),
+        max_height=None
+        if cast(bool, args.keep_size)
+        else cast(int | None, args.max_height),
+        fps=None if cast(bool, args.keep_fps) else cast(int | None, args.fps),
+        include_audio=cast(bool, args.include_audio),
+        audio_codec=cast(shortcuts.ShrinkAudioCodec, args.audio_codec),
+        audio_bitrate=cast(str, args.audio_bitrate),
+        overwrite=overwrite,
+        timeout=cast(float | None, args.timeout),
+    )
+    return _run_batch_jobs(args, jobs, output_dir=output_dir, overwrite=overwrite)
+
+
+def _run_batch_jobs(
+    args: argparse.Namespace,
+    jobs: tuple[BatchJob, ...],
+    *,
+    output_dir: Path,
+    overwrite: bool,
+) -> int:
     ffmpeg = cast(str, args.ffmpeg)
     if cast(bool, args.dry_run):
         _print_batch_dry_run(jobs, ffmpeg=ffmpeg, as_json=cast(bool, args.json))
@@ -3155,6 +3296,53 @@ def _batch_transcode_jobs(
             source,
             destination,
             include_audio=include_audio,
+            overwrite=overwrite,
+        )
+        jobs.append(BatchJob(source.name, plan, timeout=timeout))
+    return tuple(jobs)
+
+
+def _batch_shrink_jobs(
+    sources: tuple[Path, ...],
+    output_dir: Path,
+    *,
+    name_suffix: str,
+    codec: shortcuts.ShrinkVideoCodec,
+    crf: int,
+    encoder_preset: shortcuts.EncoderPreset,
+    max_width: int | None,
+    max_height: int | None,
+    fps: int | None,
+    include_audio: bool,
+    audio_codec: shortcuts.ShrinkAudioCodec,
+    audio_bitrate: str,
+    overwrite: bool,
+    timeout: float | None,
+) -> tuple[BatchJob, ...]:
+    destinations: dict[str, Path] = {}
+    jobs: list[BatchJob] = []
+    for source in sources:
+        destination = output_dir / f"{source.stem}{name_suffix}.mp4"
+        key = os.path.normcase(os.path.abspath(destination))
+        previous = destinations.get(key)
+        if previous is not None:
+            raise GraphError(
+                "Batch sources produce the same output name: "
+                f"{redact_text(os.fspath(previous))}"
+            )
+        destinations[key] = destination
+        plan = shortcuts.shrink_video(
+            source,
+            destination,
+            codec=codec,
+            crf=crf,
+            encoder_preset=encoder_preset,
+            max_width=max_width,
+            max_height=max_height,
+            fps=fps,
+            include_audio=include_audio,
+            audio_codec=audio_codec,
+            audio_bitrate=audio_bitrate,
             overwrite=overwrite,
         )
         jobs.append(BatchJob(source.name, plan, timeout=timeout))
