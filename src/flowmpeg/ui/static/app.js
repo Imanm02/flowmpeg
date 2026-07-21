@@ -15,6 +15,7 @@ const state = {
   pollTimer: null,
   fileBrowser: null,
   lastDirectory: null,
+  presets: [],
 };
 
 const elements = {
@@ -56,6 +57,9 @@ const elements = {
   fileUsePath: document.querySelector("#file-use-path"),
   outputNameField: document.querySelector("#output-name-field"),
   outputFileName: document.querySelector("#output-file-name"),
+  presetSelect: document.querySelector("#preset-select"),
+  savePreset: document.querySelector("#save-preset"),
+  deletePreset: document.querySelector("#delete-preset"),
 };
 
 async function api(path, options = {}) {
@@ -145,6 +149,7 @@ function selectCommand(command) {
       ? "The interface is already running"
       : "Run this command on the current computer";
   renderForm(command);
+  renderPresetOptions();
   history.replaceState(null, "", `#command=${encodeURIComponent(command.name)}`);
   renderNavigation();
   elements.commandPanel.scrollIntoView({behavior: "smooth", block: "start"});
@@ -161,6 +166,112 @@ function loadFavorites() {
   } catch {
     state.favorites = new Set();
   }
+}
+
+function loadPresets() {
+  try {
+    const values = JSON.parse(localStorage.getItem("flowmpeg-presets") || "[]");
+    state.presets = Array.isArray(values)
+      ? values.filter(
+          (value) =>
+            value &&
+            typeof value.id === "string" &&
+            typeof value.name === "string" &&
+            typeof value.command === "string" &&
+            value.values &&
+            typeof value.values === "object",
+        )
+      : [];
+  } catch {
+    state.presets = [];
+  }
+}
+
+function savePresets() {
+  localStorage.setItem("flowmpeg-presets", JSON.stringify(state.presets));
+}
+
+function renderPresetOptions() {
+  elements.presetSelect.replaceChildren(
+    new Option("Choose a saved preset", ""),
+  );
+  if (!state.selectedCommand) {
+    return;
+  }
+  const presets = state.presets
+    .filter((preset) => preset.command === state.selectedCommand.name)
+    .sort((first, second) => first.name.localeCompare(second.name));
+  for (const preset of presets) {
+    elements.presetSelect.append(new Option(preset.name, preset.id));
+  }
+  elements.deletePreset.disabled = true;
+}
+
+elements.savePreset.addEventListener("click", () => {
+  if (!state.selectedCommand) {
+    return;
+  }
+  const name = window.prompt("Preset name");
+  if (!name?.trim()) {
+    return;
+  }
+  state.presets.push({
+    id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+    name: name.trim(),
+    command: state.selectedCommand.name,
+    values: collectValues(),
+  });
+  savePresets();
+  renderPresetOptions();
+  showToast("Preset saved in this browser.");
+});
+
+elements.presetSelect.addEventListener("change", () => {
+  const preset = state.presets.find(
+    (value) => value.id === elements.presetSelect.value,
+  );
+  elements.deletePreset.disabled = !preset;
+  if (!preset) {
+    return;
+  }
+  applyFormValues(preset.values);
+  showToast("Preset loaded.");
+});
+
+elements.deletePreset.addEventListener("click", () => {
+  const id = elements.presetSelect.value;
+  if (!id) {
+    return;
+  }
+  state.presets = state.presets.filter((preset) => preset.id !== id);
+  savePresets();
+  renderPresetOptions();
+  showToast("Preset deleted.");
+});
+
+function applyFormValues(values) {
+  for (const field of state.selectedCommand.fields) {
+    const control = elements.form.elements.namedItem(field.name);
+    if (!control || !(field.name in values)) {
+      continue;
+    }
+    const value = values[field.name];
+    const clear = elements.form.querySelector(
+      `[data-clear-for="${field.name}"]`,
+    );
+    if (clear) {
+      clear.checked = value === null;
+      control.disabled = clear.checked;
+    }
+    if (field.kind === "boolean") {
+      control.checked = Boolean(value);
+    } else if (field.multiple && Array.isArray(value)) {
+      control.value = value.join("\n");
+    } else if (value !== null) {
+      control.value = String(value);
+    }
+  }
+  elements.form.dispatchEvent(new Event("input", {bubbles: true}));
 }
 
 function updateFavoriteButton() {
@@ -939,6 +1050,7 @@ elements.search.addEventListener("input", (event) => {
 async function boot() {
   try {
     loadFavorites();
+    loadPresets();
     const [health, schema] = await Promise.all([
       api("/api/health"),
       api("/api/schema"),
