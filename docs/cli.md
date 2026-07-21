@@ -54,6 +54,28 @@ python -m flowmpeg doctor
 python -m flowmpeg cut input.mp4 --duration 5 -o clip.mp4
 ```
 
+## Open local browser forms
+
+```console
+flowmpeg ui
+```
+
+The UI searches the command catalog and builds fields from the same argument
+parser described in this guide. It can browse local paths, validate required
+values, preview the equivalent one-line command, and run it as a local job.
+
+```console
+flowmpeg ui --port 8123
+flowmpeg ui --no-browser
+```
+
+The first form uses a fixed local port. The second prints a free local address
+without opening the default browser. The aliases `app` and `gui` start the
+same interface.
+
+Use the [local browser UI guide](ui.md) for real job examples, keyboard
+controls, presets, cancellation, and the loopback-only security model.
+
 ## The four command rules
 
 1. Editing commands execute unless `--dry-run` is present.
