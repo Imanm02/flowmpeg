@@ -364,3 +364,16 @@ container size.
 
 Why I use it: I can see what changed after a conversion without opening two
 separate probe reports.
+
+### Measure visual quality
+
+Input: `reference.mp4` and `candidate.mp4`.
+
+```console
+flowmpeg quality reference.mp4 candidate.mp4 --duration 30
+```
+
+Output: PSNR and SSIM values for the compared range.
+
+Why I use it: this gives a numeric check when a smaller file still needs to
+look close to the source.
