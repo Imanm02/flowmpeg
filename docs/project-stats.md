@@ -9,15 +9,15 @@ source change.
 
 | Measure | Count | Source |
 |---|---:|---|
-| Canonical terminal commands | 88 | `COMMAND_CATALOG` |
-| Generated UI command forms | 88 | UI schema builder |
-| Command aliases | 108 | `COMMAND_CATALOG` |
+| Canonical terminal commands | 89 | `COMMAND_CATALOG` |
+| Generated UI command forms | 89 | UI schema builder |
+| Command aliases | 110 | `COMMAND_CATALOG` |
 | Python shortcut functions | 68 | `shortcuts.__all__` |
-| One-line terminal examples | 89 | CLI example catalog |
+| One-line terminal examples | 90 | CLI example catalog |
 | Stable error identifiers | 16 | CLI error guide |
 | Stable audit findings | 20 | Media audit |
 | Doctor feature groups | 18 | Doctor requirements |
-| Test function definitions | 588 | `tests/test_*.py` |
+| Test function definitions | 598 | `tests/test_*.py` |
 | UI test function definitions | 133 | `tests/test_ui_*.py` |
 | FFmpeg integration tests | 42 | Pytest markers |
 | Documentation pages | 20 | `docs/*.md` |
@@ -40,7 +40,7 @@ counts distinct canonical commands with at least one built-in example.
 | subtitles | 4 | 5 | 4 | 4/4 (100%) | 4 | `####` |
 | metadata | 3 | 4 | 3 | 3/3 (100%) | 2 | `###` |
 | inspect | 11 | 16 | 11 | 11/11 (100%) | 0 | `###########` |
-| help | 5 | 2 | 5 | 5/5 (100%) | 0 | `#####` |
+| help | 6 | 4 | 6 | 6/6 (100%) | 0 | `######` |
 
 ## Use-case coverage
 
@@ -53,7 +53,7 @@ The bar uses one `#` per canonical command carrying the tag.
 | copy | 7 | 7 | `#######` |
 | creator | 49 | 50 | `#################################################` |
 | delivery | 26 | 27 | `##########################` |
-| discover | 5 | 5 | `#####` |
+| discover | 6 | 6 | `######` |
 | inspect | 11 | 11 | `###########` |
 | podcast | 21 | 21 | `#####################` |
 | privacy | 4 | 4 | `####` |
