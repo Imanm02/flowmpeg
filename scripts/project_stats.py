@@ -26,9 +26,10 @@ from flowmpeg.cli import _ERROR_GUIDE, _EXAMPLES, _FEATURE_REQUIREMENTS  # noqa:
 TARGET = ROOT / "docs" / "project-stats.md"
 
 
-def _test_counts() -> tuple[int, int]:
+def _test_counts() -> tuple[int, int, int]:
     tests = 0
     integration = 0
+    ui_tests = 0
     for path in sorted((ROOT / "tests").glob("test_*.py")):
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
         for node in ast.walk(tree):
@@ -36,9 +37,11 @@ def _test_counts() -> tuple[int, int]:
                 node, (ast.FunctionDef, ast.AsyncFunctionDef)
             ) and node.name.startswith("test_"):
                 tests += 1
+                if path.stem.startswith("test_ui_"):
+                    ui_tests += 1
                 if any(_is_integration_mark(item) for item in node.decorator_list):
                     integration += 1
-    return tests, integration
+    return tests, integration, ui_tests
 
 
 def _is_integration_mark(node: ast.expr) -> bool:
@@ -69,7 +72,7 @@ def _roadmap_counts() -> tuple[int, int]:
 def render() -> str:
     """Render the current statistics as Markdown."""
 
-    tests, integration = _test_counts()
+    tests, integration, ui_tests = _test_counts()
     docs, documented_commands = _documentation_counts()
     completed, open_items = _roadmap_counts()
     aliases = sum(len(spec.aliases) for spec in COMMAND_CATALOG)
@@ -111,6 +114,7 @@ def render() -> str:
         "| Measure | Count | Source |",
         "|---|---:|---|",
         f"| Canonical terminal commands | {len(COMMAND_CATALOG)} | `COMMAND_CATALOG` |",
+        f"| Generated UI command forms | {len(COMMAND_CATALOG)} | UI schema builder |",
         f"| Command aliases | {aliases} | `COMMAND_CATALOG` |",
         f"| Python shortcut functions | {shortcut_functions} | `shortcuts.__all__` |",
         f"| One-line terminal examples | {len(_EXAMPLES)} | CLI example catalog |",
@@ -118,6 +122,7 @@ def render() -> str:
         f"| Stable audit findings | {len(AUDIT_CODES)} | Media audit |",
         f"| Doctor feature groups | {len(_FEATURE_REQUIREMENTS)} | Doctor requirements |",
         f"| Test function definitions | {tests} | `tests/test_*.py` |",
+        f"| UI test function definitions | {ui_tests} | `tests/test_ui_*.py` |",
         f"| FFmpeg integration tests | {integration} | Pytest markers |",
         f"| Documentation pages | {docs} | `docs/*.md` |",
         f"| Documented command lines | {documented_commands} | Markdown code lines |",
