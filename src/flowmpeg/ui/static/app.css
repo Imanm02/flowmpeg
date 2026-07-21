@@ -622,6 +622,18 @@ pre {
   background: #13231d;
 }
 
+.job-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.7rem;
+}
+
+.job-actions button {
+  min-height: 2rem;
+  padding: 0.35rem 0.55rem;
+  font-size: 0.72rem;
+}
+
 :focus-visible {
   outline: 3px solid #39a983;
   outline-offset: 2px;

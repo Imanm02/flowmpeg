@@ -454,8 +454,12 @@ function renderJobs() {
     empty.className = "empty-state";
     empty.textContent = "No jobs in this session.";
     elements.jobList.append(empty);
+    elements.clearJobs.disabled = true;
     return;
   }
+  elements.clearJobs.disabled = !jobs.some((job) =>
+    ["succeeded", "failed", "cancelled"].includes(job.status),
+  );
   for (const job of jobs) {
     const card = document.createElement("article");
     card.className = "job-card";
@@ -479,9 +483,54 @@ function renderJobs() {
       output.tabIndex = 0;
       card.append(output);
     }
+    if (["queued", "running"].includes(job.status)) {
+      const actions = document.createElement("div");
+      actions.className = "job-actions";
+      const cancel = document.createElement("button");
+      cancel.type = "button";
+      cancel.className = "quiet-button";
+      cancel.textContent = "Cancel job";
+      cancel.addEventListener("click", () => cancelJob(job.id, cancel));
+      actions.append(cancel);
+      card.append(actions);
+    }
     elements.jobList.append(card);
   }
 }
+
+async function cancelJob(jobId, button) {
+  button.disabled = true;
+  button.textContent = "Cancelling...";
+  try {
+    const job = await api(`/api/jobs/${encodeURIComponent(jobId)}/cancel`, {
+      method: "POST",
+    });
+    state.jobs.set(job.id, job);
+    renderJobs();
+    scheduleJobPoll();
+  } catch (error) {
+    showToast(error.message);
+    button.disabled = false;
+    button.textContent = "Cancel job";
+  }
+}
+
+elements.clearJobs.addEventListener("click", async () => {
+  elements.clearJobs.disabled = true;
+  try {
+    const result = await api("/api/jobs/clear", {method: "POST"});
+    for (const [jobId, job] of state.jobs) {
+      if (["succeeded", "failed", "cancelled"].includes(job.status)) {
+        state.jobs.delete(jobId);
+      }
+    }
+    renderJobs();
+    showToast(`${result.cleared} finished job records cleared.`);
+  } catch (error) {
+    showToast(error.message);
+    renderJobs();
+  }
+});
 
 function jobTiming(job) {
   const started = job.startedAt || job.createdAt;
