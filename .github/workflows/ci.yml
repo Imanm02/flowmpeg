@@ -35,6 +35,13 @@ jobs:
       - run: wheel-test/bin/python -m pip install --no-index --find-links dist flowmpeg
       - run: wheel-test/bin/flowmpeg --version
       - run: wheel-test/bin/python -m flowmpeg --version
+      - run: wheel-test/bin/flowmpeg ui --help
+      - run: >-
+          wheel-test/bin/python -c
+          "from flowmpeg.ui.assets import load_asset;
+          assert load_asset('index.html');
+          assert load_asset('app.css');
+          assert load_asset('app.js')"
 
   unit-tests:
     name: Unit tests (${{ matrix.os }}, Python ${{ matrix.python-version }})
