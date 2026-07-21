@@ -29,6 +29,10 @@ const elements = {
   basicFields: document.querySelector("#basic-fields"),
   advancedFields: document.querySelector("#advanced-fields"),
   advancedSection: document.querySelector("#advanced-section"),
+  previewButton: document.querySelector("#preview-button"),
+  runButton: document.querySelector("#run-button"),
+  copyCommand: document.querySelector("#copy-command"),
+  formErrors: document.querySelector("#form-errors"),
 };
 
 async function api(path, options = {}) {
@@ -244,6 +248,109 @@ function pathPlaceholder(role) {
 function pathHelp(role) {
   return role === "none" ? "" : "This path stays on your computer.";
 }
+
+function collectValues() {
+  const values = {};
+  for (const field of state.selectedCommand.fields) {
+    const control = elements.form.elements.namedItem(field.name);
+    if (!control) {
+      continue;
+    }
+    const clear = elements.form.querySelector(
+      `[data-clear-for="${field.name}"]`,
+    );
+    if (clear?.checked) {
+      values[field.name] = null;
+      continue;
+    }
+    if (field.kind === "boolean") {
+      values[field.name] = control.checked;
+      continue;
+    }
+    if (field.multiple) {
+      const items = control.value
+        .split(/\r?\n/)
+        .map((value) => value.trim())
+        .filter(Boolean);
+      if (items.length) {
+        values[field.name] = items;
+      }
+      continue;
+    }
+    if (control.value === "") {
+      continue;
+    }
+    values[field.name] =
+      field.kind === "number" ? Number(control.value) : control.value;
+  }
+  return values;
+}
+
+function clearFormErrors() {
+  elements.formErrors.hidden = true;
+  elements.formErrors.replaceChildren();
+  for (const control of elements.form.elements) {
+    control.removeAttribute("aria-invalid");
+  }
+}
+
+function showFormIssues(issues) {
+  clearFormErrors();
+  const list = document.createElement("ul");
+  for (const issue of issues) {
+    const item = document.createElement("li");
+    item.textContent = issue.message;
+    list.append(item);
+    if (issue.field) {
+      const control = elements.form.elements.namedItem(issue.field);
+      control?.setAttribute("aria-invalid", "true");
+    }
+  }
+  elements.formErrors.append(list);
+  elements.formErrors.hidden = false;
+}
+
+async function requestPreview() {
+  if (!state.selectedCommand) {
+    return;
+  }
+  clearFormErrors();
+  elements.previewButton.disabled = true;
+  elements.commandPreview.textContent = "Building command preview...";
+  try {
+    const preview = await api("/api/preview", {
+      method: "POST",
+      body: JSON.stringify({
+        command: state.selectedCommand.name,
+        values: collectValues(),
+      }),
+    });
+    state.preview = preview;
+    elements.commandPreview.textContent = preview.display;
+    elements.copyCommand.disabled = false;
+  } catch (error) {
+    state.preview = null;
+    elements.copyCommand.disabled = true;
+    elements.commandPreview.textContent = "The command needs attention.";
+    if (error.data?.issues) {
+      showFormIssues(error.data.issues);
+    } else {
+      showFormIssues([{message: error.message, field: null}]);
+    }
+  } finally {
+    elements.previewButton.disabled = false;
+  }
+}
+
+elements.previewButton.addEventListener("click", requestPreview);
+elements.form.addEventListener("input", () => {
+  state.preview = null;
+  elements.copyCommand.disabled = true;
+  clearFormErrors();
+});
+elements.form.addEventListener("submit", (event) => {
+  event.preventDefault();
+});
 
 function factElement(text) {
   const fact = document.createElement("span");
