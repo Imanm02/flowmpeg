@@ -49,6 +49,14 @@ def field_label(name: str) -> str:
     return name.replace("_", " ").capitalize()
 
 
+def field_help(action: argparse.Action) -> str:
+    """Return useful parser help without argparse placeholders."""
+
+    if action.help is None or action.help is argparse.SUPPRESS:
+        return ""
+    return str(action.help).replace("%(default)s", str(field_default(action)))
+
+
 def field_kind(action: argparse.Action) -> FieldKind:
     """Choose the browser control for one parser action."""
 
@@ -129,6 +137,7 @@ __all__ = [
     "command_parsers",
     "field_choices",
     "field_default",
+    "field_help",
     "field_is_multiple",
     "field_is_advanced",
     "field_kind",

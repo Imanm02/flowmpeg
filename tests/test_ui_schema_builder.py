@@ -6,6 +6,7 @@ from flowmpeg.ui.schema_builder import (
     command_parsers,
     field_choices,
     field_default,
+    field_help,
     field_is_advanced,
     field_is_multiple,
     field_kind,
@@ -87,3 +88,16 @@ def test_ui_groups_runtime_controls_as_advanced() -> None:
     assert field_is_advanced(ffmpeg) is True
     assert field_is_advanced(timeout) is True
     assert field_is_advanced(overwrite) is False
+
+
+def test_ui_normalizes_action_help_and_default_placeholders() -> None:
+    parser = argparse.ArgumentParser()
+    timeout = parser.add_argument(
+        "--timeout",
+        default=10,
+        help="Stop after %(default)s seconds",
+    )
+    unnamed = parser.add_argument("--unnamed")
+
+    assert field_help(timeout) == "Stop after 10 seconds"
+    assert field_help(unnamed) == ""
