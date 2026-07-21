@@ -10,6 +10,7 @@ const state = {
   selectedCommand: null,
   query: "",
   preview: null,
+  selectedExample: null,
   favorites: new Set(),
   jobs: new Map(),
   readiness: null,
@@ -32,6 +33,9 @@ const elements = {
   commandSummary: document.querySelector("#command-summary"),
   commandFacts: document.querySelector("#command-facts"),
   commandPreview: document.querySelector("#command-preview"),
+  examplePanel: document.querySelector("#example-panel"),
+  exampleList: document.querySelector("#example-list"),
+  copyExample: document.querySelector("#copy-example"),
   form: document.querySelector("#command-form"),
   basicFields: document.querySelector("#basic-fields"),
   advancedFields: document.querySelector("#advanced-fields"),
@@ -148,6 +152,7 @@ function selectCommand(command) {
       factElement(`Shortcuts: ${command.aliases.join(", ")}`),
     );
   }
+  renderExamples(command);
   updateFavoriteButton();
   elements.runButton.disabled = command.name === "ui";
   elements.runButton.title =
@@ -286,6 +291,27 @@ function updateFavoriteButton() {
     ? "Remove favorite"
     : "Save favorite";
   elements.favoriteButton.setAttribute("aria-pressed", String(saved));
+}
+
+function renderExamples(command) {
+  const examples = command.examples || [];
+  state.selectedExample = examples[0] || null;
+  elements.examplePanel.hidden = !examples.length;
+  elements.copyExample.disabled = !examples.length;
+  elements.exampleList.replaceChildren();
+  for (const example of examples.slice(0, 3)) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "example-command";
+    const code = document.createElement("code");
+    code.textContent = example;
+    button.append(code);
+    button.addEventListener("click", () => {
+      state.selectedExample = example;
+      void copyText(example, "Example command copied.");
+    });
+    elements.exampleList.append(button);
+  }
 }
 
 elements.favoriteButton.addEventListener("click", () => {
@@ -944,16 +970,27 @@ function showToast(message) {
   window.setTimeout(() => toast.remove(), 3500);
 }
 
-elements.copyCommand.addEventListener("click", async () => {
-  if (!state.preview) {
-    return;
-  }
+async function copyText(text, successMessage) {
   try {
-    await navigator.clipboard.writeText(state.preview.display);
-    showToast("Command copied to the clipboard.");
+    await navigator.clipboard.writeText(text);
+    showToast(successMessage);
   } catch {
     showToast("The browser could not copy the command.");
   }
+}
+
+elements.copyCommand.addEventListener("click", () => {
+  if (!state.preview) {
+    return;
+  }
+  void copyText(state.preview.display, "Command copied to the clipboard.");
+});
+
+elements.copyExample.addEventListener("click", () => {
+  if (!state.selectedExample) {
+    return;
+  }
+  void copyText(state.selectedExample, "Example command copied.");
 });
 
 function applyTheme(theme) {
