@@ -49,6 +49,7 @@ const elements = {
   fileParent: document.querySelector("#file-parent"),
   fileCurrentPath: document.querySelector("#file-current-path"),
   fileGo: document.querySelector("#file-go"),
+  fileNewFolder: document.querySelector("#file-new-folder"),
   fileEntries: document.querySelector("#file-entries"),
   fileSelectionSummary: document.querySelector("#file-selection-summary"),
   fileCancel: document.querySelector("#file-cancel"),
@@ -346,6 +347,7 @@ async function openFileDialog(field, control) {
   };
   elements.fileDialogTitle.textContent = field.label;
   elements.outputNameField.hidden = field.pathRole !== "output-file";
+  elements.fileNewFolder.hidden = !field.pathRole.startsWith("output-");
   elements.outputFileName.value = "";
   elements.fileSelectionSummary.textContent = "Nothing selected";
   elements.fileDialog.showModal();
@@ -472,6 +474,25 @@ elements.fileParent.addEventListener("click", () => {
 });
 elements.fileGo.addEventListener("click", () => {
   loadDirectory(elements.fileCurrentPath.value.trim());
+});
+elements.fileNewFolder.addEventListener("click", async () => {
+  const name = window.prompt("New folder name");
+  if (name === null || !state.fileBrowser?.listing) {
+    return;
+  }
+  try {
+    await api("/api/directories", {
+      method: "POST",
+      body: JSON.stringify({
+        parent: state.fileBrowser.listing.path,
+        name: name.trim(),
+      }),
+    });
+    showToast("Folder created.");
+    await loadDirectory(state.fileBrowser.listing.path);
+  } catch (error) {
+    showToast(error.message);
+  }
 });
 elements.fileCurrentPath.addEventListener("keydown", (event) => {
   if (event.key === "Enter") {
