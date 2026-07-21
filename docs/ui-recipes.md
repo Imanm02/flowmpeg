@@ -504,3 +504,17 @@ Output: a video with cover art and waveform-style motion for the audio.
 
 Why I use it: it turns an audio-only file into a shareable video without a
 custom composition graph.
+
+### Fill a wide frame with blur
+
+Input: `portrait.mp4`.
+
+```console
+flowmpeg blurred-background portrait.mp4 -o portrait-wide.mp4
+```
+
+Output: a wide MP4 where a blurred copy fills the empty frame behind the
+original video.
+
+Why I use it: the result looks intentional when a vertical clip must fit a
+horizontal layout.
