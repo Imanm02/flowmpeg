@@ -150,7 +150,7 @@ class JobManager:
         return tuple(job.snapshot() for job in jobs)
 
     def wait(self, job_id: str, timeout: float | None = None) -> UiJobSnapshot:
-        """Wait for one job, primarily for callers that need synchronization.""
+        """Wait for one job, primarily for callers that need synchronization."""
 
         with self._lock:
             future = self._futures.get(job_id)
@@ -189,10 +189,17 @@ class JobManager:
         return True
 
     def close(self, *, wait: bool = True) -> None:
-        """Stop accepting jobs and release worker threads.""
+        """Stop accepting jobs and release worker threads."""
 
         with self._lock:
             self._closed = True
+            active_ids = [
+                job.id
+                for job in self._jobs.values()
+                if job.status in {JobStatus.QUEUED, JobStatus.RUNNING}
+            ]
+        for job_id in active_ids:
+            self.cancel(job_id)
         self._executor.shutdown(wait=wait, cancel_futures=True)
 
     def _execute(self, job: UiJob) -> None:

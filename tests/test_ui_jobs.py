@@ -140,3 +140,22 @@ def test_ui_job_manager_marks_running_jobs_cancelled() -> None:
     finally:
         release.set()
         manager.close()
+
+
+def test_ui_job_manager_cancels_work_during_shutdown() -> None:
+    release = threading.Event()
+
+    def wait_for_release(job: UiJob) -> int:
+        del job
+        release.wait(timeout=2)
+        return 130
+
+    manager = JobManager(runner=wait_for_release)
+    queued = manager.start(("errors",), "flowmpeg errors")
+    while manager.get(queued.id).status is JobStatus.QUEUED:  # type: ignore[union-attr]
+        pass
+    manager.close(wait=False)
+    release.set()
+
+    finished = manager.wait(queued.id, timeout=2)
+    assert finished.status is JobStatus.CANCELLED
