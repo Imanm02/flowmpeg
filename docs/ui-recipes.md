@@ -208,3 +208,16 @@ Output: an MP4 with a selectable subtitle track.
 
 Why I use it: this keeps the video image unchanged while still carrying text
 for players that support captions.
+
+### Add a corner logo
+
+Input: `video.mp4` and `logo.png`.
+
+```console
+flowmpeg mark video.mp4 logo.png -o branded.mp4
+```
+
+Output: an MP4 with the image overlaid on the video.
+
+Why I use it: choosing the two inputs in the UI makes it clear which file is
+the video and which file is the mark.
