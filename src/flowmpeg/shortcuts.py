@@ -2723,6 +2723,7 @@ def _shrink_video_args(
     audio_codec: ShrinkAudioCodec,
     audio_bitrate: str,
 ) -> tuple[str, ...]:
+    args: tuple[str, ...]
     if codec == "h264":
         args = (
             "-c:v",
