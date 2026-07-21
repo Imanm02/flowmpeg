@@ -237,10 +237,10 @@ h3 {
 
 .welcome {
   padding: clamp(1.25rem, 3vw, 2.4rem);
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-large);
-  box-shadow: var(--shadow);
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
 }
 
 .welcome h2 {
