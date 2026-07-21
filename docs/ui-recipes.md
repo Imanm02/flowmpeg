@@ -182,3 +182,16 @@ Output: an MP4 where the music lowers under the spoken track.
 
 Why I use it: sidechain-style audio work is easier to trust when the form names
 the speech and music sources separately.
+
+### Burn open captions
+
+Input: `lesson.mp4` and `captions.srt`.
+
+```console
+flowmpeg burn-captions lesson.mp4 captions.srt -o lesson-open.mp4
+```
+
+Output: an MP4 where caption text is rendered into the video frames.
+
+Why I use it: open captions survive players that ignore selectable subtitle
+tracks.
