@@ -442,6 +442,46 @@ elements.themeSelect.addEventListener("change", () => {
   applyTheme(theme);
 });
 
+document.addEventListener("keydown", (event) => {
+  const editing = ["INPUT", "TEXTAREA", "SELECT"].includes(
+    document.activeElement?.tagName,
+  );
+  if (event.key === "/" && !editing) {
+    event.preventDefault();
+    elements.search.focus();
+    return;
+  }
+  if (event.key === "Escape" && document.activeElement === elements.search) {
+    elements.search.value = "";
+    state.query = "";
+    renderNavigation();
+    return;
+  }
+  if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
+    event.preventDefault();
+    if (!elements.runButton.disabled) {
+      elements.form.requestSubmit();
+    } else {
+      requestPreview();
+    }
+  }
+});
+
+elements.commandList.addEventListener("keydown", (event) => {
+  if (!['ArrowDown', 'ArrowUp'].includes(event.key)) {
+    return;
+  }
+  const buttons = [...elements.commandList.querySelectorAll(".command-card")];
+  const current = buttons.indexOf(document.activeElement);
+  if (current < 0) {
+    return;
+  }
+  event.preventDefault();
+  const direction = event.key === "ArrowDown" ? 1 : -1;
+  const next = (current + direction + buttons.length) % buttons.length;
+  buttons[next].focus();
+});
+
 function factElement(text) {
   const fact = document.createElement("span");
   fact.className = "fact";
