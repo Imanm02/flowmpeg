@@ -43,6 +43,11 @@ class UiInvocation:
         item = next((item for item in self.values if item.name == name), None)
         return None if item is None else item.value
 
+    def has(self, name: str) -> bool:
+        """Return true when a field was present in the submission."""
+
+        return any(item.name == name for item in self.values)
+
 
 def parse_invocation(data: object) -> UiInvocation:
     """Parse a decoded JSON command submission."""

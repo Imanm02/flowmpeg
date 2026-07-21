@@ -26,6 +26,8 @@ def test_ui_invocation_finds_submitted_values() -> None:
     assert invocation.value("source") == "input.mp4"
     assert invocation.value("start") == 5
     assert invocation.value("duration") is None
+    assert invocation.has("source") is True
+    assert invocation.has("duration") is False
 
 
 def test_ui_invocation_rejects_duplicate_values() -> None:
