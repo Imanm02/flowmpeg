@@ -258,7 +258,9 @@ h3 {
 
 .readiness-card {
   display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   gap: 1rem;
+  align-items: center;
   margin-top: 1.5rem;
   padding: 1rem;
   background: var(--surface-soft);
@@ -315,6 +317,16 @@ h3 {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
+}
+
+.readiness-actions {
+  grid-row: 1 / span 2;
+  grid-column: 2;
+  justify-content: flex-end;
+}
+
+.tool-pills {
+  grid-column: 1;
 }
 
 .tool-pills span {
@@ -1003,6 +1015,16 @@ pre {
   .command-panel {
     display: block;
     padding: 1.25rem;
+  }
+
+  .readiness-card {
+    grid-template-columns: 1fr;
+  }
+
+  .readiness-actions {
+    grid-row: auto;
+    grid-column: 1;
+    justify-content: flex-start;
   }
 
   .surface-stats,
