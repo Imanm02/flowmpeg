@@ -50,6 +50,7 @@ flowmpeg find-black tape.mp4
 flowmpeg scenes interview.mp4
 flowmpeg crop-report letterboxed.mp4 --duration 30
 flowmpeg batch "recordings/*.mov" -o converted
+flowmpeg frames input.mp4 --interval 5 -o review-frames
 flowmpeg hls input.mp4 -o delivery-hls
 flowmpeg dash input.mp4 -o delivery-dash
 ```
@@ -84,6 +85,7 @@ flowmpeg webm input.mov --crf 30 -o delivery.webm
 flowmpeg hevc input.mov --crf 28 -o archive.mp4
 flowmpeg av1 input.mov --crf 35 --speed 8 -o delivery-av1.webm
 flowmpeg batch "recordings/*.mov" --name-suffix=-web -o converted
+flowmpeg frames input.mp4 --fps 2 --max-frames 20 -o review-frames
 flowmpeg hls input.mp4 --segment-duration 4 -o delivery-hls
 flowmpeg dash input.mp4 --segment-duration 2 -o delivery-dash
 flowmpeg remux input.mp4 -o archive.mkv
@@ -186,9 +188,12 @@ outputs for common jobs:
 - Find silent ranges and read analysis reports
 - Create owned HLS and DASH artifact directories
 - Convert local video folders with ordered batch results
+- Extract owned numbered JPG or PNG frame sets
 
 The [streaming package guide](docs/streaming.md) explains manifests, segment
 files, staged replacement, and the marker that protects unrelated directories.
+The [frame extraction guide](docs/frame-extraction.md) covers sampling math,
+image formats, bounded sections, and the same directory safety contract.
 
 The [real-world workflow guide](docs/workflows.md) adds 30 paired terminal and
 Python examples. It covers social formats, privacy edits, voice cleanup,
@@ -210,6 +215,7 @@ plans, see the [shortcut guide](docs/shortcuts.md).
 - Typed FFprobe container and stream results
 - Owned HLS and DASH artifact sets with failure cleanup
 - Named batches with cancellation and temporary workspace cleanup
+- Owned frame sequences with staged replacement
 - Synchronous execution with progress callbacks and timeouts
 - An installed `flowmpeg` command with editing, inspection, and help groups
 - Read-only setup checks with confirmed package manager installation

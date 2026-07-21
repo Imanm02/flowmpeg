@@ -16,7 +16,12 @@ import pytest
 
 import flowmpeg
 from flowmpeg import cli, shortcuts
-from flowmpeg.artifacts import ArtifactSet, SegmentWorkflow
+from flowmpeg.artifacts import (
+    ArtifactSet,
+    FrameSet,
+    FrameWorkflow,
+    SegmentWorkflow,
+)
 from flowmpeg.catalog import COMMAND_CATALOG
 from flowmpeg.cli import build_parser
 from flowmpeg.plan import Plan
@@ -151,6 +156,22 @@ def test_python_documentation_examples_build(
             f"{self.destination}/{self.manifest_name}",
             (f"{self.destination}/{self.manifest_name}",),
             RunResult(0, 0.0, "", None, (f"{self.destination}/{self.manifest_name}",)),
+        ),
+    )
+    monkeypatch.setattr(
+        FrameWorkflow,
+        "run",
+        lambda self, **kwargs: FrameSet(
+            self.destination,
+            self.pattern_name,
+            (f"{self.destination}/frame-000001.{self.image_format}",),
+            RunResult(
+                0,
+                0.0,
+                "",
+                None,
+                (f"{self.destination}/frame-000001.{self.image_format}",),
+            ),
         ),
     )
     monkeypatch.setattr(flowmpeg, "probe", lambda *args, **kwargs: info)

@@ -156,8 +156,8 @@ only a discussion or test placeholder.
 - Metadata removal copies selected first streams. It does not claim to remove
   every private byte from every container format.
 - Reverse video and reverse audio filters buffer decoded media in memory.
-- HLS and DASH own dedicated marked directories. Frame extraction directories
-  still need the same ownership contract before they become shortcuts.
+- HLS, DASH, and extracted frames own dedicated marked directories. Other
+  future multi-file outputs need the same contract before becoming shortcuts.
 - Native batches run one FFmpeg process at a time. They do not schedule several
   encoders in parallel. Completed final outputs remain after a later failure.
 
@@ -171,7 +171,7 @@ only a discussion or test placeholder.
 - [x] Add measured two-pass loudness normalization as a workflow.
 - [x] Define owned artifact sets for HLS and DASH outputs.
 - [x] Define batch cancellation and temporary-file cleanup rules.
-- [ ] Define owned artifact sets for extracted frame directories.
+- [x] Define owned artifact sets for extracted frame directories.
 - [ ] Add saved batch manifests with schema validation.
 - [ ] Measure reference quality with PSNR, SSIM, and VMAF when available.
 - [ ] Model adaptive streaming ladders with several renditions.

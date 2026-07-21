@@ -40,6 +40,7 @@ flowmpeg examples --search subtitle
 | Compare stream and encoding behavior | [Visual guide](visual-guide.md) | Matrices and data-flow diagrams |
 | Find cut points from measured media | [Analysis guide](analysis.md) | Silence intervals, JSON reports, timelines |
 | Create streaming media packages | [HLS and DASH](streaming.md) | Manifests, segments, owned replacement rules |
+| Extract numbered frame images | [Frame extraction](frame-extraction.md) | Sampling, counts, owned directories |
 
 ## Pick an interface
 

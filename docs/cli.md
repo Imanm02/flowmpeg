@@ -110,6 +110,7 @@ The table below is a compact editing index for scanning this longer guide.
 | Mix audio files | `mix-audio` | `mix`, `mix-audio-files` |
 | Arrange video cells | `grid` | - |
 | Save one frame | `thumbnail` | `thumb` |
+| Extract an owned frame set | `extract-frames` | `frames`, `frame-sequence` |
 | Create an animated GIF | `make-gif` | `gif` |
 | Rotate displayed video | `rotate` | - |
 | Crop a rectangle | `crop` | - |
@@ -719,6 +720,28 @@ higher quality.
 ```console
 flowmpeg thumb video.mp4 --at 3 --quality 1 -o high-quality.jpg
 ```
+
+### Extract numbered frame images
+
+Sample one JPEG every five seconds into a dedicated directory:
+
+```console
+flowmpeg frames video.mp4 --interval 5 -o review-frames
+```
+
+Use `--fps` instead of `--interval` for several samples per second. Optional
+time bounds, width, image format, JPEG quality, and a hard frame cap make the
+output size predictable before a long extraction.
+
+```console
+flowmpeg frames video.mp4 --start 30 --duration 10 --fps 2 --width 640 --max-frames 20 -o event-frames
+flowmpeg frames video.mp4 --format png --max-frames 10 -o lossless-frames
+```
+
+The output directory carries a Flowmpeg ownership marker. `--overwrite`
+replaces only a matching owned frame set. The
+[frame extraction guide](frame-extraction.md) shows sampling estimates and
+failure cleanup.
 
 ### Create an animated GIF
 
