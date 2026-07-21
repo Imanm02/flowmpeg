@@ -156,3 +156,16 @@ Output: a speech-focused audio file with the voice chain applied.
 
 Why I use it: one form collects the common voice cleanup settings I would
 otherwise repeat by hand.
+
+### Mix two audio tracks
+
+Input: `host.wav` and `guest.wav`.
+
+```console
+flowmpeg mix host.wav guest.wav -o conversation.wav
+```
+
+Output: one mixed audio file containing both inputs.
+
+Why I use it: the UI makes source order obvious before FFmpeg combines the
+tracks.
