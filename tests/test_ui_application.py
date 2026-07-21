@@ -41,3 +41,20 @@ def test_ui_schema_endpoint_returns_command_forms() -> None:
 
     assert response.status == 200
     assert data["commands"][0]["name"] == "errors"
+
+
+def test_ui_application_rejects_post_without_session_token() -> None:
+    response = _app().handle("POST", "/api/preview", body=b"{}")
+
+    assert response.status == 403
+    assert json.loads(response.body)["error"] == "invalid-token"
+
+
+def test_ui_application_accepts_exact_session_token() -> None:
+    response = _app().handle(
+        "POST",
+        "/api/missing",
+        headers={"X-Flowmpeg-Token": "test-token"},
+    )
+
+    assert response.status == 404

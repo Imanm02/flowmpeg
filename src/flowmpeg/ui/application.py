@@ -9,7 +9,7 @@ from flowmpeg.ui.http_types import ApiResponse, json_response
 from flowmpeg.ui.schema import UiSchema
 from flowmpeg.ui.schema_builder import build_ui_schema
 from flowmpeg.ui.serialization import schema_data
-from flowmpeg.ui.session import UiSession
+from flowmpeg.ui.session import TOKEN_HEADER, UiSession
 
 
 @dataclass(frozen=True, slots=True)
@@ -25,9 +25,28 @@ class UiApplication:
 
         return cls(schema=build_ui_schema(), session=UiSession.create())
 
-    def handle(self, method: str, path: str) -> ApiResponse:
+    def handle(
+        self,
+        method: str,
+        path: str,
+        *,
+        headers: dict[str, str] | None = None,
+        body: bytes = b"",
+    ) -> ApiResponse:
         """Handle one API request."""
 
+        del body
+        request_headers = {name.lower(): value for name, value in (headers or {}).items()}
+        if method in {"POST", "PUT", "PATCH", "DELETE"} and not self.session.accepts(
+            request_headers.get(TOKEN_HEADER.lower())
+        ):
+            return json_response(
+                {
+                    "error": "invalid-token",
+                    "message": "The local UI request token is missing or invalid",
+                },
+                status=403,
+            ).with_security_headers()
         if method == "GET" and path == "/api/health":
             return json_response(
                 {
