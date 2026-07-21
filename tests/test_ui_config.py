@@ -27,3 +27,11 @@ def test_ui_address_rejects_non_loopback_hosts(host: str) -> None:
 @pytest.mark.parametrize("host", ["127.0.0.1", "::1", "LOCALHOST"])
 def test_ui_address_accepts_loopback_names(host: str) -> None:
     assert UiAddress(host=host).host == host
+
+
+def test_ui_address_builds_browser_url() -> None:
+    assert UiAddress(port=8123).url == "http://127.0.0.1:8123/"
+
+
+def test_ui_address_brackets_ipv6_in_browser_url() -> None:
+    assert UiAddress(host="::1", port=8123).url == "http://[::1]:8123/"
