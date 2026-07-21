@@ -255,6 +255,89 @@ h3 {
   font-size: 1.05rem;
 }
 
+.readiness-card {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background: var(--surface-soft);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.readiness-card.ready {
+  background: color-mix(in srgb, var(--accent-soft) 55%, var(--surface));
+  border-color: color-mix(in srgb, var(--accent) 44%, var(--border));
+}
+
+.readiness-card.attention {
+  background: #fff8e8;
+  border-color: #d8a541;
+}
+
+.readiness-summary {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.85rem;
+  align-items: start;
+}
+
+.readiness-light {
+  width: 0.8rem;
+  height: 0.8rem;
+  margin-top: 0.35rem;
+  background: var(--warning);
+  border-radius: 999px;
+  box-shadow: 0 0 0 0.3rem color-mix(in srgb, var(--warning) 18%, transparent);
+}
+
+.readiness-card.ready .readiness-light {
+  background: var(--accent);
+  box-shadow: 0 0 0 0.3rem color-mix(in srgb, var(--accent) 18%, transparent);
+}
+
+.readiness-card h3,
+.readiness-card p {
+  margin-bottom: 0;
+}
+
+.readiness-card .eyebrow {
+  margin-bottom: 0.25rem;
+}
+
+.readiness-card h3 {
+  font-size: 1.05rem;
+}
+
+.tool-pills,
+.readiness-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.tool-pills span {
+  padding: 0.35rem 0.55rem;
+  color: var(--text-soft);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.tool-pills span.ready {
+  color: var(--accent-strong);
+  background: var(--accent-soft);
+  border-color: color-mix(in srgb, var(--accent) 40%, var(--border));
+}
+
+.tool-pills span.attention {
+  color: var(--warning);
+  background: #fff4d6;
+  border-color: #d8a541;
+}
+
 .surface-stats {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
