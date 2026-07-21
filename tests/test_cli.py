@@ -184,6 +184,7 @@ def test_ui_command_rejects_invalid_ports(port: str) -> None:
         ["blurred-background", "in.mp4", "-o", "out.mp4"],
         ["reverse-clip", "in.mp4", "--duration", "5", "-o", "out.mp4"],
         ["compress-video", "in.mov", "-o", "out.mp4"],
+        ["shrink-video", "in.mov", "-o", "out.mp4"],
         ["reframe", "in.mp4", "-o", "out.mp4"],
         ["social-video", "in.mp4", "-o", "out.mp4"],
         ["set-frame-rate", "in.mp4", "-o", "out.mp4"],
@@ -278,6 +279,43 @@ def test_audio_commands_accept_opus_output(
     assert "-b:a 96k" in output
 
 
+def test_shrink_command_builds_small_phone_export(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    assert (
+        cli.main(
+            [
+                "shrink",
+                "IMG_9357.MOV",
+                "--codec",
+                "hevc",
+                "--max-height",
+                "720",
+                "--fps",
+                "30",
+                "--crf",
+                "28",
+                "--audio-codec",
+                "opus",
+                "--audio-bitrate",
+                "32k",
+                "-o",
+                "IMG_9357.mp4",
+                "--dry-run",
+            ]
+        )
+        == 0
+    )
+    output = capsys.readouterr().out
+    assert "scale=w=-2:h=trunc(min(ih\\,720)/2)*2" in output
+    assert "fps=fps=30" in output
+    assert "-c:v libx265" in output
+    assert "-crf 28" in output
+    assert "-c:a libopus" in output
+    assert "-b:a 32k" in output
+    assert "-max_muxing_queue_size 1024" in output
+
+
 @pytest.mark.parametrize(
     "arguments",
     [
@@ -298,6 +336,8 @@ def test_audio_commands_accept_opus_output(
         ["reverse", "in.mp4", "--duration", "2", "-o", "out.mp4"],
         ["mix-audio-files", "one.wav", "two.wav", "-o", "out.wav"],
         ["compress", "in.mov", "-o", "out.mp4"],
+        ["shrink", "in.mov", "-o", "out.mp4"],
+        ["reduce-size", "in.mov", "-o", "out.mp4"],
         ["social", "in.mp4", "-o", "out.mp4"],
         ["fps", "in.mp4", "-o", "out.mp4"],
         ["mirror", "in.mp4", "-o", "out.mp4"],

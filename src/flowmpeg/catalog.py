@@ -110,6 +110,13 @@ _BASE_COMMAND_CATALOG = (
         capability_group="web-video",
     ),
     CommandSpec(
+        "shrink-video",
+        "video",
+        "Shrink video with size and codec controls",
+        ("shrink", "reduce-size", "small-video"),
+        capability_group="size-video",
+    ),
+    CommandSpec(
         "reframe",
         "video",
         "Fill a fixed video frame",
@@ -762,6 +769,7 @@ _COMMAND_TAGS = {
     "resize": ("delivery", "silent-input"),
     "remove-audio": ("copy", "privacy", "silent-input"),
     "compress-video": ("delivery", "silent-input"),
+    "shrink-video": ("delivery", "silent-input"),
     "reframe": ("delivery", "silent-input"),
     "social-video": ("delivery", "silent-input"),
     "set-frame-rate": ("archive", "silent-input"),
@@ -857,6 +865,15 @@ _COMMAND_REQUIREMENTS = {
     "resize": _requirements(*_MP4, "filter:scale"),
     "remove-audio": ("muxer:mp4",),
     "compress-video": _requirements(*_MP4, "filter:scale"),
+    "shrink-video": _requirements(
+        "encoder:aac",
+        "encoder:libopus",
+        "encoder:libx264",
+        "encoder:libx265",
+        "filter:fps",
+        "filter:scale",
+        "muxer:mp4",
+    ),
     "reframe": _requirements(*_MP4, "filter:crop", "filter:scale", "filter:setsar"),
     "social-video": _requirements(
         *_MP4,

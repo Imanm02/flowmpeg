@@ -123,6 +123,10 @@ _BASE_EXAMPLES = (
     _Example("video", "flowmpeg webm recording.mov -o recording.webm"),
     _Example("video", "flowmpeg hevc recording.mov -o recording-hevc.mp4"),
     _Example("video", "flowmpeg av1 recording.mov -o recording-av1.webm"),
+    _Example(
+        "video",
+        "flowmpeg shrink IMG_9357.MOV --max-height 720 --fps 30 -o IMG_9357.mp4",
+    ),
     _Example("video", "flowmpeg hls recording.mov -o hls-delivery"),
     _Example("video", "flowmpeg dash recording.mov -o dash-delivery"),
     _Example("video", "flowmpeg convert animation.mov --no-audio -o animation.mp4"),
@@ -294,6 +298,15 @@ _FEATURE_REQUIREMENTS = {
         "encoder:libopus",
         "encoder:libsvtav1",
         "muxer:webm",
+    ),
+    "size-video": (
+        "encoder:aac",
+        "encoder:libopus",
+        "encoder:libx264",
+        "encoder:libx265",
+        "filter:fps",
+        "filter:scale",
+        "muxer:mp4",
     ),
     "segmented-video": (
         "encoder:aac",
@@ -591,6 +604,7 @@ def build_parser() -> argparse.ArgumentParser:
     _add_blurred_background(commands)
     _add_reverse(commands)
     _add_compress_video(commands)
+    _add_shrink_video(commands)
     _add_reframe(commands)
     _add_social_video(commands)
     _add_frame_rate(commands)
@@ -1757,6 +1771,44 @@ def _add_compress_video(
     )
     parser.add_argument("--max-width", type=_positive_int)
     parser.add_argument("--audio-bitrate", default="128k")
+    _audio_toggle(parser)
+    _output(parser)
+
+
+def _add_shrink_video(
+    commands: argparse._SubParsersAction[argparse.ArgumentParser],
+) -> None:
+    parser = _command(
+        commands,
+        "shrink-video",
+        "Make a small MP4 with scale, frame rate, and codec controls.",
+        shortcuts.shrink_video,
+        ("source",),
+        aliases=("shrink", "reduce-size", "small-video"),
+    )
+    _source(parser)
+    parser.add_argument("--codec", choices=("h264", "hevc"), default="hevc")
+    parser.add_argument("--crf", type=_nonnegative_int, default=28)
+    parser.add_argument(
+        "--encoder-preset",
+        choices=(
+            "ultrafast",
+            "superfast",
+            "veryfast",
+            "faster",
+            "fast",
+            "medium",
+            "slow",
+            "slower",
+            "veryslow",
+        ),
+        default="medium",
+    )
+    parser.add_argument("--max-width", type=_positive_int)
+    parser.add_argument("--max-height", type=_positive_int, default=720)
+    parser.add_argument("--fps", type=_positive_int, default=30)
+    parser.add_argument("--audio-codec", choices=("aac", "opus"), default="aac")
+    parser.add_argument("--audio-bitrate", default="96k")
     _audio_toggle(parser)
     _output(parser)
 
