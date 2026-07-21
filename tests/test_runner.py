@@ -6,6 +6,7 @@ import signal
 import subprocess
 import threading
 import time
+from collections.abc import Callable
 from math import inf, nan
 from pathlib import Path
 from typing import cast
@@ -196,7 +197,7 @@ def test_runner_rejects_noncallable_cancellation(tmp_path: Path) -> None:
     plan = output(input("movie.mp4").video(), to=tmp_path / "copy.mp4")
 
     with pytest.raises(ValueError, match="predicate must be callable"):
-        plan.run(cancelled=cast(object, True))
+        plan.run(cancelled=cast(Callable[[], bool], True))
 
 
 def test_runner_cancels_before_starting(

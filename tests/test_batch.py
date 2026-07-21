@@ -38,7 +38,7 @@ def test_batch_runs_jobs_in_order(monkeypatch: pytest.MonkeyPatch) -> None:
     def run(self: Plan, **kwargs: object) -> RunResult:
         name = self.graph.inputs[0].source.removesuffix(".mp4")
         called.append(name)
-        callback = cast(object, kwargs["on_progress"])
+        callback = kwargs["on_progress"]
         assert callable(callback)
         callback(Progress(None, None, None, None, None, None, "end", ()))
         return _result(name)
