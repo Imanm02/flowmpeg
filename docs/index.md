@@ -30,7 +30,7 @@ flowmpeg examples --search subtitle
 | See input and expected output | [Example guide](examples.md) | Files, commands, graph output, explanations |
 | Follow a real production sequence | [Workflow guide](workflows.md) | Social, podcast, archive, subtitle jobs |
 | Build a staged deliverable | [Media playbooks](playbooks.md) | Lesson, podcast, tape review, product demo |
-| Process a folder from a shell | [Batch jobs](batch-jobs.md) | CMD, PowerShell, Bash, failure choices |
+| Process several files | [Batch jobs](batch-jobs.md) | Native batches, cancellation, shell loops |
 | Understand a failure | [Error guide](errors.md) | Exit codes, `FMG` identifiers, recovery steps |
 | Extend the graph layer | [Design notes](design.md) | Nodes, streams, compilation, runner boundary |
 | Practice custom graphs safely | [Graph lab](graph-lab.md) | Compiled layouts without starting FFmpeg |

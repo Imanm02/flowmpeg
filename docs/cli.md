@@ -91,6 +91,7 @@ The table below is a compact editing index for scanning this longer guide.
 | Job | Main command | Short form |
 | --- | --- | --- |
 | Convert to web MP4 | `transcode` | `convert` |
+| Convert a local video batch | `batch-transcode` | `batch`, `batch-convert` |
 | Convert to VP9 WebM | `transcode-webm` | `webm`, `vp9` |
 | Convert to HEVC MP4 | `transcode-hevc` | `hevc`, `h265` |
 | Convert to AV1 WebM | `transcode-av1` | `av1`, `svt-av1` |
@@ -186,6 +187,29 @@ Use `--no-audio` for a source with no audio stream:
 ```console
 flowmpeg convert animation.mov --no-audio -o animation.mp4
 ```
+
+### Convert several local videos
+
+Quote wildcard patterns so Flowmpeg expands them on every supported shell:
+
+```console
+flowmpeg batch "recordings/*.mov" -o converted
+flowmpeg batch recordings -o converted --recursive
+```
+
+The command sorts discovered files, rejects duplicate output names, and checks
+all existing destinations before starting the first job. It stops on the first
+failed conversion unless `--continue-on-error` is set.
+
+```console
+flowmpeg batch recordings -o converted --name-suffix=-web --continue-on-error
+flowmpeg batch recordings -o converted --dry-run --json
+```
+
+Each source gets an H.264 and optional AAC MP4. `--timeout` limits each file.
+`--no-audio` skips the automatic audio check. The
+[batch guide](batch-jobs.md) lists result states, exit codes, cancellation, and
+Python job groups.
 
 ### Convert to VP9 and Opus WebM
 

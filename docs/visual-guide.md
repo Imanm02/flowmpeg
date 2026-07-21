@@ -233,6 +233,47 @@ result = plan.run(timeout=120)
 print(result.elapsed)
 ```
 
+## Batch state and cleanup
+
+A native batch runs plans in order. The state of one job decides what happens
+to jobs that have not started:
+
+```mermaid
+flowchart TD
+    A["Start next named job"] --> B{"Cancellation requested?"}
+    B -->|"Yes"| C["Mark current and remaining jobs cancelled"]
+    B -->|"No"| D["Run one FFmpeg process"]
+    D -->|"Completed"| E["Keep final output, start next job"]
+    D -->|"Failed, stop policy"| F["Mark remaining jobs skipped"]
+    D -->|"Failed, continue policy"| E
+    E --> A
+```
+
+The four states answer different questions:
+
+| State | FFmpeg started | Final output expected | Why it ended |
+|---|:---:|:---:|---|
+| Completed | Yes | Yes | Process returned success |
+| Failed | Yes or preflight race | No | Typed media error |
+| Cancelled | Maybe | No | Shared token requested a stop |
+| Skipped | No | No | Earlier failure used stop policy |
+
+An example 20-file result is easy to scan as counts:
+
+```text
+completed  ################  16  80%
+failed     ##                2  10%
+cancelled  #                 1   5%
+skipped    #                 1   5%
+```
+
+These values illustrate the report shape. The CLI JSON uses measured counts
+and elapsed time from the current run.
+
+Final outputs remain after later failures. `BatchWorkspace` has a different
+contract because it owns temporary intermediates. Its unique directory is
+removed on success, failure, or cancellation when the context exits.
+
 ## Podcast voice chain
 
 `voice` is one FFmpeg job with a fixed chain for spoken audio. Each filter step

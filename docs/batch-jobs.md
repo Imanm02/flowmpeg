@@ -1,25 +1,279 @@
 # Batch jobs from CMD, PowerShell, and Bash
 
-I use these patterns when one Flowmpeg command needs to run over a folder.
-Every editing command still protects an existing output, so a repeated batch
-stops or reports the files it would replace unless `--overwrite` is explicit.
+I wrote the native batch command for the common case where a directory of
+local videos needs the same web MP4 conversion. It works the same way in CMD,
+PowerShell, and Bash because Flowmpeg performs file discovery itself.
+
+Shell loops are still useful for operations such as thumbnails, social
+reframing, and audio extraction. Those recipes follow the native command.
 
 For the compression examples, run the broad web-video check first:
 
 ```console
 flowmpeg doctor --require web-video
+flowmpeg doctor --command batch
 ```
 
-Feature groups cover families of commands. A group can require formats that
-one job does not use, and it may not check every part of a specific filter
-graph. Treat the result as a preflight signal, then run one representative
-file before the directory loop.
+The first check covers a family of delivery commands. The second resolves the
+`batch` alias and checks the exact default H.264, AAC, and MP4 requirements.
+Treat the results as preflight signals, then run one representative file
+before the directory job.
 
 Run one representative file with `--dry-run` before processing the directory:
 
 ```console
 flowmpeg compress sample.mp4 --crf 30 --dry-run -o small/sample.mp4
 ```
+
+## Convert a folder in one line
+
+Pass a directory to convert its supported video files without descending into
+subdirectories:
+
+```console
+flowmpeg batch recordings -o converted
+```
+
+Quote a wildcard in CMD so Flowmpeg, rather than the shell, expands it:
+
+```console
+flowmpeg batch "recordings/*.mov" -o converted
+```
+
+The canonical command and both aliases mean the same thing:
+
+```console
+flowmpeg batch-transcode recordings -o converted
+flowmpeg batch-convert recordings -o converted
+```
+
+Flowmpeg recognizes common local video suffixes including MP4, MOV, MKV,
+WebM, AVI, MPEG, MTS, and M2TS. An exact file path is accepted even when its
+suffix is outside that discovery list.
+
+### Search subdirectories
+
+```console
+flowmpeg batch recordings -o converted --recursive
+flowmpeg batch "recordings/**/*.mov" -o converted --recursive
+```
+
+Directory entries are sorted by path. Repeated paths are removed, so the same
+file is not encoded twice when two input patterns overlap.
+
+### Control output names
+
+The default output name is the source stem plus `.mp4`. Add text to every
+stem when the result should be easy to distinguish:
+
+```console
+flowmpeg batch recordings -o converted --name-suffix=-web
+```
+
+| Source | Default output | With `--name-suffix=-web` |
+|---|---|---|
+| `intro.mov` | `converted/intro.mp4` | `converted/intro-web.mp4` |
+| `lesson.mkv` | `converted/lesson.mp4` | `converted/lesson-web.mp4` |
+| `silent.webm` | `converted/silent.mp4` | `converted/silent-web.mp4` |
+
+If two sources would create the same output path, the command stops before
+starting FFmpeg. For example, `camera/clip.mov` and `phone/clip.mkv` both map
+to `converted/clip.mp4`.
+
+### Preview every FFmpeg command
+
+```console
+flowmpeg batch recordings -o converted --dry-run
+flowmpeg batch recordings -o converted --dry-run --json
+```
+
+Dry runs discover and validate the inputs but do not create the output
+directory. JSON contains an ordered `jobs` array with each name, destination,
+and redacted command.
+
+### Handle silent inputs and time limits
+
+```console
+flowmpeg batch captures -o converted --no-audio
+flowmpeg batch recordings -o converted --timeout 300
+```
+
+The timeout applies to each file, not to the batch total. The default audio
+mode checks each source at run time and uses a video-only plan when the source
+has no audio. `--no-audio` skips that check and always creates silent output.
+
+### Choose the failure policy
+
+The default stops after the first failure:
+
+```text
+COMPLETED intro.mov
+FAILED    broken.mov
+SKIPPED   lesson.mov
+SKIPPED   outro.mov
+```
+
+Use this when later outputs depend on every earlier file succeeding:
+
+```console
+flowmpeg batch recordings -o converted
+```
+
+Use `--continue-on-error` when each file is independent:
+
+```console
+flowmpeg batch recordings -o converted --continue-on-error
+```
+
+```text
+COMPLETED intro.mov
+FAILED    broken.mov
+COMPLETED lesson.mov
+COMPLETED outro.mov
+```
+
+Successful final outputs remain in the selected output directory. Flowmpeg
+does not delete completed work because another source fails later.
+
+### Protect existing outputs
+
+Without `--overwrite`, Flowmpeg checks every planned output before the first
+job starts. One existing destination stops the whole batch with exit code 4:
+
+```console
+flowmpeg batch recordings -o converted
+```
+
+Replace those final files only when they are known rebuilds:
+
+```console
+flowmpeg batch recordings -o converted --overwrite
+```
+
+### Read the result as data
+
+```console
+flowmpeg batch recordings -o converted --continue-on-error --json
+```
+
+An example result shape is:
+
+```json
+{
+  "counts": {
+    "cancelled": 0,
+    "completed": 18,
+    "failed": 1,
+    "skipped": 0
+  },
+  "elapsed": 94.8,
+  "ok": false,
+  "schema_version": 1
+}
+```
+
+The real object also contains an ordered `items` array. Each item has a name,
+state, elapsed time, output paths, and an error type when it failed.
+
+```text
+Example batch, 19 files
+completed  ##################  18
+failed     #                   1
+cancelled                      0
+skipped                        0
+```
+
+These numbers show the report layout. Actual counts and times come from the
+current run.
+
+### Exit codes
+
+| Result | Exit code |
+|---|---:|
+| Every job completed | 0 |
+| Invalid source, pattern, or duplicate output | 2 |
+| FFmpeg or FFprobe is unavailable | 3 |
+| A final output already exists | 4 |
+| FFmpeg failed | 6 |
+| A job exceeded its timeout | 7 |
+| The batch was cancelled or interrupted | 130 |
+
+## Build a batch in Python
+
+Named jobs can use any `Plan`, so one batch is not limited to the terminal
+command's web MP4 conversion:
+
+```python
+import flowmpeg
+from flowmpeg import shortcuts as ff
+
+jobs = (
+    flowmpeg.BatchJob("intro", ff.transcode("intro.mov", "web/intro.mp4")),
+    flowmpeg.BatchJob("lesson", ff.resize("lesson.mp4", "web/lesson.mp4", width=1280)),
+    flowmpeg.BatchJob("audio", ff.extract_audio("talk.mp4", "web/talk.mp3")),
+)
+
+result = flowmpeg.run_batch(jobs, continue_on_error=True)
+for item in result.items:
+    print(item.name, item.status, item.outputs)
+```
+
+The result always follows job order. Its counts separate completed, failed,
+cancelled, and skipped jobs.
+
+### Cancel a running group
+
+`CancellationToken` is thread-safe. A UI, signal handler, or controller thread
+can call `cancel()`. The active FFmpeg process tree is stopped, and jobs that
+have not started are marked cancelled.
+
+```python
+import flowmpeg
+from flowmpeg import shortcuts as ff
+
+token = flowmpeg.CancellationToken()
+jobs = (
+    flowmpeg.BatchJob("one", ff.transcode("one.mov", "out/one.mp4")),
+    flowmpeg.BatchJob("two", ff.transcode("two.mov", "out/two.mp4")),
+)
+
+token.cancel()
+result = flowmpeg.run_batch(jobs, token=token)
+print(result.cancelled)
+```
+
+The terminal command maps Ctrl+C to exit code 130 and uses the same process
+tree cleanup in the runner.
+
+### Keep temporary intermediates separate
+
+Use `BatchWorkspace` for files that are not final deliverables. It creates a
+unique directory and removes everything under it when the context exits,
+including after an exception:
+
+```python
+import flowmpeg
+from flowmpeg import shortcuts as ff
+
+with flowmpeg.BatchWorkspace() as workspace:
+    intermediate = workspace.allocate("stage/voice.wav")
+    job = flowmpeg.BatchJob(
+        "extract voice",
+        ff.extract_audio("interview.mp4", intermediate, codec="wav"),
+    )
+    result = flowmpeg.run_batch((job,))
+    print(result.ok)
+```
+
+Workspace paths reject absolute values and parent traversal. Final batch
+outputs do not use this workspace automatically because deleting a completed
+deliverable would be surprising.
+
+## Shell loops for other commands
+
+The next patterns apply one non-batch Flowmpeg command to a folder. Every
+editing command still protects an existing output, so a repeated loop stops
+or reports files it would replace unless `--overwrite` is explicit.
 
 ## CMD
 
@@ -153,7 +407,8 @@ This version continues after a failure and records the input path.
 | Files may use different tracks | Run `flowmpeg probe` first | Default shortcuts select the first matching stream |
 | A required encoder may be absent | Run `doctor --require GROUP` | Get a broad preflight result before the loop |
 
-Batch loops do not add parallel execution, cancellation groups, or automatic
-cleanup. Each `flowmpeg` process finishes before the next file begins. This
-keeps output ownership clear and avoids several jobs competing for the same
-CPU and disk at once.
+Native batches and these shell loops run one FFmpeg process at a time. This
+keeps ordering stable and prevents several encoders from competing for the
+same CPU and disk at once. Native batches add state reporting, cancellation,
+and temporary workspaces; shell loops keep the failure behavior of their
+chosen shell.

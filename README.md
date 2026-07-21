@@ -49,6 +49,7 @@ flowmpeg find-silence interview.wav
 flowmpeg find-black tape.mp4
 flowmpeg scenes interview.mp4
 flowmpeg crop-report letterboxed.mp4 --duration 30
+flowmpeg batch "recordings/*.mov" -o converted
 flowmpeg hls input.mp4 -o delivery-hls
 flowmpeg dash input.mp4 -o delivery-dash
 ```
@@ -82,6 +83,7 @@ flowmpeg loop motion.mp4 --duration 30 -o background.mp4
 flowmpeg webm input.mov --crf 30 -o delivery.webm
 flowmpeg hevc input.mov --crf 28 -o archive.mp4
 flowmpeg av1 input.mov --crf 35 --speed 8 -o delivery-av1.webm
+flowmpeg batch "recordings/*.mov" --name-suffix=-web -o converted
 flowmpeg hls input.mp4 --segment-duration 4 -o delivery-hls
 flowmpeg dash input.mp4 --segment-duration 2 -o delivery-dash
 flowmpeg remux input.mp4 -o archive.mkv
@@ -183,6 +185,7 @@ outputs for common jobs:
 - Produce multiple outputs, inspect metadata, and report progress
 - Find silent ranges and read analysis reports
 - Create owned HLS and DASH artifact directories
+- Convert local video folders with ordered batch results
 
 The [streaming package guide](docs/streaming.md) explains manifests, segment
 files, staged replacement, and the marker that protects unrelated directories.
@@ -190,8 +193,8 @@ files, staged replacement, and the marker that protects unrelated directories.
 The [real-world workflow guide](docs/workflows.md) adds 30 paired terminal and
 Python examples. It covers social formats, privacy edits, voice cleanup,
 subtitles, metadata, image sequences, and podcast audiograms. The
-[batch job guide](docs/batch-jobs.md) has folder patterns for CMD, PowerShell,
-and Bash, including failure handling and silent inputs. Four staged
+[batch job guide](docs/batch-jobs.md) covers the native folder command,
+cancellation, temporary workspaces, and shell loops for other jobs. Four staged
 [media playbooks](docs/playbooks.md) cover a lesson, podcast, tape review, and
 product demo. The
 [error guide](docs/errors.md) explains every `FMG` identifier and process exit
@@ -206,6 +209,7 @@ plans, see the [shortcut guide](docs/shortcuts.md).
 - Deterministic `filter_complex` labels and argv compilation
 - Typed FFprobe container and stream results
 - Owned HLS and DASH artifact sets with failure cleanup
+- Named batches with cancellation and temporary workspace cleanup
 - Synchronous execution with progress callbacks and timeouts
 - An installed `flowmpeg` command with editing, inspection, and help groups
 - Read-only setup checks with confirmed package manager installation

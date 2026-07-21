@@ -29,3 +29,4 @@
 - Installation, error, and real-world workflow guides
 - Measured two-pass loudness normalization with an inspectable workflow
 - Owned HLS and DASH packages with staged replacement
+- Cancellable named batches and local video folder conversion

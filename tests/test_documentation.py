@@ -253,7 +253,17 @@ def test_documented_terminal_options_parse() -> None:
     assert not failures, "\n".join(failures)
 
 
-def test_documented_edit_commands_build() -> None:
+def test_documented_edit_commands_build(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    batch_source = tmp_path / "batch-input.mov"
+    batch_source.touch()
+    monkeypatch.setattr(
+        cli,
+        "_discover_batch_sources",
+        lambda *args, **kwargs: (batch_source,),
+    )
     editing_names = {
         value
         for spec in COMMAND_CATALOG

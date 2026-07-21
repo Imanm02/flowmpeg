@@ -158,8 +158,8 @@ only a discussion or test placeholder.
 - Reverse video and reverse audio filters buffer decoded media in memory.
 - HLS and DASH own dedicated marked directories. Frame extraction directories
   still need the same ownership contract before they become shortcuts.
-- Batch orchestration, cancellation groups, and temporary-file cleanup are not
-  part of the current single-process runner.
+- Native batches run one FFmpeg process at a time. They do not schedule several
+  encoders in parallel. Completed final outputs remain after a later failure.
 
 ## Next work
 
@@ -170,7 +170,11 @@ only a discussion or test placeholder.
 - [x] Check delivery constraints such as duration, dimensions, and codecs.
 - [x] Add measured two-pass loudness normalization as a workflow.
 - [x] Define owned artifact sets for HLS and DASH outputs.
-- [ ] Define batch cancellation and temporary-file cleanup rules.
+- [x] Define batch cancellation and temporary-file cleanup rules.
+- [ ] Define owned artifact sets for extracted frame directories.
+- [ ] Add saved batch manifests with schema validation.
+- [ ] Measure reference quality with PSNR, SSIM, and VMAF when available.
+- [ ] Model adaptive streaming ladders with several renditions.
 
 ## Release gates
 

@@ -39,6 +39,7 @@ flowmpeg find-silence demo-media/voice.wav --noise-db -45 --minimum 0.2
 flowmpeg find-black demo-media/sample.mp4 --minimum 0.2
 flowmpeg scenes demo-media/sample.mp4 --threshold 0.2
 flowmpeg crop-report demo-media/sample.mp4 --duration 2
+flowmpeg batch demo-media/sample.mp4 demo-media/silent.mp4 -o demo-media/web
 flowmpeg cut demo-media/sample.mp4 --duration 1 -o demo-media/clip.mp4
 flowmpeg loop demo-media/sample.mp4 --duration 3 -o demo-media/looped.mp4
 flowmpeg webm demo-media/sample.mp4 -o demo-media/sample.webm
@@ -110,6 +111,7 @@ Paths can also be `pathlib.Path` objects.
 | An open-codec web video | `interview.mp4` | `delivery.webm` |
 | A compact HEVC delivery file | `camera-master.mov` | `camera-hevc.mp4` |
 | An AV1 delivery file | `camera-master.mov` | `camera-av1.webm` |
+| A folder of web MP4 files | Local video files | One ordered batch directory |
 | An owned HLS package | `camera-master.mov` | Manifest and segment directory |
 | An owned DASH package | `camera-master.mov` | MPD and fragmented MP4 directory |
 | A silent video | `interview.mp4` | `silent.mp4` |
