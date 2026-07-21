@@ -1,4 +1,6 @@
-from flowmpeg.ui.http_types import ApiResponse
+import json
+
+from flowmpeg.ui.http_types import ApiResponse, json_response
 
 
 def test_ui_response_keeps_status_body_and_media_type() -> None:
@@ -7,3 +9,11 @@ def test_ui_response_keeps_status_body_and_media_type() -> None:
     assert response.status == 200
     assert response.body == b"ok"
     assert response.content_type.startswith("text/plain")
+
+
+def test_ui_json_response_uses_utf8_and_requested_status() -> None:
+    response = json_response({"message": "café"}, status=201)
+
+    assert response.status == 201
+    assert response.content_type.startswith("application/json")
+    assert json.loads(response.body) == {"message": "café"}
