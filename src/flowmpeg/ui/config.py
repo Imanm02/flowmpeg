@@ -29,3 +29,11 @@ class UiAddress:
 
         host = f"[{self.host}]" if ":" in self.host else self.host
         return f"http://{host}:{self.port}/"
+
+
+@dataclass(frozen=True, slots=True)
+class UiLaunchOptions:
+    """User choices that control local UI startup."""
+
+    address: UiAddress = UiAddress()
+    open_browser: bool = True

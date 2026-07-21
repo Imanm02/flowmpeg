@@ -1,4 +1,4 @@
-from flowmpeg.ui import DEFAULT_UI_HOST, UiAddress
+from flowmpeg.ui import DEFAULT_UI_HOST, UiAddress, UiLaunchOptions
 import pytest
 
 
@@ -35,3 +35,10 @@ def test_ui_address_builds_browser_url() -> None:
 
 def test_ui_address_brackets_ipv6_in_browser_url() -> None:
     assert UiAddress(host="::1", port=8123).url == "http://[::1]:8123/"
+
+
+def test_ui_launch_options_open_browser_by_default() -> None:
+    options = UiLaunchOptions()
+
+    assert options.address == UiAddress()
+    assert options.open_browser is True
