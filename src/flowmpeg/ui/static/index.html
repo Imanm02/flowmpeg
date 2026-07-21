@@ -73,9 +73,19 @@
               <h2 id="command-title"></h2>
               <p id="command-summary"></p>
             </div>
-            <button type="button" class="quiet-button" id="favorite-button">
-              Save favorite
-            </button>
+            <div class="command-tools">
+              <label>
+                <span>Preset</span>
+                <select id="preset-select">
+                  <option value="">Choose a saved preset</option>
+                </select>
+              </label>
+              <button type="button" class="quiet-button" id="save-preset">Save preset</button>
+              <button type="button" class="quiet-button" id="delete-preset" disabled>Delete preset</button>
+              <button type="button" class="quiet-button" id="favorite-button">
+                Save favorite
+              </button>
+            </div>
           </header>
           <div class="command-facts" id="command-facts"></div>
 
