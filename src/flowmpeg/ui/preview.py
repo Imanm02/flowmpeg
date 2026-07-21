@@ -4,6 +4,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from flowmpeg.diagnostics import display_argv
+from flowmpeg.ui.invocation import UiInvocation
+from flowmpeg.ui.invocation_compiler import compile_invocation
+from flowmpeg.ui.schema import UiSchema
+
 
 @dataclass(frozen=True, slots=True)
 class UiPreview:
@@ -13,4 +18,12 @@ class UiPreview:
     display: str
 
 
-__all__ = ["UiPreview"]
+def preview_invocation(schema: UiSchema, invocation: UiInvocation) -> UiPreview:
+    """Compile a submission and prepare a safe terminal display."""
+
+    arguments = compile_invocation(schema, invocation)
+    display = display_argv(("flowmpeg", *arguments))
+    return UiPreview(arguments=arguments, display=display)
+
+
+__all__ = ["UiPreview", "preview_invocation"]
