@@ -247,3 +247,16 @@ Output: a two-column MP4 grid built from the selected videos.
 
 Why I use it: the multi-input field is easier to review than a hand-built
 filter graph.
+
+### Make a short GIF
+
+Input: `sample.mp4`.
+
+```console
+flowmpeg gif sample.mp4 --start 3 --duration 4 -o preview.gif
+```
+
+Output: a palette-based animated GIF for a short selected range.
+
+Why I use it: the UI keeps the start time and duration visible while the
+palette work happens behind the command.
