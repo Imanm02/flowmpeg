@@ -1,4 +1,5 @@
 import pytest
+import threading
 
 from flowmpeg.ui.jobs import BoundedOutput, JobManager, JobStatus, UiJob
 
@@ -94,4 +95,48 @@ def test_ui_job_manager_rejects_nested_ui_servers() -> None:
         with pytest.raises(ValueError, match="cannot be started from the UI"):
             manager.start(("ui",), "flowmpeg ui")
     finally:
+        manager.close()
+
+
+def test_ui_job_manager_cancels_queued_jobs() -> None:
+    release = threading.Event()
+
+    def wait_for_release(job: UiJob) -> int:
+        del job
+        release.wait(timeout=2)
+        return 0
+
+    manager = JobManager(max_parallel=1, runner=wait_for_release)
+    try:
+        first = manager.start(("errors",), "flowmpeg errors")
+        second = manager.start(("commands",), "flowmpeg commands")
+
+        assert manager.cancel(second.id) is True
+        assert manager.get(second.id).status is JobStatus.CANCELLED  # type: ignore[union-attr]
+        release.set()
+        manager.wait(first.id, timeout=2)
+    finally:
+        release.set()
+        manager.close()
+
+
+def test_ui_job_manager_marks_running_jobs_cancelled() -> None:
+    release = threading.Event()
+
+    def wait_for_release(job: UiJob) -> int:
+        del job
+        release.wait(timeout=2)
+        return 130
+
+    manager = JobManager(runner=wait_for_release)
+    try:
+        queued = manager.start(("errors",), "flowmpeg errors")
+        while manager.get(queued.id).status is JobStatus.QUEUED:  # type: ignore[union-attr]
+            pass
+        assert manager.cancel(queued.id) is True
+        release.set()
+        finished = manager.wait(queued.id, timeout=2)
+        assert finished.status is JobStatus.CANCELLED
+    finally:
+        release.set()
         manager.close()

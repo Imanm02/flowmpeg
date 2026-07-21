@@ -13,7 +13,7 @@ import threading
 import time
 
 from flowmpeg.diagnostics import redact_text
-from flowmpeg.processes import popen_group_options
+from flowmpeg.processes import popen_group_options, stop_process_tree
 
 MAX_JOB_OUTPUT = 200_000
 
@@ -161,6 +161,32 @@ class JobManager:
         if snapshot is None:
             raise KeyError(job_id)
         return snapshot
+
+    def cancel(self, job_id: str) -> bool:
+        """Cancel a queued or running job."""
+
+        with self._lock:
+            job = self._jobs.get(job_id)
+            future = self._futures.get(job_id)
+        if job is None or future is None:
+            return False
+        process: subprocess.Popen[str] | None = None
+        with job.lock:
+            if job.status in {
+                JobStatus.SUCCEEDED,
+                JobStatus.FAILED,
+                JobStatus.CANCELLED,
+            }:
+                return False
+            job.cancel_requested = True
+            if future.cancel():
+                job.status = JobStatus.CANCELLED
+                job.finished_at = time.time()
+                return True
+            process = job.process
+        if process is not None:
+            stop_process_tree(process, 2.0)
+        return True
 
     def close(self, *, wait: bool = True) -> None:
         """Stop accepting jobs and release worker threads.""
