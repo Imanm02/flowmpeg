@@ -179,20 +179,22 @@ function loadFavorites() {
   }
 }
 
+function isPreset(value) {
+  return Boolean(
+    value &&
+      typeof value.id === "string" &&
+      typeof value.name === "string" &&
+      typeof value.command === "string" &&
+      value.values &&
+      typeof value.values === "object" &&
+      !Array.isArray(value.values),
+  );
+}
+
 function loadPresets() {
   try {
     const values = JSON.parse(localStorage.getItem("flowmpeg-presets") || "[]");
-    state.presets = Array.isArray(values)
-      ? values.filter(
-          (value) =>
-            value &&
-            typeof value.id === "string" &&
-            typeof value.name === "string" &&
-            typeof value.command === "string" &&
-            value.values &&
-            typeof value.values === "object",
-        )
-      : [];
+    state.presets = Array.isArray(values) ? values.filter(isPreset) : [];
   } catch {
     state.presets = [];
   }
