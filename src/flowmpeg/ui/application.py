@@ -48,7 +48,9 @@ class UiApplication:
     ) -> ApiResponse:
         """Handle one API request."""
 
-        request_headers = {name.lower(): value for name, value in (headers or {}).items()}
+        request_headers = {
+            name.lower(): value for name, value in (headers or {}).items()
+        }
         if method in {"POST", "PUT", "PATCH", "DELETE"} and not self.session.accepts(
             request_headers.get(TOKEN_HEADER.lower())
         ):
@@ -61,7 +63,9 @@ class UiApplication:
             ).with_security_headers()
         if method == "GET" and path == "/":
             asset = render_index(self.session.token)
-            return ApiResponse(200, asset.data, asset.content_type).with_security_headers()
+            return ApiResponse(
+                200, asset.data, asset.content_type
+            ).with_security_headers()
         if method == "GET" and path in {"/app.css", "/app.js"}:
             asset = load_asset(path.removeprefix("/"))
             if asset is not None:
@@ -185,8 +189,10 @@ class UiApplication:
                     status=400,
                 ).with_security_headers()
             return json_response({"path": created}, status=201).with_security_headers()
-        if method == "POST" and path.startswith("/api/jobs/") and path.endswith(
-            "/cancel"
+        if (
+            method == "POST"
+            and path.startswith("/api/jobs/")
+            and path.endswith("/cancel")
         ):
             job_id = path.removeprefix("/api/jobs/").removesuffix("/cancel")
             if "/" in job_id or not job_id:

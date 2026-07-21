@@ -2,15 +2,15 @@
 
 from __future__ import annotations
 
+import secrets
+import subprocess
+import sys
+import threading
+import time
 from collections.abc import Callable
 from concurrent.futures import Future, ThreadPoolExecutor
 from dataclasses import dataclass, field
 from enum import Enum
-import subprocess
-import secrets
-import sys
-import threading
-import time
 
 from flowmpeg.diagnostics import redact_text
 from flowmpeg.processes import popen_group_options, stop_process_tree
@@ -198,9 +198,7 @@ class JobManager:
         }
         with self._lock:
             job_ids = [
-                job_id
-                for job_id, job in self._jobs.items()
-                if job.status in terminal
+                job_id for job_id, job in self._jobs.items() if job.status in terminal
             ]
             for job_id in job_ids:
                 self._jobs.pop(job_id, None)

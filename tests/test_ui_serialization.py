@@ -1,7 +1,7 @@
 import json
 
-from flowmpeg.ui.jobs import JobStatus, UiJobSnapshot
 from flowmpeg.ui.files import DirectoryListing, FileEntry
+from flowmpeg.ui.jobs import JobStatus, UiJobSnapshot
 from flowmpeg.ui.preview import UiPreview
 from flowmpeg.ui.schema import FieldKind, PathRole, UiCommand, UiField, UiSchema
 from flowmpeg.ui.serialization import (

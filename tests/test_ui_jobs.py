@@ -1,5 +1,6 @@
-import pytest
 import threading
+
+import pytest
 
 from flowmpeg.ui.jobs import BoundedOutput, JobManager, JobStatus, UiJob
 

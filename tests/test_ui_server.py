@@ -5,11 +5,10 @@ from io import StringIO
 
 from flowmpeg.ui.application import UiApplication
 from flowmpeg.ui.config import UiAddress
-from flowmpeg.ui.schema import UiSchema
-from flowmpeg.ui.server import create_server
-from flowmpeg.ui.server import UiRequestHandler
-from flowmpeg.ui.session import UiSession
 from flowmpeg.ui.request_data import MAX_JSON_BYTES
+from flowmpeg.ui.schema import UiSchema
+from flowmpeg.ui.server import UiRequestHandler, create_server
+from flowmpeg.ui.session import UiSession
 
 
 def test_ui_server_serves_application_routes_on_loopback() -> None:

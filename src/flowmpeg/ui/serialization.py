@@ -5,8 +5,8 @@ from __future__ import annotations
 import json
 from typing import Any
 
-from flowmpeg.ui.jobs import UiJobSnapshot
 from flowmpeg.ui.files import DirectoryListing
+from flowmpeg.ui.jobs import UiJobSnapshot
 from flowmpeg.ui.preview import UiPreview
 from flowmpeg.ui.schema import UiCommand, UiField, UiSchema
 from flowmpeg.ui.validation import UiValidationIssue

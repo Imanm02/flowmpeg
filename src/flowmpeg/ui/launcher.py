@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
+import webbrowser
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TextIO
-import webbrowser
 
 from flowmpeg.ui.application import UiApplication
 from flowmpeg.ui.config import UiAddress, UiLaunchOptions
