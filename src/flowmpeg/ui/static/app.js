@@ -13,6 +13,8 @@ const state = {
   favorites: new Set(),
   jobs: new Map(),
   pollTimer: null,
+  fileBrowser: null,
+  lastDirectory: null,
 };
 
 const elements = {
@@ -41,6 +43,18 @@ const elements = {
   favoriteButton: document.querySelector("#favorite-button"),
   jobList: document.querySelector("#job-list"),
   clearJobs: document.querySelector("#clear-jobs"),
+  fileDialog: document.querySelector("#file-dialog"),
+  fileDialogTitle: document.querySelector("#file-dialog-title"),
+  fileDialogClose: document.querySelector("#file-dialog-close"),
+  fileParent: document.querySelector("#file-parent"),
+  fileCurrentPath: document.querySelector("#file-current-path"),
+  fileGo: document.querySelector("#file-go"),
+  fileEntries: document.querySelector("#file-entries"),
+  fileSelectionSummary: document.querySelector("#file-selection-summary"),
+  fileCancel: document.querySelector("#file-cancel"),
+  fileUsePath: document.querySelector("#file-use-path"),
+  outputNameField: document.querySelector("#output-name-field"),
+  outputFileName: document.querySelector("#output-file-name"),
 };
 
 async function api(path, options = {}) {
@@ -222,7 +236,21 @@ function renderField(field) {
   help.className = "field-help";
   help.id = `help-${field.name}`;
   help.textContent = field.help || pathHelp(field.pathRole);
-  wrapper.append(label, control, help);
+  wrapper.append(label);
+  if (field.pathRole !== "none") {
+    const row = document.createElement("div");
+    row.className = "path-control";
+    const browse = document.createElement("button");
+    browse.type = "button";
+    browse.className = "secondary-button";
+    browse.textContent = "Browse";
+    browse.addEventListener("click", () => openFileDialog(field, control));
+    row.append(control, browse);
+    wrapper.append(row);
+  } else {
+    wrapper.append(control);
+  }
+  wrapper.append(help);
 
   if (field.clearFlags.length) {
     const clearLabel = document.createElement("label");
@@ -307,6 +335,184 @@ function pathPlaceholder(role) {
 
 function pathHelp(role) {
   return role === "none" ? "" : "This path stays on your computer.";
+}
+
+async function openFileDialog(field, control) {
+  state.fileBrowser = {
+    field,
+    control,
+    listing: null,
+    selected: new Set(),
+  };
+  elements.fileDialogTitle.textContent = field.label;
+  elements.outputNameField.hidden = field.pathRole !== "output-file";
+  elements.outputFileName.value = "";
+  elements.fileSelectionSummary.textContent = "Nothing selected";
+  elements.fileDialog.showModal();
+  await loadDirectory(state.lastDirectory);
+}
+
+async function loadDirectory(path) {
+  elements.fileEntries.replaceChildren();
+  const loading = document.createElement("p");
+  loading.className = "empty-state";
+  loading.textContent = "Loading local paths...";
+  elements.fileEntries.append(loading);
+  try {
+    const listing = await api("/api/files", {
+      method: "POST",
+      body: JSON.stringify({path: path || null}),
+    });
+    state.fileBrowser.listing = listing;
+    state.fileBrowser.selected.clear();
+    state.lastDirectory = listing.path;
+    elements.fileCurrentPath.value = listing.path;
+    elements.fileParent.disabled = !listing.parent;
+    renderFileEntries();
+  } catch (error) {
+    elements.fileEntries.replaceChildren();
+    const message = document.createElement("p");
+    message.className = "form-errors";
+    message.textContent = error.message;
+    elements.fileEntries.append(message);
+  }
+}
+
+function renderFileEntries() {
+  const browser = state.fileBrowser;
+  elements.fileEntries.replaceChildren();
+  if (!browser.listing.entries.length) {
+    const empty = document.createElement("p");
+    empty.className = "empty-state";
+    empty.textContent = "This folder is empty.";
+    elements.fileEntries.append(empty);
+  }
+  for (const entry of browser.listing.entries) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "file-entry";
+    button.classList.toggle("selected", browser.selected.has(entry.path));
+    button.setAttribute("role", "option");
+    button.setAttribute("aria-selected", String(browser.selected.has(entry.path)));
+    const name = document.createElement("span");
+    name.textContent = entry.name;
+    const detail = document.createElement("small");
+    detail.textContent = entry.directory ? "Folder" : formatBytes(entry.size);
+    button.append(name, detail);
+    button.addEventListener("dblclick", () => {
+      if (entry.directory) {
+        loadDirectory(entry.path);
+      }
+    });
+    button.addEventListener("click", () => toggleFileSelection(entry));
+    elements.fileEntries.append(button);
+  }
+  if (browser.listing.truncated) {
+    const warning = document.createElement("p");
+    warning.className = "empty-state";
+    warning.textContent = "Only the first 1000 entries are shown.";
+    elements.fileEntries.append(warning);
+  }
+}
+
+function toggleFileSelection(entry) {
+  const browser = state.fileBrowser;
+  const wantsDirectory = ["input-directory", "output-directory"].includes(
+    browser.field.pathRole,
+  );
+  if (entry.directory !== wantsDirectory && browser.field.pathRole !== "input-files") {
+    return;
+  }
+  if (entry.directory && browser.field.pathRole === "input-files") {
+    loadDirectory(entry.path);
+    return;
+  }
+  if (browser.field.pathRole === "input-files") {
+    if (browser.selected.has(entry.path)) {
+      browser.selected.delete(entry.path);
+    } else {
+      browser.selected.add(entry.path);
+    }
+  } else {
+    browser.selected.clear();
+    browser.selected.add(entry.path);
+  }
+  const count = browser.selected.size;
+  elements.fileSelectionSummary.textContent = count
+    ? `${count} path${count === 1 ? "" : "s"} selected`
+    : "Nothing selected";
+  renderFileEntries();
+}
+
+function formatBytes(value) {
+  if (value === null) {
+    return "File";
+  }
+  if (value < 1024) {
+    return `${value} B`;
+  }
+  if (value < 1024 ** 2) {
+    return `${(value / 1024).toFixed(1)} KiB`;
+  }
+  if (value < 1024 ** 3) {
+    return `${(value / 1024 ** 2).toFixed(1)} MiB`;
+  }
+  return `${(value / 1024 ** 3).toFixed(1)} GiB`;
+}
+
+function closeFileDialog() {
+  elements.fileDialog.close();
+  state.fileBrowser = null;
+}
+
+elements.fileParent.addEventListener("click", () => {
+  if (state.fileBrowser?.listing?.parent) {
+    loadDirectory(state.fileBrowser.listing.parent);
+  }
+});
+elements.fileGo.addEventListener("click", () => {
+  loadDirectory(elements.fileCurrentPath.value.trim());
+});
+elements.fileCurrentPath.addEventListener("keydown", (event) => {
+  if (event.key === "Enter") {
+    event.preventDefault();
+    loadDirectory(elements.fileCurrentPath.value.trim());
+  }
+});
+elements.fileDialogClose.addEventListener("click", closeFileDialog);
+elements.fileCancel.addEventListener("click", closeFileDialog);
+elements.fileUsePath.addEventListener("click", () => {
+  const browser = state.fileBrowser;
+  if (!browser?.listing) {
+    return;
+  }
+  let paths = [...browser.selected];
+  if (browser.field.pathRole === "output-file") {
+    const name = elements.outputFileName.value.trim();
+    if (!name || name.includes("/") || name.includes("\\")) {
+      showToast("Enter a file name without folder separators.");
+      elements.outputFileName.focus();
+      return;
+    }
+    paths = [joinLocalPath(browser.listing.path, name)];
+  }
+  if (["input-directory", "output-directory"].includes(browser.field.pathRole)) {
+    paths = paths.length ? paths : [browser.listing.path];
+  }
+  if (!paths.length) {
+    showToast("Select a path first.");
+    return;
+  }
+  browser.control.value = browser.field.multiple
+    ? paths.join("\n")
+    : paths[0];
+  browser.control.dispatchEvent(new Event("input", {bubbles: true}));
+  closeFileDialog();
+});
+
+function joinLocalPath(folder, name) {
+  const separator = folder.includes("\\") ? "\\" : "/";
+  return folder.endsWith(separator) ? `${folder}${name}` : `${folder}${separator}${name}`;
 }
 
 function collectValues() {

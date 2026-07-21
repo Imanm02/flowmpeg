@@ -63,6 +63,17 @@ textarea {
   min-height: auto;
 }
 
+.path-control {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.6rem;
+  align-items: start;
+}
+
+.path-control button {
+  min-height: 2.7rem;
+}
+
 button,
 select {
   cursor: pointer;
