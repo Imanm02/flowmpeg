@@ -164,3 +164,27 @@ def test_ui_compiler_uses_clear_flags_for_explicit_nulls() -> None:
         _schema(command),
         UiInvocation("make-gif", (UiValue("duration", None),)),
     ) == ("make-gif", "--full")
+
+
+def test_ui_compiler_expands_repeatable_values_without_shell_joining() -> None:
+    field = UiField(
+        "sources",
+        "Sources",
+        FieldKind.TEXT,
+        required=True,
+        multiple=True,
+    )
+    command = UiCommand(
+        name="join-matching",
+        category="composition",
+        summary="Join videos",
+        fields=(field,),
+    )
+
+    assert compile_invocation(
+        _schema(command),
+        UiInvocation(
+            "join-matching",
+            (UiValue("sources", ("one clip.mp4", "two;clip.mp4")),),
+        ),
+    ) == ("join-matching", "one clip.mp4", "two;clip.mp4")

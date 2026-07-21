@@ -69,9 +69,21 @@ def compile_invocation(schema: UiSchema, invocation: UiInvocation) -> tuple[str,
 
 
 def _field_arguments(field: UiField, value: object) -> tuple[str, ...]:
+    if field.multiple:
+        return _multiple_arguments(field, value)
     if field.kind is FieldKind.BOOLEAN:
         return _boolean_arguments(field, value)
     return _scalar_arguments(field, value)
+
+
+def _multiple_arguments(field: UiField, value: object) -> tuple[str, ...]:
+    if not isinstance(value, tuple) or not all(
+        isinstance(item, str) and item for item in value
+    ):
+        raise _invalid_type(field)
+    if field.flags:
+        return (field.flags[-1], *value)
+    return value
 
 
 def _boolean_arguments(field: UiField, value: object) -> tuple[str, ...]:
