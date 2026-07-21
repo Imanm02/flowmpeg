@@ -46,6 +46,29 @@ def test_ui_field_keeps_negative_and_clear_flags() -> None:
     assert field.clear_flags == ("--full",)
 
 
+def test_ui_number_field_keeps_input_constraints() -> None:
+    field = UiField(
+        name="duration",
+        label="Duration",
+        kind=FieldKind.NUMBER,
+        minimum=0,
+        exclusive_minimum=True,
+    )
+
+    assert field.minimum == 0
+    assert field.exclusive_minimum is True
+
+
+def test_ui_text_field_rejects_numeric_constraints() -> None:
+    with pytest.raises(ValueError, match="numeric constraints"):
+        UiField(
+            name="source",
+            label="Source",
+            kind=FieldKind.TEXT,
+            minimum=0,
+        )
+
+
 @pytest.mark.parametrize("name", ["", "output path", "--output", "a/b"])
 def test_ui_field_rejects_unsafe_names(name: str) -> None:
     with pytest.raises(ValueError, match="field name"):

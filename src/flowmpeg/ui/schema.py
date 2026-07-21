@@ -47,6 +47,9 @@ class UiField:
     choices: tuple[str, ...] = ()
     path_role: PathRole = PathRole.NONE
     advanced: bool = False
+    integer: bool = False
+    minimum: int | float | None = None
+    exclusive_minimum: bool = False
 
     def __post_init__(self) -> None:
         if not self.name or not self.name.replace("_", "").isalnum():
@@ -60,6 +63,12 @@ class UiField:
         all_flags = (*self.flags, *self.negative_flags, *self.clear_flags)
         if len(all_flags) != len(set(all_flags)):
             raise ValueError("field flags must be unique")
+        if self.kind is not FieldKind.NUMBER and (
+            self.integer or self.minimum is not None or self.exclusive_minimum
+        ):
+            raise ValueError("numeric constraints require a number field")
+        if self.exclusive_minimum and self.minimum is None:
+            raise ValueError("an exclusive minimum requires a minimum")
 
 
 @dataclass(frozen=True, slots=True)
