@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from flowmpeg.ui.schema import UiCommand, UiField
+from flowmpeg.ui.schema import UiCommand, UiField, UiSchema
 
 
 def field_data(field: UiField) -> dict[str, Any]:
@@ -40,4 +40,14 @@ def command_data(command: UiCommand) -> dict[str, Any]:
     }
 
 
-__all__ = ["command_data", "field_data"]
+def schema_data(schema: UiSchema) -> dict[str, Any]:
+    """Return the complete form schema as JSON-compatible data."""
+
+    return {
+        "version": schema.version,
+        "categories": list(schema.categories),
+        "commands": [command_data(command) for command in schema.commands],
+    }
+
+
+__all__ = ["command_data", "field_data", "schema_data"]
