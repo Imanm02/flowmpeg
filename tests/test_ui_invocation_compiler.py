@@ -234,3 +234,20 @@ def test_ui_compiler_rejects_invalid_numeric_values(value: object) -> None:
             _schema(command),
             UiInvocation("trim", (UiValue("start", value),)),  # type: ignore[arg-type]
         )
+
+
+@pytest.mark.parametrize("value", ["", 3, True])
+def test_ui_compiler_rejects_invalid_text_values(value: object) -> None:
+    field = UiField("source", "Source", FieldKind.TEXT)
+    command = UiCommand(
+        name="probe",
+        category="inspect",
+        summary="Inspect media",
+        fields=(field,),
+    )
+
+    with pytest.raises(UiValidationError):
+        compile_invocation(
+            _schema(command),
+            UiInvocation("probe", (UiValue("source", value),)),  # type: ignore[arg-type]
+        )

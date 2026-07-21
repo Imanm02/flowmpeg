@@ -95,6 +95,10 @@ def _field_arguments(field: UiField, value: object) -> tuple[str, ...]:
                     field=field.name,
                 )
             )
+    if field.kind is FieldKind.TEXT and (
+        not isinstance(value, str) or not value
+    ):
+        raise _invalid_type(field)
     return _scalar_arguments(field, value)
 
 
