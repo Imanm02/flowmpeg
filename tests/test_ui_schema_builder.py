@@ -3,9 +3,9 @@ import argparse
 from flowmpeg.catalog import COMMAND_CATALOG, command_spec
 from flowmpeg.ui.schema import FieldKind, PathRole, UiField
 from flowmpeg.ui.schema_builder import (
+    build_ui_command,
     build_ui_field,
     build_ui_schema,
-    build_ui_command,
     command_parsers,
     field_choices,
     field_default,
@@ -172,4 +172,6 @@ def test_ui_schema_covers_every_catalog_command() -> None:
     assert tuple(command.name for command in schema.commands) == tuple(
         spec.name for spec in COMMAND_CATALOG
     )
-    assert all(command.fields for command in schema.commands)
+    assert [command.name for command in schema.commands if not command.fields] == [
+        "errors"
+    ]
