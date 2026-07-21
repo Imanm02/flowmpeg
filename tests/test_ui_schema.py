@@ -205,3 +205,13 @@ def test_ui_schema_rejects_alias_collisions() -> None:
             categories=("video", "audio"),
             commands=(first, second),
         )
+
+
+def test_ui_command_examples_must_use_flowmpeg() -> None:
+    with pytest.raises(ValueError, match="flowmpeg commands"):
+        UiCommand(
+            name="trim",
+            category="video",
+            summary="Cut video",
+            examples=("ffmpeg -i input.mp4 output.mp4",),
+        )

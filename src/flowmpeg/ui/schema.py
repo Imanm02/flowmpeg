@@ -98,6 +98,8 @@ class UiCommand:
         names = [field.name for field in self.fields]
         if len(names) != len(set(names)):
             raise ValueError("command field names must be unique")
+        if any(not example.startswith("flowmpeg ") for example in self.examples):
+            raise ValueError("command examples must be flowmpeg commands")
 
 
 @dataclass(frozen=True, slots=True)
