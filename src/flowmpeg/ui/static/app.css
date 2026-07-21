@@ -634,6 +634,107 @@ pre {
   font-size: 0.72rem;
 }
 
+.file-dialog {
+  width: min(58rem, calc(100vw - 2rem));
+  max-height: calc(100vh - 2rem);
+  padding: 0;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-large);
+  box-shadow: var(--shadow);
+}
+
+.file-dialog::backdrop {
+  background: rgb(7 16 12 / 62%);
+  backdrop-filter: blur(4px);
+}
+
+.file-dialog-shell {
+  display: grid;
+  gap: 1rem;
+  padding: 1.25rem;
+}
+
+.path-bar {
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr) auto;
+  gap: 0.6rem;
+  align-items: center;
+}
+
+.path-bar label {
+  color: var(--text-soft);
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
+.file-notice {
+  margin: 0;
+  color: var(--text-soft);
+  font-size: 0.76rem;
+}
+
+.file-entries {
+  min-height: 14rem;
+  max-height: 52vh;
+  padding: 0.4rem;
+  overflow: auto;
+  background: var(--surface-soft);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.file-entry {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.65rem 0.75rem;
+  color: inherit;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-small);
+}
+
+.file-entry:hover,
+.file-entry.selected {
+  background: var(--accent-soft);
+}
+
+.file-entry small {
+  color: var(--text-soft);
+}
+
+.file-dialog-actions {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--text-soft);
+  font-size: 0.78rem;
+}
+
+.file-dialog-actions > div {
+  display: flex;
+  gap: 0.6rem;
+}
+
+@media (max-width: 640px) {
+  .path-bar {
+    grid-template-columns: auto 1fr auto;
+  }
+
+  .path-bar label {
+    grid-column: 1 / -1;
+  }
+
+  .file-dialog-actions {
+    display: grid;
+  }
+}
+
 :focus-visible {
   outline: 3px solid #39a983;
   outline-offset: 2px;

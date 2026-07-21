@@ -30,3 +30,4 @@ def test_ui_index_has_semantic_command_and_activity_regions() -> None:
     assert 'id="command-form"' in index
     assert 'id="job-list"' in index
     assert 'aria-live="polite"' in index
+    assert 'id="file-dialog"' in index

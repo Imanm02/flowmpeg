@@ -126,6 +126,39 @@
       </aside>
     </div>
     <div class="toast-region" id="toast-region" aria-live="polite" aria-atomic="true"></div>
+    <dialog class="file-dialog" id="file-dialog" aria-labelledby="file-dialog-title">
+      <div class="file-dialog-shell">
+        <header class="section-heading">
+          <div>
+            <p class="eyebrow">This computer</p>
+            <h2 id="file-dialog-title">Choose a path</h2>
+          </div>
+          <button type="button" class="quiet-button" id="file-dialog-close">Close</button>
+        </header>
+        <div class="path-bar">
+          <button type="button" class="quiet-button" id="file-parent">Up</button>
+          <label for="file-current-path">Current folder</label>
+          <input id="file-current-path" type="text" autocomplete="off">
+          <button type="button" class="secondary-button" id="file-go">Go</button>
+        </div>
+        <p class="file-notice" id="file-notice">
+          Flowmpeg lists names and file details only. Media stays on this computer.
+        </p>
+        <div class="file-entries" id="file-entries" role="listbox" aria-label="Local paths"></div>
+        <label class="field output-name-field" id="output-name-field" hidden>
+          <span class="field-label">Output file name</span>
+          <input id="output-file-name" type="text" placeholder="output.mp4" autocomplete="off">
+          <span class="field-help">The file will be created in the current folder.</span>
+        </label>
+        <footer class="file-dialog-actions">
+          <span id="file-selection-summary">Nothing selected</span>
+          <div>
+            <button type="button" class="quiet-button" id="file-cancel">Cancel</button>
+            <button type="button" class="primary-button" id="file-use-path">Use path</button>
+          </div>
+        </footer>
+      </div>
+    </dialog>
     <script src="/app.js" defer></script>
   </body>
 </html>
