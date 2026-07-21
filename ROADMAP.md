@@ -185,8 +185,8 @@ only a discussion or test placeholder.
 - Native batches run one FFmpeg process at a time. They do not schedule several
   encoders in parallel. Completed final outputs remain after a later failure.
 - The browser UI is a local session. Job cards do not survive server shutdown.
-- UI favorites and presets stay in one browser profile. There is no preset
-  import or export file yet.
+- UI favorites stay in one browser profile. Presets can be exported to and
+  imported from a local JSON file.
 - The path picker is an in-page local browser, not an operating-system file
   dialog.
 
