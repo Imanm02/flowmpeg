@@ -45,6 +45,7 @@ def command_data(command: UiCommand) -> dict[str, Any]:
         "summary": command.summary,
         "aliases": list(command.aliases),
         "tags": list(command.tags),
+        "examples": list(command.examples),
         "inputKind": command.input_kind,
         "outputKind": command.output_kind,
         "fields": [field_data(field) for field in command.fields],

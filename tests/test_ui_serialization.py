@@ -58,12 +58,14 @@ def test_command_data_contains_discovery_and_field_data() -> None:
         aliases=("cut",),
         tags=("creator",),
         fields=(field,),
+        examples=("flowmpeg cut input.mp4 --duration 5 -o clip.mp4",),
     )
 
     data = command_data(command)
 
     assert data["name"] == "trim"
     assert data["aliases"] == ["cut"]
+    assert data["examples"] == ["flowmpeg cut input.mp4 --duration 5 -o clip.mp4"]
     assert data["fields"] == [field_data(field)]
 
 
