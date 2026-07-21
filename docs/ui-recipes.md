@@ -390,3 +390,15 @@ Output: start, end, and duration values for detected silent intervals.
 
 Why I use it: the report gives edit candidates without changing the original
 recording.
+
+### Find black video ranges
+
+Input: `tape.mp4`.
+
+```console
+flowmpeg find-black tape.mp4 --picture-threshold 0.98 --min-duration 0.5
+```
+
+Output: time ranges where the picture is mostly black.
+
+Why I use it: this helps find slates, gaps, or capture dropouts before cutting.
