@@ -54,10 +54,10 @@
       <main class="workspace" id="workspace" tabindex="-1">
         <section class="welcome" id="welcome-panel">
           <p class="eyebrow">Runs on this computer</p>
-          <h2>Pick a media task to begin</h2>
+          <h2>Flowmpeg workbench</h2>
           <p>
-            Flowmpeg turns each choice into a local command. You can inspect the
-            exact command before running it.
+            Pick a command, choose local paths, preview the exact Flowmpeg
+            command, then run it on this computer.
           </p>
           <section class="readiness-card" id="readiness-card" aria-labelledby="readiness-title">
             <div class="readiness-summary">
@@ -92,6 +92,10 @@
               <h3 id="quick-start-heading">Start with a familiar result</h3>
             </div>
             <div class="quick-start-grid">
+              <button type="button" data-command="demo-media">
+                <strong>Create demo files</strong>
+                <span>Generate tiny inputs for testing</span>
+              </button>
               <button type="button" data-command="doctor">
                 <strong>Check FFmpeg</strong>
                 <span>Confirm tools and codecs before a job</span>
