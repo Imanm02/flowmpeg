@@ -478,3 +478,16 @@ Output: a media file with the selected title metadata.
 
 Why I use it: the form keeps metadata text visible and quoted correctly in the
 previewed command.
+
+### Turn images into video
+
+Input: numbered files like `frames/frame-0001.png`.
+
+```console
+flowmpeg timelapse frames/frame-%04d.png -o timelapse.mp4
+```
+
+Output: an MP4 created from the numbered image sequence.
+
+Why I use it: the UI keeps the pattern and output file together, which reduces
+mistakes with frame sequence names.
