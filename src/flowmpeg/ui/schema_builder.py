@@ -4,9 +4,16 @@ from __future__ import annotations
 
 import argparse
 
-from flowmpeg.catalog import COMMAND_CATALOG, CommandSpec
+from flowmpeg.catalog import CATEGORIES, COMMAND_CATALOG, CommandSpec
 from flowmpeg.cli import build_parser
-from flowmpeg.ui.schema import FieldKind, FieldValue, PathRole, UiCommand, UiField
+from flowmpeg.ui.schema import (
+    FieldKind,
+    FieldValue,
+    PathRole,
+    UiCommand,
+    UiField,
+    UiSchema,
+)
 
 _INPUT_FIELD_NAMES = frozenset(
     {
@@ -182,7 +189,18 @@ def command_parsers() -> dict[str, argparse.ArgumentParser]:
     return {spec.name: subparsers.choices[spec.name] for spec in COMMAND_CATALOG}
 
 
+def build_ui_schema() -> UiSchema:
+    """Build the complete browser schema from current command metadata."""
+
+    parsers = command_parsers()
+    commands = tuple(
+        build_ui_command(spec, parsers[spec.name]) for spec in COMMAND_CATALOG
+    )
+    return UiSchema(version=1, categories=CATEGORIES, commands=commands)
+
+
 __all__ = [
+    "build_ui_schema",
     "build_ui_field",
     "build_ui_command",
     "command_parsers",
