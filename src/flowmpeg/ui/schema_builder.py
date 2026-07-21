@@ -6,7 +6,28 @@ import argparse
 
 from flowmpeg.catalog import COMMAND_CATALOG
 from flowmpeg.cli import build_parser
-from flowmpeg.ui.schema import FieldKind, FieldValue
+from flowmpeg.ui.schema import FieldKind, FieldValue, PathRole
+
+_INPUT_FIELD_NAMES = frozenset(
+    {
+        "after",
+        "audio_source",
+        "before",
+        "candidate",
+        "cover_image",
+        "first",
+        "image",
+        "inset_source",
+        "music",
+        "pattern",
+        "reference",
+        "second",
+        "source",
+        "sources",
+        "subtitle_source",
+        "video_source",
+    }
+)
 
 
 def field_label(name: str) -> str:
@@ -57,6 +78,22 @@ def field_is_multiple(action: argparse.Action) -> bool:
     )
 
 
+def field_path_role(action: argparse.Action, output_kind: str) -> PathRole:
+    """Infer filesystem browsing behavior for a parser field."""
+
+    if action.dest == "output_dir":
+        return PathRole.OUTPUT_DIRECTORY
+    if action.dest == "output":
+        if "directory" in output_kind:
+            return PathRole.OUTPUT_DIRECTORY
+        return PathRole.OUTPUT_FILE
+    if action.dest in _INPUT_FIELD_NAMES:
+        if field_is_multiple(action):
+            return PathRole.INPUT_FILES
+        return PathRole.INPUT_FILE
+    return PathRole.NONE
+
+
 def command_parsers() -> dict[str, argparse.ArgumentParser]:
     """Return canonical command names mapped to their parsers."""
 
@@ -76,4 +113,5 @@ __all__ = [
     "field_is_multiple",
     "field_kind",
     "field_label",
+    "field_path_role",
 ]

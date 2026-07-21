@@ -9,7 +9,9 @@ from flowmpeg.ui.schema_builder import (
     field_is_multiple,
     field_kind,
     field_label,
+    field_path_role,
 )
+from flowmpeg.ui.schema import PathRole
 
 
 def test_ui_maps_every_canonical_command_parser() -> None:
@@ -61,3 +63,15 @@ def test_ui_detects_repeatable_and_fixed_group_fields() -> None:
     assert field_is_multiple(sources) is True
     assert field_is_multiple(pair) is True
     assert field_is_multiple(source) is False
+
+
+def test_ui_infers_input_and_output_path_roles() -> None:
+    parser = argparse.ArgumentParser()
+    source = parser.add_argument("source")
+    sources = parser.add_argument("sources", nargs="+")
+    output = parser.add_argument("-o", "--output")
+
+    assert field_path_role(source, "media") is PathRole.INPUT_FILE
+    assert field_path_role(sources, "media") is PathRole.INPUT_FILES
+    assert field_path_role(output, "media") is PathRole.OUTPUT_FILE
+    assert field_path_role(output, "artifact directory") is PathRole.OUTPUT_DIRECTORY
