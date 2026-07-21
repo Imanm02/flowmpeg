@@ -4,8 +4,12 @@ from flowmpeg import shortcuts
 from flowmpeg.artifacts import (
     ArtifactKind,
     ArtifactSet,
+    FrameSet,
+    FrameWorkflow,
+    ImageFormat,
     SegmentWorkflow,
     dash_package,
+    frame_sequence,
     hls_package,
 )
 from flowmpeg.audit import (
@@ -127,9 +131,12 @@ __all__ = [
     "Expression",
     "FlowmpegError",
     "FormatInfo",
+    "FrameSet",
+    "FrameWorkflow",
     "GraphError",
     "JobCancelledError",
     "JobTimeoutError",
+    "ImageFormat",
     "LoudnessMeasurement",
     "LoudnessWorkflow",
     "LoudnessWorkflowResult",
@@ -175,6 +182,7 @@ __all__ = [
     "duck_audio",
     "expr",
     "fade_audio",
+    "frame_sequence",
     "input",
     "hls_package",
     "media",

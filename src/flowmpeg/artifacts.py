@@ -1,4 +1,4 @@
-"""Owned multi-file HLS and DASH delivery workflows."""
+"""Owned multi-file streaming and image workflows."""
 
 from __future__ import annotations
 
@@ -12,16 +12,18 @@ import warnings
 from collections.abc import Callable
 from dataclasses import dataclass, replace
 from pathlib import Path
-from typing import Literal
+from typing import Literal, cast
 
 from flowmpeg.errors import GraphError, OutputExistsError
 from flowmpeg.pathing import same_destination
 from flowmpeg.plan import Plan, output
 from flowmpeg.progress import Progress
+from flowmpeg.recipes.video import scale
 from flowmpeg.runner import RunResult
 from flowmpeg.streams import Stream, input
 
-ArtifactKind = Literal["hls", "dash"]
+ArtifactKind = Literal["hls", "dash", "frames"]
+ImageFormat = Literal["jpg", "png"]
 _MARKER_NAME = ".flowmpeg-artifacts.json"
 _BITRATE = re.compile(r"(\d+(?:\.\d+)?)[kKmMgG]?")
 
@@ -33,6 +35,16 @@ class ArtifactSet:
     kind: ArtifactKind
     root: str
     manifest: str
+    files: tuple[str, ...]
+    encoding: RunResult
+
+
+@dataclass(frozen=True, slots=True)
+class FrameSet:
+    """Completed numbered images owned by one frame workflow."""
+
+    root: str
+    pattern: str
     files: tuple[str, ...]
     encoding: RunResult
 
@@ -89,6 +101,7 @@ class SegmentWorkflow:
         self,
         *,
         ffmpeg: str = "ffmpeg",
+        cancelled: Callable[[], bool] | None = None,
         on_progress: Callable[[Progress], None] | None = None,
         expected_duration: float | None = None,
         timeout: float | None = None,
@@ -119,6 +132,7 @@ class SegmentWorkflow:
             encoding = self.plan(work_root).run(
                 ffmpeg=ffmpeg,
                 cwd=work_root,
+                cancelled=cancelled,
                 on_progress=on_progress,
                 expected_duration=expected_duration,
                 timeout=timeout,
@@ -127,7 +141,12 @@ class SegmentWorkflow:
             manifest = work_root / self.manifest_name
             if not manifest.is_file():
                 raise GraphError(f"FFmpeg did not create {self.manifest_name}")
-            _write_marker(work_root, self.kind, self.manifest_name, files)
+            _write_marker(
+                work_root,
+                self.kind,
+                files,
+                manifest=self.manifest_name,
+            )
             if work_root != target:
                 _publish_replacement(work_root, target)
             published = True
@@ -192,6 +211,140 @@ class SegmentWorkflow:
         )
 
 
+@dataclass(frozen=True, slots=True)
+class FrameWorkflow:
+    """A staged numbered-image extraction with directory ownership."""
+
+    source: str
+    destination: str
+    interval: float | None = None
+    fps: float | None = None
+    start: float | None = None
+    duration: float | None = None
+    width: int | None = None
+    image_format: ImageFormat = "jpg"
+    quality: int = 2
+    max_frames: int | None = None
+    overwrite: bool = False
+
+    def __post_init__(self) -> None:
+        if self.interval is None and self.fps is None:
+            object.__setattr__(self, "interval", 1.0)
+        _validate_frame_workflow(self)
+
+    @property
+    def pattern_name(self) -> str:
+        """Return the numbered filename pattern."""
+
+        return f"frame-%06d.{self.image_format}"
+
+    def plan(self, destination: str | os.PathLike[str] | None = None) -> Plan:
+        """Build the frame plan without creating the artifact directory."""
+
+        root = Path(self.destination if destination is None else destination).resolve()
+        source_args: list[str] = []
+        if self.start is not None:
+            source_args.extend(("-ss", f"{self.start:g}"))
+        if self.duration is not None:
+            source_args.extend(("-t", f"{self.duration:g}"))
+        video = input(_plan_source(self.source), *source_args).video()
+        output_fps = self.fps if self.fps is not None else 1 / cast(float, self.interval)
+        video = video.filter("fps", fps=output_fps)
+        if self.width is not None:
+            video = scale(video, width=self.width)
+        args: tuple[str, ...] = ("-start_number", "1", "-f", "image2")
+        if self.max_frames is not None:
+            args += ("-frames:v", str(self.max_frames))
+        if self.image_format == "jpg":
+            args += ("-q:v", str(self.quality))
+        return output(video, to=root / self.pattern_name, args=args).overwrite(False)
+
+    def explain(self, ffmpeg: str = "ffmpeg") -> str:
+        """Describe frame sampling and ownership without creating files."""
+
+        sampling = (
+            f"{self.fps:g} frame(s) per second"
+            if self.fps is not None
+            else f"one frame every {cast(float, self.interval):g}s"
+        )
+        return "\n".join(
+            (
+                "Artifact kind: frames",
+                f"Owned directory: {self.destination}",
+                f"Pattern: {self.pattern_name}",
+                f"Sampling: {sampling}",
+                f"Overwrite owned set: {'yes' if self.overwrite else 'no'}",
+                f"Command: {self.plan().command(ffmpeg)}",
+            )
+        )
+
+    def run(
+        self,
+        *,
+        ffmpeg: str = "ffmpeg",
+        cancelled: Callable[[], bool] | None = None,
+        on_progress: Callable[[Progress], None] | None = None,
+        expected_duration: float | None = None,
+        timeout: float | None = None,
+    ) -> FrameSet:
+        """Extract frames into a staged owned directory and publish them."""
+
+        target = Path(self.destination).resolve()
+        target.parent.mkdir(parents=True, exist_ok=True)
+        existing_owned = _existing_owned_kind(target)
+        if existing_owned is not None:
+            if existing_owned != "frames":
+                raise OutputExistsError(
+                    f"Artifact directory belongs to {existing_owned}: {target}"
+                )
+            if not self.overwrite:
+                raise OutputExistsError(f"Artifact directory already exists: {target}")
+            work_root = _sibling(target, "stage")
+        elif os.path.lexists(target):
+            raise OutputExistsError(
+                f"Artifact directory is not Flowmpeg-owned: {target}"
+            )
+        else:
+            work_root = target
+
+        work_root.mkdir()
+        published = False
+        try:
+            encoding = self.plan(work_root).run(
+                ffmpeg=ffmpeg,
+                cancelled=cancelled,
+                on_progress=on_progress,
+                expected_duration=expected_duration,
+                timeout=timeout,
+            )
+            files = _artifact_files(work_root)
+            if not files:
+                raise GraphError("FFmpeg did not create any frame images")
+            _write_marker(
+                work_root,
+                "frames",
+                files,
+                pattern=self.pattern_name,
+            )
+            if work_root != target:
+                _publish_replacement(work_root, target)
+            published = True
+        finally:
+            if not published and work_root.exists():
+                _remove_created_tree(work_root)
+
+        final_files = tuple(
+            str(target / relative) for relative in _artifact_files(target)
+        )
+        final_encoding = replace(encoding, outputs=final_files)
+        return FrameSet(
+            str(target),
+            self.pattern_name,
+            final_files,
+            final_encoding,
+        )
+
+
 def hls_package(
     source: str | os.PathLike[str],
     destination: str | os.PathLike[str],
@@ -240,6 +393,37 @@ def dash_package(
     )
 
 
+def frame_sequence(
+    source: str | os.PathLike[str],
+    destination: str | os.PathLike[str],
+    *,
+    interval: float | None = None,
+    fps: float | None = None,
+    start: float | None = None,
+    duration: float | None = None,
+    width: int | None = None,
+    image_format: ImageFormat = "jpg",
+    quality: int = 2,
+    max_frames: int | None = None,
+    overwrite: bool = False,
+) -> FrameWorkflow:
+    """Build an owned numbered-image extraction workflow."""
+
+    return FrameWorkflow(
+        os.fspath(source),
+        os.fspath(destination),
+        interval,
+        fps,
+        start,
+        duration,
+        width,
+        image_format,
+        quality,
+        max_frames,
+        overwrite,
+    )
+
+
 def _validate_workflow(workflow: SegmentWorkflow) -> None:
     if workflow.kind not in {"hls", "dash"}:
         raise GraphError(f"Unknown artifact kind: {workflow.kind}")
@@ -278,6 +462,70 @@ def _validate_workflow(workflow: SegmentWorkflow) -> None:
         raise GraphError("Overwrite state must be Boolean")
 
 
+def _validate_frame_workflow(workflow: FrameWorkflow) -> None:
+    if not workflow.source or workflow.source.startswith("-"):
+        raise GraphError("Frame sources cannot be empty or start with a dash")
+    if not workflow.destination or workflow.destination.startswith("-"):
+        raise GraphError("Frame directories cannot be empty or start with a dash")
+    if "://" in workflow.destination or workflow.destination.startswith("file:"):
+        raise GraphError("Frame directories must use local filesystem paths")
+    if same_destination(workflow.source, workflow.destination):
+        raise GraphError("A frame directory cannot replace its input")
+    if (workflow.interval is None) == (workflow.fps is None):
+        raise GraphError("Choose exactly one frame interval or frame rate")
+    if workflow.interval is not None:
+        _positive_finite("Frame interval", workflow.interval, maximum=86_400)
+    if workflow.fps is not None:
+        _positive_finite("Frame rate", workflow.fps, maximum=240)
+    if workflow.start is not None:
+        _nonnegative_finite("Frame start", workflow.start)
+    if workflow.duration is not None:
+        _positive_finite("Frame duration", workflow.duration, maximum=604_800)
+    if workflow.width is not None and (
+        isinstance(workflow.width, bool)
+        or not isinstance(workflow.width, int)
+        or workflow.width <= 0
+    ):
+        raise GraphError("Frame width must be a positive integer")
+    if workflow.image_format not in {"jpg", "png"}:
+        raise GraphError("Frame format must be jpg or png")
+    if (
+        isinstance(workflow.quality, bool)
+        or not isinstance(workflow.quality, int)
+        or not 1 <= workflow.quality <= 31
+    ):
+        raise GraphError("JPEG quality must be an integer from 1 through 31")
+    if workflow.max_frames is not None and (
+        isinstance(workflow.max_frames, bool)
+        or not isinstance(workflow.max_frames, int)
+        or workflow.max_frames <= 0
+    ):
+        raise GraphError("Maximum frames must be a positive integer")
+    if not isinstance(workflow.overwrite, bool):
+        raise GraphError("Overwrite state must be Boolean")
+
+
+def _positive_finite(name: str, value: float, *, maximum: float) -> None:
+    if (
+        isinstance(value, bool)
+        or not isinstance(value, int | float)
+        or not math.isfinite(value)
+        or value <= 0
+        or value > maximum
+    ):
+        raise GraphError(f"{name} must be above zero and at most {maximum:g}")
+
+
+def _nonnegative_finite(name: str, value: float) -> None:
+    if (
+        isinstance(value, bool)
+        or not isinstance(value, int | float)
+        or not math.isfinite(value)
+        or value < 0
+    ):
+        raise GraphError(f"{name} must be nonnegative and finite")
+
+
 def _plan_source(source: str) -> str:
     if "://" in source or source.startswith("file:"):
         return source
@@ -297,7 +545,7 @@ def _existing_owned_kind(root: Path) -> ArtifactKind | None:
     if not isinstance(data, dict) or data.get("schema_version") != 1:
         return None
     kind = data.get("kind")
-    return kind if kind in {"hls", "dash"} else None
+    return kind if kind in {"hls", "dash", "frames"} else None
 
 
 def _artifact_files(root: Path) -> tuple[str, ...]:
@@ -311,15 +559,20 @@ def _artifact_files(root: Path) -> tuple[str, ...]:
 def _write_marker(
     root: Path,
     kind: ArtifactKind,
-    manifest: str,
     files: tuple[str, ...],
+    *,
+    manifest: str | None = None,
+    pattern: str | None = None,
 ) -> None:
-    data = {
+    data: dict[str, object] = {
         "schema_version": 1,
         "kind": kind,
-        "manifest": manifest,
         "files": files,
     }
+    if manifest is not None:
+        data["manifest"] = manifest
+    if pattern is not None:
+        data["pattern"] = pattern
     (root / _MARKER_NAME).write_text(
         json.dumps(data, indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
@@ -358,7 +611,11 @@ def _remove_created_tree(root: Path) -> None:
 __all__ = [
     "ArtifactKind",
     "ArtifactSet",
+    "FrameSet",
+    "FrameWorkflow",
+    "ImageFormat",
     "SegmentWorkflow",
     "dash_package",
+    "frame_sequence",
     "hls_package",
 ]

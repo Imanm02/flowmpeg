@@ -14,7 +14,7 @@ from pathlib import Path
 import pytest
 
 from flowmpeg import cli, diagnostics
-from flowmpeg.artifacts import ArtifactSet, SegmentWorkflow
+from flowmpeg.artifacts import ArtifactSet, FrameSet, FrameWorkflow, SegmentWorkflow
 from flowmpeg.batch import BatchItemResult, BatchResult
 from flowmpeg.black import BlackInterval, BlackReport
 from flowmpeg.catalog import COMMAND_CATALOG
@@ -1266,6 +1266,122 @@ def test_dash_command_reports_created_artifacts(
         == 0
     )
     assert "Created 3 DASH artifacts: delivery/manifest.mpd" in capsys.readouterr().out
+
+
+def test_frames_dry_run_prints_owned_directory_plan(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    target = tmp_path / "frames"
+
+    assert (
+        cli.main(
+            [
+                "frames",
+                "input.mp4",
+                "-o",
+                str(target),
+                "--interval",
+                "2.5",
+                "--start",
+                "3",
+                "--duration",
+                "10",
+                "--width",
+                "640",
+                "--max-frames",
+                "4",
+                "--dry-run",
+            ]
+        )
+        == 0
+    )
+    output = capsys.readouterr().out
+    assert "Artifact kind: frames" in output
+    assert "frame-%06d.jpg" in output
+    assert "one frame every 2.5s" in output
+    assert "fps=fps=0.4" in output
+    assert not target.exists()
+
+
+def test_frames_command_reports_created_images(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    result = FrameSet(
+        "review-frames",
+        "frame-%06d.png",
+        (
+            "review-frames/frame-000001.png",
+            "review-frames/frame-000002.png",
+        ),
+        RunResult(
+            0,
+            1.0,
+            "",
+            None,
+            (
+                "review-frames/frame-000001.png",
+                "review-frames/frame-000002.png",
+            ),
+        ),
+    )
+    monkeypatch.setattr(FrameWorkflow, "run", lambda *args, **kwargs: result)
+
+    assert (
+        cli.main(
+            [
+                "frame-sequence",
+                "input.mp4",
+                "-o",
+                "review-frames",
+                "--fps",
+                "2",
+                "--format",
+                "png",
+                "--no-progress",
+            ]
+        )
+        == 0
+    )
+    assert "Created 2 frames: review-frames" in capsys.readouterr().out
+
+
+def test_frames_rejects_conflicting_sampling_options() -> None:
+    with pytest.raises(SystemExit) as raised:
+        cli.main(
+            [
+                "frames",
+                "input.mp4",
+                "-o",
+                "frames",
+                "--interval",
+                "1",
+                "--fps",
+                "2",
+            ]
+        )
+
+    assert raised.value.code == 2
+
+
+def test_frames_rejects_invalid_jpeg_quality(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    code = cli.main(
+        [
+            "frames",
+            "input.mp4",
+            "-o",
+            "frames",
+            "--quality",
+            "32",
+            "--dry-run",
+        ]
+    )
+
+    assert code == 2
+    assert "JPEG quality" in capsys.readouterr().err
 
 
 def test_silence_report_prints_intervals(

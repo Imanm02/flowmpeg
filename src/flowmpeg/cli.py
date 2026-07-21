@@ -19,7 +19,13 @@ from pathlib import Path
 from typing import TextIO, cast
 
 from flowmpeg import __version__, shortcuts
-from flowmpeg.artifacts import SegmentWorkflow, dash_package, hls_package
+from flowmpeg.artifacts import (
+    FrameWorkflow,
+    SegmentWorkflow,
+    dash_package,
+    frame_sequence,
+    hls_package,
+)
 from flowmpeg.audit import (
     AuditConstraints,
     AuditExpectation,
@@ -64,6 +70,7 @@ from flowmpeg.workflows import normalize_loudness_two_pass
 
 _Factory = Callable[..., Plan]
 _ArtifactFactory = Callable[..., SegmentWorkflow]
+_FrameFactory = Callable[..., FrameWorkflow]
 _Handler = Callable[[argparse.Namespace], int]
 _JSON_SCHEMA_VERSION = 1
 _VIDEO_INPUT_SUFFIXES = frozenset(
@@ -191,6 +198,7 @@ _BASE_EXAMPLES = (
         "composition", "flowmpeg still-video cover.jpg episode.mp3 -o episode.mp4"
     ),
     _Example("images", "flowmpeg gif input.mp4 --start 3 --duration 4 -o preview.gif"),
+    _Example("images", "flowmpeg frames input.mp4 --interval 2 -o review-frames"),
     _Example("images", "flowmpeg thumb video.mp4 --at 12 -o moment.jpg"),
     _Example("images", "flowmpeg waveform song.mp3 -o waveform.png"),
     _Example("images", "flowmpeg spectrum song.mp3 -o spectrum.png"),
@@ -542,6 +550,7 @@ def build_parser() -> argparse.ArgumentParser:
     _add_transcode_av1(commands)
     _add_hls(commands)
     _add_dash(commands)
+    _add_frame_sequence(commands)
     _add_trim(commands)
     _add_loop_video(commands)
     _add_resize(commands)
@@ -980,6 +989,69 @@ def _add_artifact_command(
     )
     parser.add_argument("--explain", action="store_true")
     parser.set_defaults(handler=_run_artifact_workflow, artifact_factory=factory)
+
+
+def _add_frame_sequence(
+    commands: argparse._SubParsersAction[argparse.ArgumentParser],
+) -> None:
+    parser = commands.add_parser(
+        "extract-frames",
+        aliases=["frames", "frame-sequence"],
+        help="Extract numbered images into an owned directory.",
+        description="Extract sampled video frames into a protected artifact directory.",
+        allow_abbrev=False,
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+    _source(parser)
+    parser.add_argument(
+        "-o",
+        "--output",
+        required=True,
+        help="Dedicated frame artifact directory",
+    )
+    sampling = parser.add_mutually_exclusive_group()
+    sampling.add_argument(
+        "--interval",
+        type=_positive_float,
+        help="Seconds between sampled frames",
+    )
+    sampling.add_argument(
+        "--fps",
+        type=_positive_float,
+        help="Sampled frames per second",
+    )
+    parser.add_argument("--start", type=_nonnegative_float)
+    parser.add_argument("--duration", type=_positive_float)
+    parser.add_argument("--width", type=_positive_int)
+    parser.add_argument(
+        "--format",
+        dest="image_format",
+        choices=("jpg", "png"),
+        default="jpg",
+    )
+    parser.add_argument(
+        "--quality",
+        type=_positive_int,
+        default=2,
+        help="JPEG quality scale from 1 to 31, lower keeps more detail",
+    )
+    parser.add_argument("--max-frames", type=_positive_int)
+    parser.add_argument(
+        "--overwrite",
+        action="store_true",
+        help="Replace a matching Flowmpeg-owned frame set",
+    )
+    parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument("--ffmpeg", default="ffmpeg", help="FFmpeg executable")
+    parser.add_argument("--timeout", type=_positive_float)
+    parser.add_argument("--expected-duration", type=_positive_float)
+    parser.add_argument(
+        "--progress",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+    )
+    parser.add_argument("--explain", action="store_true")
+    parser.set_defaults(handler=_run_frame_workflow, frame_factory=frame_sequence)
 
 
 def _add_trim(commands: argparse._SubParsersAction[argparse.ArgumentParser]) -> None:
@@ -3063,6 +3135,47 @@ def _run_artifact_workflow(args: argparse.Namespace) -> int:
         f"Created {len(result.files)} {result.kind.upper()} artifacts: "
         f"{redact_text(result.manifest)}"
     )
+    return 0
+
+
+def _run_frame_workflow(args: argparse.Namespace) -> int:
+    factory = cast(_FrameFactory, args.frame_factory)
+    workflow = factory(
+        cast(str, args.source),
+        cast(str, args.output),
+        interval=cast(float | None, args.interval),
+        fps=cast(float | None, args.fps),
+        start=cast(float | None, args.start),
+        duration=cast(float | None, args.duration),
+        width=cast(int | None, args.width),
+        image_format=cast(str, args.image_format),
+        quality=cast(int, args.quality),
+        max_frames=cast(int | None, args.max_frames),
+        overwrite=cast(bool, args.overwrite),
+    )
+    ffmpeg = cast(str, args.ffmpeg)
+    if cast(bool, args.explain) or cast(bool, args.dry_run):
+        print(workflow.explain(ffmpeg))
+    if cast(bool, args.dry_run):
+        return 0
+
+    progress_printer = (
+        _ProgressPrinter(sys.stderr) if cast(bool, args.progress) else None
+    )
+    expected_duration = cast(float | None, args.expected_duration)
+    if expected_duration is None:
+        expected_duration = cast(float | None, args.duration)
+    try:
+        result = workflow.run(
+            ffmpeg=ffmpeg,
+            on_progress=progress_printer,
+            expected_duration=expected_duration,
+            timeout=cast(float | None, args.timeout),
+        )
+    finally:
+        if progress_printer is not None:
+            progress_printer.close()
+    print(f"Created {len(result.files)} frames: {redact_text(result.root)}")
     return 0
 
 

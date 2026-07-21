@@ -84,11 +84,12 @@ Exact needs are checked by `flowmpeg doctor --command NAME`.
 | `blur-region` | `privacy-blur` | media | video | `creator`, `privacy`, `silent-input` | `creator-video` | `encoder:aac`, `encoder:libx264`, `filter:boxblur`, `filter:crop`, `filter:overlay`, `filter:split`, `muxer:mp4` |
 | `reverse-clip` | `reverse` | media | video | `creator`, `silent-input` | `reverse` | `encoder:aac`, `encoder:libx264`, `filter:areverse`, `filter:asetpts`, `filter:atrim`, `filter:reverse`, `filter:setpts`, `filter:trim`, `muxer:mp4` |
 
-## Images (6)
+## Images (7)
 
 | Command | Aliases | Input | Output | Tags | Doctor group | Exact needs |
 |---|---|---|---|---|---|---|
 | `thumbnail` | `thumb` | media | image | `creator`, `archive`, `silent-input` | `analysis-images` | `encoder:mjpeg`, `muxer:image2` |
+| `extract-frames` | `frames`, `frame-sequence` | media | artifact directory | `creator`, `archive`, `silent-input` | `analysis-images` | `encoder:mjpeg`, `filter:fps`, `muxer:image2` |
 | `make-gif` | `gif` | media | image | `creator`, `delivery`, `silent-input` | `animated-gif` | `encoder:gif`, `filter:fps`, `filter:palettegen`, `filter:paletteuse`, `filter:scale`, `filter:setpts`, `filter:split`, `filter:trim`, `muxer:gif` |
 | `waveform-image` | `waveform` | audio | image | `creator` | `analysis-images` | `encoder:png`, `filter:showwavespic`, `muxer:image2` |
 | `spectrum-image` | `spectrum` | audio | image | `creator` | `analysis-images` | `encoder:png`, `filter:scale`, `filter:showspectrumpic`, `muxer:image2` |

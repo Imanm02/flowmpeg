@@ -483,6 +483,14 @@ _BASE_COMMAND_CATALOG = (
         capability_group="analysis-images",
     ),
     CommandSpec(
+        "extract-frames",
+        "images",
+        "Extract numbered images into an owned directory",
+        ("frames", "frame-sequence"),
+        output_kind="artifact directory",
+        capability_group="analysis-images",
+    ),
+    CommandSpec(
         "make-gif",
         "images",
         "Create a palette based GIF",
@@ -759,6 +767,7 @@ _COMMAND_TAGS = {
     "blur-region": ("privacy", "silent-input"),
     "reverse-clip": ("silent-input",),
     "thumbnail": ("archive", "silent-input"),
+    "extract-frames": ("archive", "silent-input"),
     "make-gif": ("delivery", "silent-input"),
     "contact-sheet": ("archive", "silent-input"),
     "image-sequence-video": ("silent-input",),
@@ -974,6 +983,7 @@ _COMMAND_REQUIREMENTS = {
         "filter:trim",
     ),
     "thumbnail": ("encoder:mjpeg", "muxer:image2"),
+    "extract-frames": ("encoder:mjpeg", "filter:fps", "muxer:image2"),
     "make-gif": _requirements(
         "encoder:gif",
         "filter:fps",
