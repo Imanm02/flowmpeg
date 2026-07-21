@@ -522,6 +522,11 @@ select {
   margin-top: 0.15rem;
 }
 
+.boolean-field > span {
+  display: grid;
+  gap: 0.2rem;
+}
+
 .advanced-section {
   margin-top: 1.25rem;
   padding: 1rem;
