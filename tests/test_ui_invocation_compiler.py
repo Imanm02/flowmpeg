@@ -55,3 +55,44 @@ def test_ui_compiler_reports_every_missing_required_field() -> None:
         compile_invocation(_schema(command), UiInvocation("trim"))
 
     assert [issue.field for issue in caught.value.issues] == ["source", "output"]
+
+
+def test_ui_compiler_builds_positional_and_option_arguments() -> None:
+    command = UiCommand(
+        name="trim",
+        category="video",
+        summary="Cut video",
+        fields=(
+            UiField("source", "Source", FieldKind.TEXT, required=True),
+            UiField(
+                "start",
+                "Start",
+                FieldKind.NUMBER,
+                flags=("--start",),
+            ),
+            UiField(
+                "output",
+                "Output",
+                FieldKind.TEXT,
+                flags=("-o", "--output"),
+                required=True,
+            ),
+        ),
+    )
+    invocation = UiInvocation(
+        "trim",
+        (
+            UiValue("source", "input file.mp4"),
+            UiValue("start", 2.5),
+            UiValue("output", "clip file.mp4"),
+        ),
+    )
+
+    assert compile_invocation(_schema(command), invocation) == (
+        "trim",
+        "input file.mp4",
+        "--start",
+        "2.5",
+        "--output",
+        "clip file.mp4",
+    )

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from flowmpeg.ui.invocation import UiInvocation
-from flowmpeg.ui.schema import UiSchema
+from flowmpeg.ui.schema import UiField, UiSchema
 from flowmpeg.ui.validation import UiValidationError, UiValidationIssue
 
 
@@ -53,7 +53,30 @@ def compile_invocation(schema: UiSchema, invocation: UiInvocation) -> tuple[str,
                 for field in missing
             )
         )
-    return (command.name,)
+    arguments = [command.name]
+    for field in command.fields:
+        if not invocation.has(field.name):
+            continue
+        value = invocation.value(field.name)
+        if value is None:
+            continue
+        arguments.extend(_scalar_arguments(field, value))
+    return tuple(arguments)
+
+
+def _scalar_arguments(field: UiField, value: object) -> tuple[str, ...]:
+    if isinstance(value, (tuple, bool)):
+        raise UiValidationError(
+            UiValidationIssue(
+                code="invalid-type",
+                message=f"{field.label} has an invalid value",
+                field=field.name,
+            )
+        )
+    rendered = str(value)
+    if field.flags:
+        return (field.flags[-1], rendered)
+    return (rendered,)
 
 
 __all__ = ["compile_invocation"]
