@@ -15,5 +15,9 @@ class UiValue:
     name: str
     value: SubmittedValue
 
+    def __post_init__(self) -> None:
+        if not self.name or not self.name.replace("_", "").isalnum():
+            raise ValueError("submitted field name is invalid")
+
 
 __all__ = ["SubmittedValue", "UiValue"]
