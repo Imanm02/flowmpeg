@@ -96,7 +96,7 @@ Why I use it: I can make a review copy without typing filter syntax.
 Input: `master.mov`.
 
 ```console
-flowmpeg compress master.mov --crf 24 --width 1280 -o delivery.mp4
+flowmpeg compress master.mov --crf 24 --max-width 1280 -o delivery.mp4
 ```
 
 Output: an H.264 MP4 with a smaller review size and AAC audio.
@@ -383,7 +383,7 @@ look close to the source.
 Input: `interview.wav`.
 
 ```console
-flowmpeg find-silence interview.wav --threshold-db -45 --min-duration 0.5
+flowmpeg find-silence interview.wav --noise-db -45 --minimum-duration 0.5
 ```
 
 Output: start, end, and duration values for detected silent intervals.
@@ -396,7 +396,7 @@ recording.
 Input: `tape.mp4`.
 
 ```console
-flowmpeg find-black tape.mp4 --picture-threshold 0.98 --min-duration 0.5
+flowmpeg find-black tape.mp4 --picture-ratio 0.98 --minimum-duration 0.5
 ```
 
 Output: time ranges where the picture is mostly black.
