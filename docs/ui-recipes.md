@@ -350,3 +350,17 @@ flowmpeg audit delivery.mp4 --expect av --max-duration 60 --width 1920 --height 
 Output: a pass or finding report with stable finding codes.
 
 Why I use it: I can check the file against a delivery policy before I send it.
+
+### Compare before and after
+
+Input: `original.mp4` and `compressed.mp4`.
+
+```console
+flowmpeg compare original.mp4 compressed.mp4
+```
+
+Output: a report comparing stream counts, codecs, dimensions, duration, and
+container size.
+
+Why I use it: I can see what changed after a conversion without opening two
+separate probe reports.
