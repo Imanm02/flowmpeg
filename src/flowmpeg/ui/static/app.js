@@ -755,6 +755,10 @@ async function startJob() {
   if (!state.selectedCommand || elements.runButton.disabled) {
     return;
   }
+  const values = collectValues();
+  if (!confirmSensitiveJob(state.selectedCommand.name, values)) {
+    return;
+  }
   clearFormErrors();
   elements.runButton.disabled = true;
   elements.runButton.textContent = "Starting...";
@@ -763,7 +767,7 @@ async function startJob() {
       method: "POST",
       body: JSON.stringify({
         command: state.selectedCommand.name,
-        values: collectValues(),
+        values,
       }),
     });
     state.jobs.set(job.id, job);
@@ -780,6 +784,20 @@ async function startJob() {
     elements.runButton.disabled = state.selectedCommand?.name === "ui";
     elements.runButton.textContent = "Run locally";
   }
+}
+
+function confirmSensitiveJob(command, values) {
+  if (command === "setup" && values.install) {
+    return window.confirm(
+      "This will run a system package manager on this computer. Continue?",
+    );
+  }
+  if (values.overwrite) {
+    return window.confirm(
+      "Overwrite is enabled. Existing output at the selected path may be replaced. Continue?",
+    );
+  }
+  return true;
 }
 
 function renderJobs() {
