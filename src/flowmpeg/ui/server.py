@@ -41,6 +41,11 @@ class UiRequestHandler(BaseHTTPRequestHandler):
 
     server_version = "FlowmpegUI"
 
+    def log_message(self, format: str, *args: object) -> None:
+        """Keep routine browser polling out of the terminal."""
+
+        del format, args
+
     def do_GET(self) -> None:
         """Serve an application GET route.""
 

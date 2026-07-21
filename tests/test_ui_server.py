@@ -1,11 +1,13 @@
 import http.client
 import json
 import threading
+from io import StringIO
 
 from flowmpeg.ui.application import UiApplication
 from flowmpeg.ui.config import UiAddress
 from flowmpeg.ui.schema import UiSchema
 from flowmpeg.ui.server import create_server
+from flowmpeg.ui.server import UiRequestHandler
 from flowmpeg.ui.session import UiSession
 
 
@@ -60,3 +62,10 @@ def test_ui_server_passes_authorized_post_bodies_to_application() -> None:
         server.shutdown()
         server.server_close()
         thread.join(timeout=2)
+
+
+def test_ui_request_handler_suppresses_routine_access_logs() -> None:
+    handler = object.__new__(UiRequestHandler)
+    handler.log_message("%s", "request")
+
+    assert StringIO().getvalue() == ""
