@@ -260,3 +260,15 @@ Output: a palette-based animated GIF for a short selected range.
 
 Why I use it: the UI keeps the start time and duration visible while the
 palette work happens behind the command.
+
+### Save a thumbnail
+
+Input: `video.mp4`.
+
+```console
+flowmpeg thumb video.mp4 --at 12 -o moment.jpg
+```
+
+Output: one JPG image from the selected timestamp.
+
+Why I use it: I can pick a review frame without typing a seek command.
