@@ -73,6 +73,9 @@ The category counts show the current command surface. Search matches command
 names, aliases, descriptions, categories, and tags. For example, searching
 `podcast`, `privacy`, or `subtitle` narrows the list to related work.
 
+For result-based examples, use the [UI recipe book](ui-recipes.md). It pairs
+inputs, commands, expected outputs, and the reason each job is useful.
+
 ## A normal editing job
 
 To create a 20 second clip:
