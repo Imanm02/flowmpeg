@@ -1,6 +1,6 @@
 import pytest
 
-from flowmpeg.ui.schema import FieldKind, PathRole, UiCommand, UiField
+from flowmpeg.ui.schema import FieldKind, PathRole, UiCommand, UiField, UiSchema
 
 
 def test_field_kinds_have_stable_json_values() -> None:
@@ -105,3 +105,17 @@ def test_ui_command_rejects_duplicate_field_names() -> None:
             summary="Cut video",
             fields=(field, field),
         )
+
+
+def test_ui_schema_records_version_categories_and_commands() -> None:
+    command = UiCommand(name="trim", category="video", summary="Cut video")
+    schema = UiSchema(version=1, categories=("video",), commands=(command,))
+
+    assert schema.version == 1
+    assert schema.categories == ("video",)
+    assert schema.commands == (command,)
+
+
+def test_ui_schema_rejects_nonpositive_versions() -> None:
+    with pytest.raises(ValueError, match="version must be positive"):
+        UiSchema(version=0, categories=(), commands=())

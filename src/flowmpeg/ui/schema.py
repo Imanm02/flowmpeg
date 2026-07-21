@@ -83,4 +83,27 @@ class UiCommand:
             raise ValueError("command field names must be unique")
 
 
-__all__ = ["FieldKind", "FieldValue", "PathRole", "UiCommand", "UiField"]
+@dataclass(frozen=True, slots=True)
+class UiSchema:
+    """The command surface and its stable schema version."""
+
+    version: int
+    categories: tuple[str, ...]
+    commands: tuple[UiCommand, ...]
+
+    def __post_init__(self) -> None:
+        if self.version < 1:
+            raise ValueError("schema version must be positive")
+        names = [command.name for command in self.commands]
+        if len(names) != len(set(names)):
+            raise ValueError("schema command names must be unique")
+
+
+__all__ = [
+    "FieldKind",
+    "FieldValue",
+    "PathRole",
+    "UiCommand",
+    "UiField",
+    "UiSchema",
+]
