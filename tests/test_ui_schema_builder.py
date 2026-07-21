@@ -6,6 +6,7 @@ from flowmpeg.ui.schema_builder import (
     command_parsers,
     field_choices,
     field_default,
+    field_is_multiple,
     field_kind,
     field_label,
 )
@@ -49,3 +50,14 @@ def test_ui_field_default_hides_suppressed_values() -> None:
 
     assert field_default(hidden) is None
     assert field_default(timeout) == 10.0
+
+
+def test_ui_detects_repeatable_and_fixed_group_fields() -> None:
+    parser = argparse.ArgumentParser()
+    sources = parser.add_argument("sources", nargs="+")
+    pair = parser.add_argument("--pair", nargs=2)
+    source = parser.add_argument("source")
+
+    assert field_is_multiple(sources) is True
+    assert field_is_multiple(pair) is True
+    assert field_is_multiple(source) is False

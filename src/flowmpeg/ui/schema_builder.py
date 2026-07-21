@@ -49,6 +49,14 @@ def field_default(action: argparse.Action) -> FieldValue:
     return str(value)
 
 
+def field_is_multiple(action: argparse.Action) -> bool:
+    """Return true when a field accepts more than one value."""
+
+    return action.nargs in {"+", "*"} or (
+        isinstance(action.nargs, int) and action.nargs > 1
+    )
+
+
 def command_parsers() -> dict[str, argparse.ArgumentParser]:
     """Return canonical command names mapped to their parsers."""
 
@@ -65,6 +73,7 @@ __all__ = [
     "command_parsers",
     "field_choices",
     "field_default",
+    "field_is_multiple",
     "field_kind",
     "field_label",
 ]
