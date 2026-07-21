@@ -544,3 +544,15 @@ Output: a faster MP4 with matching video timing and audio tempo.
 
 Why I use it: previewing the factor helps avoid accidentally making a clip too
 slow or too fast.
+
+### Hold the final frame
+
+Input: `announcement.mp4`.
+
+```console
+flowmpeg freeze announcement.mp4 --seconds 3 -o held.mp4
+```
+
+Output: an MP4 that keeps the last frame visible for 3 extra seconds.
+
+Why I use it: this gives a title, slate, or call-to-action more time on screen.
