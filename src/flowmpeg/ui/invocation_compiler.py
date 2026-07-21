@@ -73,6 +73,15 @@ def _field_arguments(field: UiField, value: object) -> tuple[str, ...]:
         return _multiple_arguments(field, value)
     if field.kind is FieldKind.BOOLEAN:
         return _boolean_arguments(field, value)
+    if field.kind is FieldKind.CHOICE:
+        if not isinstance(value, str) or value not in field.choices:
+            raise UiValidationError(
+                UiValidationIssue(
+                    code="invalid-choice",
+                    message=f"{field.label} is not one of the available choices",
+                    field=field.name,
+                )
+            )
     return _scalar_arguments(field, value)
 
 

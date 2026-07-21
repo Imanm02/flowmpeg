@@ -188,3 +188,27 @@ def test_ui_compiler_expands_repeatable_values_without_shell_joining() -> None:
             (UiValue("sources", ("one clip.mp4", "two;clip.mp4")),),
         ),
     ) == ("join-matching", "one clip.mp4", "two;clip.mp4")
+
+
+def test_ui_compiler_rejects_values_outside_field_choices() -> None:
+    field = UiField(
+        "codec",
+        "Codec",
+        FieldKind.CHOICE,
+        flags=("--codec",),
+        choices=("aac", "mp3"),
+    )
+    command = UiCommand(
+        name="extract-audio",
+        category="audio",
+        summary="Save audio",
+        fields=(field,),
+    )
+
+    with pytest.raises(UiValidationError) as caught:
+        compile_invocation(
+            _schema(command),
+            UiInvocation("extract-audio", (UiValue("codec", "flac"),)),
+        )
+
+    assert caught.value.issues[0].code == "invalid-choice"
