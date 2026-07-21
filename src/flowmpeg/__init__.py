@@ -38,6 +38,7 @@ from flowmpeg.comparison import (
     compare_media_info,
 )
 from flowmpeg.crop_detection import CropCandidate, CropReport, detect_crop
+from flowmpeg.demo import DemoMediaResult, generate_demo_media
 from flowmpeg.errors import (
     BinaryNotFoundError,
     BinaryUnusableError,
@@ -136,6 +137,7 @@ __all__ = [
     "CancellationToken",
     "CropCandidate",
     "CropReport",
+    "DemoMediaResult",
     "ExecutionError",
     "Expression",
     "FlowmpegError",
@@ -198,6 +200,7 @@ __all__ = [
     "expr",
     "fade_audio",
     "frame_sequence",
+    "generate_demo_media",
     "input",
     "hls_package",
     "media",
