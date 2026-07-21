@@ -8,6 +8,7 @@ from typing import Any
 from flowmpeg.ui.files import DirectoryListing
 from flowmpeg.ui.jobs import UiJobSnapshot
 from flowmpeg.ui.preview import UiPreview
+from flowmpeg.ui.readiness import SystemReadiness, ToolReadiness
 from flowmpeg.ui.schema import UiCommand, UiField, UiSchema
 from flowmpeg.ui.validation import UiValidationIssue
 
@@ -100,6 +101,27 @@ def job_data(job: UiJobSnapshot) -> dict[str, Any]:
     }
 
 
+def _tool_readiness_data(tool: ToolReadiness) -> dict[str, Any]:
+    return {
+        "name": tool.name,
+        "state": tool.state.value,
+        "ready": tool.ready,
+        "path": tool.path,
+        "version": tool.version,
+        "reason": tool.reason,
+    }
+
+
+def readiness_data(readiness: SystemReadiness) -> dict[str, Any]:
+    """Return local tool readiness for the browser client."""
+
+    return {
+        "ready": readiness.ready,
+        "ffmpeg": _tool_readiness_data(readiness.ffmpeg),
+        "ffprobe": _tool_readiness_data(readiness.ffprobe),
+    }
+
+
 def directory_data(listing: DirectoryListing) -> dict[str, Any]:
     """Return a local directory listing as JSON-compatible data."""
 
@@ -126,6 +148,7 @@ __all__ = [
     "field_data",
     "job_data",
     "preview_data",
+    "readiness_data",
     "schema_data",
     "schema_json",
     "validation_issue_data",
