@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from flowmpeg import __version__
+from flowmpeg.ui.assets import load_asset, render_index
 from flowmpeg.ui.http_types import ApiResponse, json_response
 from flowmpeg.ui.invocation import parse_invocation
 from flowmpeg.ui.preview import preview_invocation
@@ -50,6 +51,18 @@ class UiApplication:
                 },
                 status=403,
             ).with_security_headers()
+        if method == "GET" and path == "/":
+            asset = render_index(self.session.token)
+            return ApiResponse(200, asset.data, asset.content_type).with_security_headers()
+        if method == "GET" and path in {"/app.css", "/app.js"}:
+            asset = load_asset(path.removeprefix("/"))
+            if asset is not None:
+                return ApiResponse(
+                    200,
+                    asset.data,
+                    asset.content_type,
+                    (("Cache-Control", "no-cache"),),
+                ).with_security_headers()
         if method == "GET" and path == "/api/health":
             return json_response(
                 {

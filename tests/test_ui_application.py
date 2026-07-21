@@ -29,6 +29,22 @@ def test_ui_application_returns_structured_not_found_response() -> None:
     assert json.loads(response.body)["error"] == "not-found"
 
 
+def test_ui_application_serves_shell_with_session_token() -> None:
+    response = _app().handle("GET", "/")
+
+    assert response.status == 200
+    assert response.content_type.startswith("text/html")
+    assert b"test-token" in response.body
+
+
+def test_ui_application_serves_allow_listed_static_assets() -> None:
+    response = _app().handle("GET", "/app.js")
+
+    assert response.status == 200
+    assert response.content_type.startswith("text/javascript")
+    assert dict(response.headers)["Cache-Control"] == "no-cache"
+
+
 def test_ui_schema_endpoint_returns_command_forms() -> None:
     command = UiCommand("errors", "help", "List errors")
     app = UiApplication(
