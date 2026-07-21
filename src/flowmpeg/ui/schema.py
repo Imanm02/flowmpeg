@@ -83,6 +83,7 @@ class UiCommand:
     input_kind: str = "media"
     output_kind: str = "media"
     fields: tuple[UiField, ...] = ()
+    examples: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
         if not self.name or any(
