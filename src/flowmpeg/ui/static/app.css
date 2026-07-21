@@ -237,7 +237,7 @@ h3 {
 
 .welcome {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(16rem, 22rem);
+  grid-template-columns: minmax(0, 1fr) minmax(14rem, 20rem);
   gap: 1.25rem;
   align-items: start;
   padding: clamp(1.25rem, 3vw, 2.4rem);
@@ -249,7 +249,10 @@ h3 {
 
 .welcome > .eyebrow,
 .welcome > h2,
-.welcome > p:not(.eyebrow),
+.welcome > p:not(.eyebrow) {
+  grid-column: 1 / -1;
+}
+
 .readiness-card,
 .surface-stats {
   grid-column: 1;
@@ -376,7 +379,7 @@ h3 {
 
 .quick-start {
   grid-column: 2;
-  grid-row: 1 / span 5;
+  grid-row: 4 / span 2;
   margin-top: 0;
 }
 
