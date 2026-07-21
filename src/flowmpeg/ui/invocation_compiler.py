@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import math
+
 from flowmpeg.ui.invocation import UiInvocation
 from flowmpeg.ui.schema import FieldKind, UiField, UiSchema
 from flowmpeg.ui.validation import UiValidationError, UiValidationIssue
@@ -79,6 +81,17 @@ def _field_arguments(field: UiField, value: object) -> tuple[str, ...]:
                 UiValidationIssue(
                     code="invalid-choice",
                     message=f"{field.label} is not one of the available choices",
+                    field=field.name,
+                )
+            )
+    if field.kind is FieldKind.NUMBER:
+        if isinstance(value, bool) or not isinstance(value, (int, float)):
+            raise _invalid_type(field)
+        if not math.isfinite(value):
+            raise UiValidationError(
+                UiValidationIssue(
+                    code="nonfinite-number",
+                    message=f"{field.label} must be a finite number",
                     field=field.name,
                 )
             )

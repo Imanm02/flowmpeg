@@ -212,3 +212,25 @@ def test_ui_compiler_rejects_values_outside_field_choices() -> None:
         )
 
     assert caught.value.issues[0].code == "invalid-choice"
+
+
+@pytest.mark.parametrize("value", [True, "3", float("nan"), float("inf")])
+def test_ui_compiler_rejects_invalid_numeric_values(value: object) -> None:
+    field = UiField(
+        "start",
+        "Start",
+        FieldKind.NUMBER,
+        flags=("--start",),
+    )
+    command = UiCommand(
+        name="trim",
+        category="video",
+        summary="Cut video",
+        fields=(field,),
+    )
+
+    with pytest.raises(UiValidationError):
+        compile_invocation(
+            _schema(command),
+            UiInvocation("trim", (UiValue("start", value),)),  # type: ignore[arg-type]
+        )
