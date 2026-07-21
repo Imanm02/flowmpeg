@@ -5,6 +5,7 @@ from flowmpeg.ui.schema import FieldKind
 from flowmpeg.ui.schema_builder import (
     command_parsers,
     field_choices,
+    field_default,
     field_kind,
     field_label,
 )
@@ -39,3 +40,12 @@ def test_ui_field_choices_convert_numeric_values_to_text() -> None:
     action = parser.add_argument("--level", choices=(1, 2, 3))
 
     assert field_choices(action) == ("1", "2", "3")
+
+
+def test_ui_field_default_hides_suppressed_values() -> None:
+    parser = argparse.ArgumentParser()
+    hidden = parser.add_argument("--hidden", default=argparse.SUPPRESS)
+    timeout = parser.add_argument("--timeout", type=float, default=10.0)
+
+    assert field_default(hidden) is None
+    assert field_default(timeout) == 10.0

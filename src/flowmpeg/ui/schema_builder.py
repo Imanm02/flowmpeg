@@ -6,7 +6,7 @@ import argparse
 
 from flowmpeg.catalog import COMMAND_CATALOG
 from flowmpeg.cli import build_parser
-from flowmpeg.ui.schema import FieldKind
+from flowmpeg.ui.schema import FieldKind, FieldValue
 
 
 def field_label(name: str) -> str:
@@ -38,6 +38,17 @@ def field_choices(action: argparse.Action) -> tuple[str, ...]:
     return tuple(str(choice) for choice in action.choices)
 
 
+def field_default(action: argparse.Action) -> FieldValue:
+    """Return a default value that can be represented in JSON."""
+
+    value = action.default
+    if value is argparse.SUPPRESS or value is None:
+        return None
+    if isinstance(value, (str, int, float, bool)):
+        return value
+    return str(value)
+
+
 def command_parsers() -> dict[str, argparse.ArgumentParser]:
     """Return canonical command names mapped to their parsers."""
 
@@ -50,4 +61,10 @@ def command_parsers() -> dict[str, argparse.ArgumentParser]:
     return {spec.name: subparsers.choices[spec.name] for spec in COMMAND_CATALOG}
 
 
-__all__ = ["command_parsers", "field_choices", "field_kind", "field_label"]
+__all__ = [
+    "command_parsers",
+    "field_choices",
+    "field_default",
+    "field_kind",
+    "field_label",
+]
