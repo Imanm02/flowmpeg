@@ -569,3 +569,16 @@ Output: a 30 second MP4 made by repeating the input.
 
 Why I use it: it creates a background plate with predictable duration for a
 title or audio bed.
+
+### Adjust color values
+
+Input: `flat.mp4`.
+
+```console
+flowmpeg color flat.mp4 --contrast 1.12 --saturation 1.08 -o graded.mp4
+```
+
+Output: an MP4 with the selected color adjustment values applied.
+
+Why I use it: the UI makes small numeric changes easier to compare before the
+encode starts.
