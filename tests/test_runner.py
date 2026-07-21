@@ -17,6 +17,7 @@ from flowmpeg import (
     BinaryUnusableError,
     ExecutionError,
     GraphError,
+    JobCancelledError,
     JobTimeoutError,
     OutputExistsError,
     Progress,
@@ -189,6 +190,73 @@ def test_runner_rejects_invalid_stderr_limit(
 
     with pytest.raises(ValueError, match="positive integer"):
         plan.run(stderr_limit=cast(int, value))
+
+
+def test_runner_rejects_noncallable_cancellation(tmp_path: Path) -> None:
+    plan = output(input("movie.mp4").video(), to=tmp_path / "copy.mp4")
+
+    with pytest.raises(ValueError, match="predicate must be callable"):
+        plan.run(cancelled=cast(object, True))
+
+
+def test_runner_cancels_before_starting(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    started = False
+
+    def start(*args: object, **kwargs: object) -> None:
+        nonlocal started
+        del args, kwargs
+        started = True
+
+    monkeypatch.setattr(subprocess, "Popen", start)
+    plan = output(input("movie.mp4").video(), to=tmp_path / "copy.mp4")
+
+    with pytest.raises(JobCancelledError, match="was cancelled"):
+        plan.run(cancelled=lambda: True)
+
+    assert not started
+
+
+def test_runner_stops_process_after_cancellation(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    checks = 0
+    stopped = False
+
+    class RunningProcess:
+        def __init__(self) -> None:
+            self.stdout = io.StringIO()
+            self.stderr = io.StringIO()
+
+        def poll(self) -> None:
+            return None
+
+    process = RunningProcess()
+
+    def cancelled() -> bool:
+        nonlocal checks
+        checks += 1
+        return checks >= 3
+
+    def stop(*args: object) -> bool:
+        nonlocal stopped
+        del args
+        stopped = True
+        return True
+
+    monkeypatch.setattr(subprocess, "Popen", lambda *args, **kwargs: process)
+    monkeypatch.setattr("flowmpeg.runner.stop_process_tree", stop)
+    plan = output(input("movie.mp4").video(), to=tmp_path / "copy.mp4")
+
+    with pytest.raises(JobCancelledError, match="was cancelled"):
+        plan.run(cancelled=cancelled, termination_grace=0.01)
+
+    assert stopped
+    assert process.stdout.closed
+    assert process.stderr.closed
 
 
 def test_process_cleanup_does_not_mask_a_job_error() -> None:

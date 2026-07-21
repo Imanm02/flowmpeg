@@ -25,6 +25,7 @@ from flowmpeg.errors import (
     CompilationError,
     ExecutionError,
     FlowmpegError,
+    JobCancelledError,
     JobTimeoutError,
     OutputExistsError,
     ProbeError,
@@ -645,6 +646,20 @@ def test_keyboard_interrupt_returns_130(
 
     assert cli.main(["mute", "in.mp4", "-o", "out.mp4"]) == 130
     assert "interrupted" in capsys.readouterr().err
+
+
+def test_job_cancellation_returns_130(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    def cancel(self: Plan, **kwargs: object) -> RunResult:
+        del self, kwargs
+        raise JobCancelledError("FFmpeg job was cancelled")
+
+    monkeypatch.setattr(Plan, "run", cancel)
+
+    assert cli.main(["mute", "in.mp4", "-o", "out.mp4"]) == 130
+    assert "cancelled" in capsys.readouterr().err
 
 
 def test_probe_human_output(

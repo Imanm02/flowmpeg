@@ -67,5 +67,9 @@ class JobTimeoutError(FlowmpegError):
     """Raised when an FFmpeg process exceeds its timeout."""
 
 
+class JobCancelledError(FlowmpegError):
+    """Raised when an FFmpeg process is cancelled."""
+
+
 class OutputExistsError(FlowmpegError):
     """Raised when an output exists and overwrite is disabled."""

@@ -37,6 +37,7 @@ from flowmpeg.errors import (
     ExecutionError,
     FlowmpegError,
     GraphError,
+    JobCancelledError,
     JobTimeoutError,
     OutputExistsError,
     ProbeError,
@@ -634,6 +635,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         return _execution_error(error)
     except JobTimeoutError as error:
         return _error(error, 7, "FMG700")
+    except JobCancelledError:
+        print("flowmpeg: cancelled", file=sys.stderr)
+        return 130
     except KeyboardInterrupt:
         print("flowmpeg: interrupted", file=sys.stderr)
         return 130

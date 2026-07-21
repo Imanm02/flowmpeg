@@ -21,6 +21,7 @@ from flowmpeg.errors import (
     BinaryUnusableError,
     ExecutionError,
     GraphError,
+    JobCancelledError,
     JobTimeoutError,
     OutputExistsError,
 )
@@ -48,6 +49,7 @@ def run(
     *,
     ffmpeg: str = "ffmpeg",
     cwd: str | os.PathLike[str] | None = None,
+    cancelled: Callable[[], bool] | None = None,
     on_progress: Callable[[Progress], None] | None = None,
     expected_duration: float | None = None,
     timeout: float | None = None,
@@ -59,6 +61,8 @@ def run(
 
     if expected_duration is not None:
         _require_positive_finite("Expected duration", expected_duration)
+    if cancelled is not None and not callable(cancelled):
+        raise ValueError("Cancellation predicate must be callable")
     if timeout is not None:
         _require_positive_finite("Timeout", timeout)
     _require_positive_finite("Progress interval", progress_interval)
@@ -71,6 +75,7 @@ def run(
     if working_directory == "":
         raise ValueError("Working directory cannot be empty")
 
+    _raise_cancelled(cancelled)
     _check_outputs(plan)
     _check_pipes(plan)
     compiled = plan.compile(ffmpeg)
@@ -158,6 +163,7 @@ def run(
         stderr_thread.start()
         stderr_started = True
         while process.poll() is None or progress_thread.is_alive():
+            _raise_cancelled(cancelled)
             _raise_callback_failure(callback_failures)
             _raise_timeout(timeout, started)
             try:
@@ -175,6 +181,7 @@ def run(
                 _put_latest(callback_events, remaining)
         callback_stop.set()
         while callback_thread is not None and callback_thread.is_alive():
+            _raise_cancelled(cancelled)
             _raise_callback_failure(callback_failures)
             _raise_timeout(timeout, started)
             callback_thread.join(timeout=0.05)
@@ -286,6 +293,11 @@ def _raise_callback_failure(
 def _raise_timeout(timeout: float | None, started: float) -> None:
     if timeout is not None and time.monotonic() - started >= timeout:
         raise JobTimeoutError(f"FFmpeg timed out after {timeout:g} seconds")
+
+
+def _raise_cancelled(cancelled: Callable[[], bool] | None) -> None:
+    if cancelled is not None and cancelled():
+        raise JobCancelledError("FFmpeg job was cancelled")
 
 
 def _require_positive_finite(name: str, value: float) -> None:
