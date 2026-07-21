@@ -1,3 +1,5 @@
+import pytest
+
 from flowmpeg.ui.schema import FieldKind, PathRole, UiField
 
 
@@ -28,3 +30,9 @@ def test_ui_field_keeps_form_metadata() -> None:
     assert field.flags == ("-o", "--output")
     assert field.required is True
     assert field.path_role is PathRole.OUTPUT_FILE
+
+
+@pytest.mark.parametrize("name", ["", "output path", "--output", "a/b"])
+def test_ui_field_rejects_unsafe_names(name: str) -> None:
+    with pytest.raises(ValueError, match="field name"):
+        UiField(name=name, label="Value", kind=FieldKind.TEXT)

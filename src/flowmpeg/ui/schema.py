@@ -46,5 +46,9 @@ class UiField:
     path_role: PathRole = PathRole.NONE
     advanced: bool = False
 
+    def __post_init__(self) -> None:
+        if not self.name or not self.name.replace("_", "").isalnum():
+            raise ValueError("field name must contain letters, digits, or underscores")
+
 
 __all__ = ["FieldKind", "FieldValue", "PathRole", "UiField"]
