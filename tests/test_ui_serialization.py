@@ -1,5 +1,5 @@
-from flowmpeg.ui.schema import FieldKind, PathRole, UiField
-from flowmpeg.ui.serialization import field_data
+from flowmpeg.ui.schema import FieldKind, PathRole, UiCommand, UiField
+from flowmpeg.ui.serialization import command_data, field_data
 
 
 def test_field_data_uses_browser_property_names() -> None:
@@ -25,3 +25,21 @@ def test_field_data_uses_browser_property_names() -> None:
         "pathRole": "output-file",
         "advanced": False,
     }
+
+
+def test_command_data_contains_discovery_and_field_data() -> None:
+    field = UiField(name="source", label="Source", kind=FieldKind.TEXT)
+    command = UiCommand(
+        name="trim",
+        category="video",
+        summary="Cut video",
+        aliases=("cut",),
+        tags=("creator",),
+        fields=(field,),
+    )
+
+    data = command_data(command)
+
+    assert data["name"] == "trim"
+    assert data["aliases"] == ["cut"]
+    assert data["fields"] == [field_data(field)]
