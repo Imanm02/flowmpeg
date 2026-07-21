@@ -12,6 +12,7 @@ const state = {
   preview: null,
   favorites: new Set(),
   jobs: new Map(),
+  readiness: null,
   pollTimer: null,
   fileBrowser: null,
   lastDirectory: null,
@@ -41,6 +42,11 @@ const elements = {
   formErrors: document.querySelector("#form-errors"),
   themeSelect: document.querySelector("#theme-select"),
   toastRegion: document.querySelector("#toast-region"),
+  readinessCard: document.querySelector("#readiness-card"),
+  readinessTitle: document.querySelector("#readiness-title"),
+  readinessMessage: document.querySelector("#readiness-message"),
+  ffmpegStatus: document.querySelector("#ffmpeg-status"),
+  ffprobeStatus: document.querySelector("#ffprobe-status"),
   favoriteButton: document.querySelector("#favorite-button"),
   jobList: document.querySelector("#job-list"),
   clearJobs: document.querySelector("#clear-jobs"),
@@ -1078,20 +1084,65 @@ document.querySelectorAll("[data-command]").forEach((button) => {
   });
 });
 
+function toolStatusText(tool) {
+  if (tool.ready) {
+    return `${tool.name}: ready`;
+  }
+  return `${tool.name}: ${tool.state.replace("-", " ")}`;
+}
+
+function updateToolPill(element, tool) {
+  element.textContent = toolStatusText(tool);
+  element.classList.toggle("ready", Boolean(tool.ready));
+  element.classList.toggle("attention", !tool.ready);
+  element.title = [tool.version, tool.path, tool.reason]
+    .filter(Boolean)
+    .join("\n");
+}
+
+function renderReadiness(readiness) {
+  state.readiness = readiness;
+  elements.readinessCard.classList.toggle("ready", readiness.ready);
+  elements.readinessCard.classList.toggle("attention", !readiness.ready);
+  updateToolPill(elements.ffmpegStatus, readiness.ffmpeg);
+  updateToolPill(elements.ffprobeStatus, readiness.ffprobe);
+  if (readiness.ready) {
+    elements.readinessTitle.textContent = "Ready for local media work";
+    elements.readinessMessage.textContent =
+      "Flowmpeg found FFmpeg and FFprobe. Commands can run from this browser.";
+    return;
+  }
+  const missing = [readiness.ffmpeg, readiness.ffprobe]
+    .filter((tool) => tool.state === "missing")
+    .map((tool) => tool.name)
+    .join(" and ");
+  if (missing) {
+    elements.readinessTitle.textContent = "Setup needed";
+    elements.readinessMessage.textContent =
+      `${missing} not found. Open setup options or run flowmpeg setup.`;
+    return;
+  }
+  elements.readinessTitle.textContent = "Tool check needs attention";
+  elements.readinessMessage.textContent =
+    "Flowmpeg found the tools, but one version check did not finish cleanly.";
+}
+
 async function boot() {
   try {
     loadFavorites();
     loadPresets();
-    const [health, schema] = await Promise.all([
+    const [health, schema, readiness] = await Promise.all([
       api("/api/health"),
       api("/api/schema"),
+      api("/api/readiness"),
     ]);
     state.schema = schema;
     elements.connection.textContent = `Ready, version ${health.version}`;
     elements.connection.classList.add("ready");
     elements.stats[0].textContent = String(schema.commands.length);
     elements.stats[1].textContent = String(schema.categories.length);
-    elements.stats[2].textContent = "Loopback only";
+    elements.stats[2].textContent = readiness.ready ? "Ready" : "Setup";
+    renderReadiness(readiness);
     renderNavigation();
     const selectedName = new URLSearchParams(location.hash.slice(1)).get(
       "command",
