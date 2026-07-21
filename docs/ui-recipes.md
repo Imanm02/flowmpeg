@@ -38,3 +38,16 @@ Output: a capability report with the FFmpeg and FFprobe paths, feature groups,
 and a tiny encode-and-probe test result.
 
 Why I use it: I want setup problems to appear before a long encode starts.
+
+### Inspect a media file
+
+Input: `sample.mp4`.
+
+```console
+flowmpeg probe sample.mp4
+```
+
+Output: container duration, size, streams, codecs, dimensions, and audio layout.
+
+Why I use it: I can confirm track shape before choosing trim, audio extraction,
+captions, or delivery settings.
