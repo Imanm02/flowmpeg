@@ -59,6 +59,28 @@
             Flowmpeg turns each choice into a local command. You can inspect the
             exact command before running it.
           </p>
+          <section class="readiness-card" id="readiness-card" aria-labelledby="readiness-title">
+            <div class="readiness-summary">
+              <span class="readiness-light" id="readiness-light" aria-hidden="true"></span>
+              <div>
+                <p class="eyebrow">Local media engine</p>
+                <h3 id="readiness-title">Checking this computer</h3>
+                <p id="readiness-message">Looking for the tools Flowmpeg needs.</p>
+              </div>
+            </div>
+            <div class="tool-pills" aria-label="Media tool status">
+              <span id="ffmpeg-status">FFmpeg: checking</span>
+              <span id="ffprobe-status">FFprobe: checking</span>
+            </div>
+            <div class="readiness-actions">
+              <button type="button" class="secondary-button" data-command="doctor">
+                Run full check
+              </button>
+              <button type="button" class="quiet-button" data-command="setup">
+                Setup options
+              </button>
+            </div>
+          </section>
           <dl class="surface-stats" id="surface-stats">
             <div><dt>Commands</dt><dd>Loading</dd></div>
             <div><dt>Categories</dt><dd>Loading</dd></div>
