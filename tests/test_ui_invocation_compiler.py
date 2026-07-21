@@ -116,3 +116,29 @@ def test_ui_compiler_omits_unchanged_optional_defaults() -> None:
     invocation = UiInvocation("doctor", (UiValue("timeout", 10.0),))
 
     assert compile_invocation(_schema(command), invocation) == ("doctor",)
+
+
+def test_ui_compiler_uses_positive_and_negative_boolean_flags() -> None:
+    field = UiField(
+        "include_audio",
+        "Include audio",
+        FieldKind.BOOLEAN,
+        flags=("--audio",),
+        negative_flags=("--no-audio", "--silent"),
+        default=True,
+    )
+    command = UiCommand(
+        name="transcode",
+        category="video",
+        summary="Convert video",
+        fields=(field,),
+    )
+
+    assert compile_invocation(
+        _schema(command),
+        UiInvocation("transcode", (UiValue("include_audio", False),)),
+    ) == ("transcode", "--no-audio")
+    assert compile_invocation(
+        _schema(command),
+        UiInvocation("transcode", (UiValue("include_audio", True),)),
+    ) == ("transcode",)

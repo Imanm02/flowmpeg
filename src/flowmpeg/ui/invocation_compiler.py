@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from flowmpeg.ui.invocation import UiInvocation
-from flowmpeg.ui.schema import UiField, UiSchema
+from flowmpeg.ui.schema import FieldKind, UiField, UiSchema
 from flowmpeg.ui.validation import UiValidationError, UiValidationIssue
 
 
@@ -62,23 +62,50 @@ def compile_invocation(schema: UiSchema, invocation: UiInvocation) -> tuple[str,
             continue
         if field.flags and value == field.default:
             continue
-        arguments.extend(_scalar_arguments(field, value))
+        arguments.extend(_field_arguments(field, value))
     return tuple(arguments)
+
+
+def _field_arguments(field: UiField, value: object) -> tuple[str, ...]:
+    if field.kind is FieldKind.BOOLEAN:
+        return _boolean_arguments(field, value)
+    return _scalar_arguments(field, value)
+
+
+def _boolean_arguments(field: UiField, value: object) -> tuple[str, ...]:
+    if not isinstance(value, bool):
+        raise _invalid_type(field)
+    if value == field.default:
+        return ()
+    flags = field.flags if value else field.negative_flags
+    if not flags:
+        raise UiValidationError(
+            UiValidationIssue(
+                code="unsupported-value",
+                message=f"{field.label} cannot be set to {str(value).lower()}",
+                field=field.name,
+            )
+        )
+    return (flags[0] if not value else flags[-1],)
 
 
 def _scalar_arguments(field: UiField, value: object) -> tuple[str, ...]:
     if isinstance(value, (tuple, bool)):
-        raise UiValidationError(
-            UiValidationIssue(
-                code="invalid-type",
-                message=f"{field.label} has an invalid value",
-                field=field.name,
-            )
-        )
+        raise _invalid_type(field)
     rendered = str(value)
     if field.flags:
         return (field.flags[-1], rendered)
     return (rendered,)
+
+
+def _invalid_type(field: UiField) -> UiValidationError:
+    return UiValidationError(
+        UiValidationIssue(
+            code="invalid-type",
+            message=f"{field.label} has an invalid value",
+            field=field.name,
+        )
+    )
 
 
 __all__ = ["compile_invocation"]
