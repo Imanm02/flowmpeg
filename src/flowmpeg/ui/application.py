@@ -150,6 +150,31 @@ class UiApplication:
                     status=400,
                 ).with_security_headers()
             return json_response(job_data(job), status=202).with_security_headers()
+        if method == "POST" and path == "/api/jobs/clear":
+            count = self.jobs.clear_finished()
+            return json_response({"cleared": count}).with_security_headers()
+        if method == "POST" and path.startswith("/api/jobs/") and path.endswith(
+            "/cancel"
+        ):
+            job_id = path.removeprefix("/api/jobs/").removesuffix("/cancel")
+            if "/" in job_id or not job_id:
+                return json_response(
+                    {"error": "job-not-found", "message": "Local job not found"},
+                    status=404,
+                ).with_security_headers()
+            if not self.jobs.cancel(job_id):
+                status = 404 if self.jobs.get(job_id) is None else 409
+                return json_response(
+                    {
+                        "error": "job-not-cancellable",
+                        "message": "Local job is missing or already finished",
+                    },
+                    status=status,
+                ).with_security_headers()
+            job = self.jobs.get(job_id)
+            if job is None:
+                raise RuntimeError("cancelled job disappeared")
+            return json_response(job_data(job), status=202).with_security_headers()
         return json_response(
             {"error": "not-found", "message": "Route not found"},
             status=404,

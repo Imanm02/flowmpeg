@@ -1,7 +1,9 @@
 import json
+import threading
 
 from flowmpeg import __version__
 from flowmpeg.ui.application import UiApplication
+from flowmpeg.ui.jobs import JobManager, UiJob
 from flowmpeg.ui.schema import FieldKind, UiCommand, UiField, UiSchema
 from flowmpeg.ui.session import UiSession
 
@@ -210,4 +212,40 @@ def test_ui_job_detail_returns_structured_not_found() -> None:
         assert response.status == 404
         assert json.loads(response.body)["error"] == "job-not-found"
     finally:
+        application.close()
+
+
+def test_ui_job_cancel_and_clear_endpoints_manage_session_jobs() -> None:
+    release = threading.Event()
+
+    def wait_for_release(job: UiJob) -> int:
+        del job
+        release.wait(timeout=2)
+        return 130
+
+    manager = JobManager(runner=wait_for_release)
+    application = UiApplication(
+        UiSchema(1, (), ()),
+        UiSession("test-token"),
+        manager,
+    )
+    try:
+        queued = manager.start(("errors",), "flowmpeg errors")
+        response = application.handle(
+            "POST",
+            f"/api/jobs/{queued.id}/cancel",
+            headers={"X-Flowmpeg-Token": "test-token"},
+        )
+        release.set()
+        manager.wait(queued.id, timeout=2)
+        cleared = application.handle(
+            "POST",
+            "/api/jobs/clear",
+            headers={"X-Flowmpeg-Token": "test-token"},
+        )
+
+        assert response.status == 202
+        assert json.loads(cleared.body) == {"cleared": 1}
+    finally:
+        release.set()
         application.close()
