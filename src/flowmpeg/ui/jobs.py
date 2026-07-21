@@ -188,6 +188,25 @@ class JobManager:
             stop_process_tree(process, 2.0)
         return True
 
+    def clear_finished(self) -> int:
+        """Remove terminal jobs from the session list."""
+
+        terminal = {
+            JobStatus.SUCCEEDED,
+            JobStatus.FAILED,
+            JobStatus.CANCELLED,
+        }
+        with self._lock:
+            job_ids = [
+                job_id
+                for job_id, job in self._jobs.items()
+                if job.status in terminal
+            ]
+            for job_id in job_ids:
+                self._jobs.pop(job_id, None)
+                self._futures.pop(job_id, None)
+        return len(job_ids)
+
     def close(self, *, wait: bool = True) -> None:
         """Stop accepting jobs and release worker threads."""
 

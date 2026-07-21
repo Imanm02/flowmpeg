@@ -159,3 +159,16 @@ def test_ui_job_manager_cancels_work_during_shutdown() -> None:
 
     finished = manager.wait(queued.id, timeout=2)
     assert finished.status is JobStatus.CANCELLED
+
+
+def test_ui_job_manager_clears_only_finished_jobs() -> None:
+    manager = JobManager(runner=lambda job: 0)
+    try:
+        queued = manager.start(("errors",), "flowmpeg errors")
+        manager.wait(queued.id, timeout=2)
+
+        assert manager.clear_finished() == 1
+        assert manager.get(queued.id) is None
+        assert manager.clear_finished() == 0
+    finally:
+        manager.close()
