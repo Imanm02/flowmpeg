@@ -27,7 +27,7 @@ def load_asset(name: str) -> StaticAsset | None:
     content_type = _CONTENT_TYPES.get(name)
     if content_type is None:
         return None
-    resource = files("flowmpeg.ui").joinpath("static", name)
+    resource = files("flowmpeg.ui").joinpath("static").joinpath(name)
     return StaticAsset(name, resource.read_bytes(), content_type)
 
 

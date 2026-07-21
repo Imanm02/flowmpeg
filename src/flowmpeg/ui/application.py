@@ -62,17 +62,17 @@ class UiApplication:
                 status=403,
             ).with_security_headers()
         if method == "GET" and path == "/":
-            asset = render_index(self.session.token)
+            index_asset = render_index(self.session.token)
             return ApiResponse(
-                200, asset.data, asset.content_type
+                200, index_asset.data, index_asset.content_type
             ).with_security_headers()
         if method == "GET" and path in {"/app.css", "/app.js"}:
-            asset = load_asset(path.removeprefix("/"))
-            if asset is not None:
+            static_asset = load_asset(path.removeprefix("/"))
+            if static_asset is not None:
                 return ApiResponse(
                     200,
-                    asset.data,
-                    asset.content_type,
+                    static_asset.data,
+                    static_asset.content_type,
                     (("Cache-Control", "no-cache"),),
                 ).with_security_headers()
         if method == "GET" and path == "/api/health":
