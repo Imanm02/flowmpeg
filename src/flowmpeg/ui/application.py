@@ -13,7 +13,7 @@ from flowmpeg.ui.preview import preview_invocation
 from flowmpeg.ui.request_data import decode_json_body
 from flowmpeg.ui.schema import UiSchema
 from flowmpeg.ui.schema_builder import build_ui_schema
-from flowmpeg.ui.serialization import schema_data
+from flowmpeg.ui.serialization import job_data, schema_data
 from flowmpeg.ui.session import TOKEN_HEADER, UiSession
 from flowmpeg.ui.validation import UiValidationError
 
@@ -110,6 +110,32 @@ class UiApplication:
                     "display": preview.display,
                 }
             ).with_security_headers()
+        if method == "POST" and path == "/api/jobs":
+            try:
+                invocation = parse_invocation(decode_json_body(body))
+                preview = preview_invocation(self.schema, invocation)
+                job = self.jobs.start(preview.arguments, preview.display)
+            except UiValidationError as error:
+                return json_response(
+                    {
+                        "error": "validation",
+                        "issues": [
+                            {
+                                "code": issue.code,
+                                "message": issue.message,
+                                "field": issue.field,
+                            }
+                            for issue in error.issues
+                        ],
+                    },
+                    status=422,
+                ).with_security_headers()
+            except ValueError as error:
+                return json_response(
+                    {"error": "bad-request", "message": str(error)},
+                    status=400,
+                ).with_security_headers()
+            return json_response(job_data(job), status=202).with_security_headers()
         return json_response(
             {"error": "not-found", "message": "Route not found"},
             status=404,

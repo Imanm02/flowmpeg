@@ -142,3 +142,46 @@ def test_ui_application_owns_a_local_job_manager() -> None:
         assert finished.returncode == 0
     finally:
         application.close()
+
+
+def test_ui_job_endpoint_starts_a_validated_local_command() -> None:
+    command = UiCommand("errors", "help", "List errors")
+    application = UiApplication(
+        UiSchema(1, ("help",), (command,)),
+        UiSession("test-token"),
+    )
+    try:
+        response = application.handle(
+            "POST",
+            "/api/jobs",
+            headers={"X-Flowmpeg-Token": "test-token"},
+            body=b'{"command":"errors","values":{}}',
+        )
+        queued = json.loads(response.body)
+        finished = application.jobs.wait(queued["id"], timeout=10)
+
+        assert response.status == 202
+        assert finished.returncode == 0
+        assert "FMG200" in finished.output
+    finally:
+        application.close()
+
+
+def test_ui_job_endpoint_rejects_nested_ui_command() -> None:
+    command = UiCommand("ui", "help", "Open local application")
+    application = UiApplication(
+        UiSchema(1, ("help",), (command,)),
+        UiSession("test-token"),
+    )
+    try:
+        response = application.handle(
+            "POST",
+            "/api/jobs",
+            headers={"X-Flowmpeg-Token": "test-token"},
+            body=b'{"command":"ui","values":{}}',
+        )
+
+        assert response.status == 400
+        assert "cannot be started" in json.loads(response.body)["message"]
+    finally:
+        application.close()
