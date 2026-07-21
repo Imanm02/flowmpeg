@@ -828,6 +828,8 @@ pre {
 
 .job-actions {
   display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
   justify-content: flex-end;
   margin-top: 0.7rem;
 }
