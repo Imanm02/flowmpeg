@@ -679,6 +679,14 @@ _BASE_COMMAND_CATALOG = (
         output_kind="report",
     ),
     CommandSpec(
+        "demo-media",
+        "help",
+        "Create small local files for examples",
+        ("demo", "samples"),
+        input_kind="none",
+        output_kind="media set",
+    ),
+    CommandSpec(
         "ui",
         "help",
         "Open the local browser interface",

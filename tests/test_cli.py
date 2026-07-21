@@ -21,6 +21,7 @@ from flowmpeg.black import BlackInterval, BlackReport
 from flowmpeg.catalog import COMMAND_CATALOG
 from flowmpeg.comparison import MediaComparison, MediaSummary
 from flowmpeg.crop_detection import CropCandidate, CropReport
+from flowmpeg.demo import DemoMediaResult
 from flowmpeg.errors import (
     BinaryNotFoundError,
     BinaryUnusableError,
@@ -98,6 +99,47 @@ def test_ui_help_does_not_mark_no_browser_as_default(
 
     assert exit_info.value.code == 0
     assert "(default: True)" not in capsys.readouterr().out
+
+
+def test_demo_media_command_reports_created_files(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    result = DemoMediaResult(
+        directory=tmp_path,
+        files=(tmp_path / "sample.mp4", tmp_path / "voice.wav"),
+        video_duration=2.0,
+    )
+    monkeypatch.setattr(
+        "flowmpeg.cli.generate_demo_media", lambda *args, **kwargs: result
+    )
+
+    assert cli.main(["demo-media", str(tmp_path)]) == 0
+
+    output = capsys.readouterr().out
+    assert "Created 2 demo files" in output
+    assert "sample.mp4" in output
+    assert "flowmpeg cut sample.mp4" in output
+
+
+def test_demo_media_command_prints_json(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    result = DemoMediaResult(
+        directory=tmp_path,
+        files=(tmp_path / "sample.mp4",),
+        video_duration=2.0,
+    )
+    monkeypatch.setattr(
+        "flowmpeg.cli.generate_demo_media", lambda *args, **kwargs: result
+    )
+
+    assert cli.main(["demo", str(tmp_path), "--json"]) == 0
+
+    assert json.loads(capsys.readouterr().out) == result.as_dict()
 
 
 @pytest.mark.parametrize("port", ["-1", "65536"])

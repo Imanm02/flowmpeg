@@ -38,6 +38,7 @@ from flowmpeg.black import BlackReport, detect_black
 from flowmpeg.catalog import CATEGORIES, COMMAND_CATALOG, TAGS, command_spec
 from flowmpeg.comparison import MediaComparison, MediaSummary, compare_media
 from flowmpeg.crop_detection import CropReport, detect_crop
+from flowmpeg.demo import generate_demo_media
 from flowmpeg.diagnostics import display_argv, redact_text
 from flowmpeg.errors import (
     BinaryNotFoundError,
@@ -246,6 +247,7 @@ _BASE_EXAMPLES = (
     _Example("help", "flowmpeg explain-error FMG610"),
     _Example("help", "flowmpeg examples --category video"),
     _Example("help", "flowmpeg commands --category audio"),
+    _Example("help", "flowmpeg demo-media flowmpeg-demo"),
     _Example("help", "flowmpeg ui --no-browser"),
 )
 
@@ -634,6 +636,7 @@ def build_parser() -> argparse.ArgumentParser:
     _add_crop_detection(commands)
     _add_doctor(commands)
     _add_setup(commands)
+    _add_demo_media(commands)
     _add_ui(commands)
     _add_errors(commands)
     _add_explain_error(commands)
@@ -2808,6 +2811,30 @@ def _add_ui(commands: argparse._SubParsersAction[argparse.ArgumentParser]) -> No
     parser.set_defaults(handler=_run_ui)
 
 
+def _add_demo_media(
+    commands: argparse._SubParsersAction[argparse.ArgumentParser],
+) -> None:
+    parser = commands.add_parser(
+        "demo-media",
+        aliases=["demo", "samples"],
+        help="Create small local files for examples.",
+        description="Create small local files for examples.",
+        allow_abbrev=False,
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+    parser.add_argument("directory", help="Output folder for demo files")
+    parser.add_argument(
+        "--overwrite",
+        action="store_true",
+        help="Allow replacing existing demo files",
+    )
+    parser.add_argument("--ffmpeg", default="ffmpeg", help="FFmpeg executable")
+    parser.add_argument("--ffprobe", default="ffprobe", help="FFprobe executable")
+    parser.add_argument("--timeout", type=_positive_float, default=30.0)
+    parser.add_argument("--json", action="store_true", help="Print result JSON")
+    parser.set_defaults(handler=_run_demo_media)
+
+
 def _add_explain_error(
     commands: argparse._SubParsersAction[argparse.ArgumentParser],
 ) -> None:
@@ -4708,6 +4735,25 @@ def _run_ui(args: argparse.Namespace) -> int:
         open_browser=cast(bool, getattr(args, "open_browser", True)),
     )
     serve_ui(options, sys.stdout)
+    return 0
+
+
+def _run_demo_media(args: argparse.Namespace) -> int:
+    result = generate_demo_media(
+        cast(str, args.directory),
+        ffmpeg=cast(str, args.ffmpeg),
+        ffprobe=cast(str, args.ffprobe),
+        overwrite=cast(bool, args.overwrite),
+        timeout=cast(float, args.timeout),
+    )
+    if cast(bool, args.json):
+        print(json.dumps(result.as_dict(), indent=2, sort_keys=True))
+        return 0
+    print(f"Created {len(result.files)} demo files in {result.directory}")
+    for path in result.files:
+        print(f"  {path.name}")
+    print("Try: flowmpeg probe sample.mp4")
+    print("Try: flowmpeg cut sample.mp4 --duration 1 -o clip.mp4")
     return 0
 
 
