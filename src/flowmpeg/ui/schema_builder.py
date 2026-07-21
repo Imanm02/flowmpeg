@@ -28,6 +28,19 @@ _INPUT_FIELD_NAMES = frozenset(
         "video_source",
     }
 )
+_ADVANCED_FIELD_NAMES = frozenset(
+    {
+        "dry_run",
+        "expected_duration",
+        "explain",
+        "ffmpeg",
+        "ffprobe",
+        "json",
+        "probe_timeout",
+        "progress",
+        "timeout",
+    }
+)
 
 
 def field_label(name: str) -> str:
@@ -94,6 +107,12 @@ def field_path_role(action: argparse.Action, output_kind: str) -> PathRole:
     return PathRole.NONE
 
 
+def field_is_advanced(action: argparse.Action) -> bool:
+    """Return true for controls hidden behind the advanced section."""
+
+    return action.dest in _ADVANCED_FIELD_NAMES
+
+
 def command_parsers() -> dict[str, argparse.ArgumentParser]:
     """Return canonical command names mapped to their parsers."""
 
@@ -111,6 +130,7 @@ __all__ = [
     "field_choices",
     "field_default",
     "field_is_multiple",
+    "field_is_advanced",
     "field_kind",
     "field_label",
     "field_path_role",

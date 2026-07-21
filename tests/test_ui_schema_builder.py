@@ -6,6 +6,7 @@ from flowmpeg.ui.schema_builder import (
     command_parsers,
     field_choices,
     field_default,
+    field_is_advanced,
     field_is_multiple,
     field_kind,
     field_label,
@@ -75,3 +76,14 @@ def test_ui_infers_input_and_output_path_roles() -> None:
     assert field_path_role(sources, "media") is PathRole.INPUT_FILES
     assert field_path_role(output, "media") is PathRole.OUTPUT_FILE
     assert field_path_role(output, "artifact directory") is PathRole.OUTPUT_DIRECTORY
+
+
+def test_ui_groups_runtime_controls_as_advanced() -> None:
+    parser = argparse.ArgumentParser()
+    ffmpeg = parser.add_argument("--ffmpeg")
+    timeout = parser.add_argument("--timeout")
+    overwrite = parser.add_argument("--overwrite", action="store_true")
+
+    assert field_is_advanced(ffmpeg) is True
+    assert field_is_advanced(timeout) is True
+    assert field_is_advanced(overwrite) is False
