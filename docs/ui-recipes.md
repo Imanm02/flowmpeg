@@ -221,3 +221,16 @@ Output: an MP4 with the image overlaid on the video.
 
 Why I use it: choosing the two inputs in the UI makes it clear which file is
 the video and which file is the mark.
+
+### Add picture in picture
+
+Input: `screen.mp4` and `camera.mp4`.
+
+```console
+flowmpeg pip screen.mp4 camera.mp4 -o with-camera.mp4
+```
+
+Output: an MP4 with the second video placed over the first.
+
+Why I use it: this is a common tutorial layout, and the UI keeps the base and
+inset clips separate.
