@@ -51,3 +51,16 @@ Output: container duration, size, streams, codecs, dimensions, and audio layout.
 
 Why I use it: I can confirm track shape before choosing trim, audio extraction,
 captions, or delivery settings.
+
+### Convert to a browser MP4
+
+Input: `recording.mov`.
+
+```console
+flowmpeg convert recording.mov -o recording.mp4
+```
+
+Output: an MP4 with H.264 video and AAC audio.
+
+Why I use it: this is the plain delivery file I can send to a browser, chat
+app, or video review tool.
