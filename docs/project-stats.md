@@ -21,7 +21,7 @@ source change.
 | UI test function definitions | 151 | `tests/test_ui_*.py` |
 | FFmpeg integration tests | 42 | Pytest markers |
 | Documentation pages | 22 | `docs/*.md` |
-| Documented command lines | 601 | Markdown code lines |
+| Documented command lines | 606 | Markdown code lines |
 | Completed roadmap items | 136 | `ROADMAP.md` |
 | Open roadmap items | 2 | `ROADMAP.md` |
 

@@ -309,6 +309,41 @@ flowmpeg probe IMG_9357.mp4
 | Shrink a folder | `flowmpeg shrink-batch "clips/*.MOV" -o small-clips` |
 | Shrink folders recursively | `flowmpeg shrink-batch clips -o small-clips --recursive` |
 
+## Copy-paste command matrix
+
+These are the commands I would try first before tuning anything.
+
+| Job | Single file | Whole folder or pattern |
+| --- | --- | --- |
+| Normal share copy | `flowmpeg shrink input.mov -o output.mp4` | `flowmpeg shrink-batch "clips/*.MOV" -o small-clips` |
+| Tiny chat copy | `flowmpeg shrink input.mov --max-height 540 --fps 24 --crf 34 --audio-codec opus --audio-bitrate 32k -o output.mp4` | `flowmpeg shrink-batch "clips/*.MOV" --max-height 540 --fps 24 --crf 34 --audio-codec opus --audio-bitrate 32k -o chat-clips` |
+| Safer older-device copy | `flowmpeg shrink input.mov --codec h264 --audio-codec aac --crf 27 -o output.mp4` | `flowmpeg shrink-batch "clips/*.MOV" --codec h264 --audio-codec aac --crf 27 -o safe-clips` |
+| Better 1080p copy | `flowmpeg shrink input.mov --max-height 1080 --crf 24 --audio-bitrate 128k -o output.mp4` | `flowmpeg shrink-batch "clips/*.MOV" --max-height 1080 --crf 24 --audio-bitrate 128k -o archive-clips` |
+| Screen recording | `flowmpeg shrink screen.mov --codec h264 --max-height 1080 --fps 30 --crf 26 --audio-bitrate 64k -o screen.mp4` | `flowmpeg shrink-batch "screens/*.mov" --codec h264 --max-height 1080 --fps 30 --crf 26 --audio-bitrate 64k -o small-screens` |
+| Silent screen recording | `flowmpeg shrink screen.mov --codec h264 --max-height 720 --fps 15 --crf 30 --no-audio -o screen.mp4` | `flowmpeg shrink-batch "screens/*.mov" --codec h264 --max-height 720 --fps 15 --crf 30 --no-audio -o tiny-screens` |
+| Keep source shape | `flowmpeg shrink input.mov --keep-size --keep-fps --crf 28 -o output.mp4` | `flowmpeg shrink-batch "masters/*.MOV" --keep-size --keep-fps --crf 28 -o master-copies` |
+| Speech notes | `flowmpeg shrink note.mov --audio-codec opus --audio-bitrate 32k -o note.mp4` | `flowmpeg shrink-batch "notes/*.MOV" --audio-codec opus --audio-bitrate 32k -o small-notes` |
+
+For an unknown folder, I would start here:
+
+```console
+flowmpeg doctor --require size-video
+flowmpeg shrink-batch "clips/*" -o small-clips --dry-run --json
+flowmpeg shrink-batch "clips/*" -o small-clips
+```
+
+For a folder that must play almost anywhere:
+
+```console
+flowmpeg shrink-batch "clips/*" --codec h264 --audio-codec aac --crf 27 -o safe-clips
+```
+
+For a folder where size matters more than compatibility:
+
+```console
+flowmpeg shrink-batch "clips/*" --max-height 540 --fps 24 --crf 34 --audio-codec opus --audio-bitrate 32k -o tiny-clips
+```
+
 ## Shrink many files
 
 Use `shrink-batch` when a folder or quoted pattern needs the same settings on
