@@ -30,6 +30,9 @@ def test_field_data_uses_browser_property_names() -> None:
         "choices": [],
         "pathRole": "output-file",
         "advanced": False,
+        "integer": False,
+        "minimum": None,
+        "exclusiveMinimum": False,
     }
 
 

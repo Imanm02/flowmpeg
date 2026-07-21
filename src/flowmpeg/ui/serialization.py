@@ -26,6 +26,9 @@ def field_data(field: UiField) -> dict[str, Any]:
         "choices": list(field.choices),
         "pathRole": field.path_role.value,
         "advanced": field.advanced,
+        "integer": field.integer,
+        "minimum": field.minimum,
+        "exclusiveMinimum": field.exclusive_minimum,
     }
 
 
