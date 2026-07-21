@@ -182,6 +182,14 @@ def test_python_documentation_examples_build(
     )
     monkeypatch.setattr(
         flowmpeg,
+        "measure_quality",
+        lambda *args, **kwargs: SimpleNamespace(
+            psnr=SimpleNamespace(average_db=42.7),
+            ssim=SimpleNamespace(all=0.993),
+        ),
+    )
+    monkeypatch.setattr(
+        flowmpeg,
         "detect_silence",
         lambda *args, **kwargs: SimpleNamespace(
             intervals=(SimpleNamespace(start=1.0, end=2.0, duration=1.0),),

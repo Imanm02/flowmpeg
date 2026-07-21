@@ -33,6 +33,7 @@ Try the generated files with these one-liners:
 flowmpeg probe demo-media/sample.mp4
 flowmpeg audit demo-media/sample.mp4 --expect av
 flowmpeg audit demo-media/sample.mp4 --expect av --max-duration 5 --width 320 --height 180 --video-codec h264 --audio-codec aac
+flowmpeg quality demo-media/sample.mp4 demo-media/sample.mp4 --duration 1
 flowmpeg loudness demo-media/voice.wav
 flowmpeg normalize-exact demo-media/voice.wav -o demo-media/voice-exact.wav
 flowmpeg find-silence demo-media/voice.wav --noise-db -45 --minimum 0.2
@@ -116,6 +117,7 @@ Paths can also be `pathlib.Path` objects.
 | An owned HLS package | `camera-master.mov` | Manifest and segment directory |
 | An owned DASH package | `camera-master.mov` | MPD and fragmented MP4 directory |
 | An owned numbered frame set | `camera-master.mov` | JPG or PNG directory |
+| A visual quality report | Reference and candidate videos | PSNR and SSIM values |
 | A silent video | `interview.mp4` | `silent.mp4` |
 | An MP3 from a video | `interview.mp4` | `voice.mp3` |
 | Standard-rate mono audio | `field.wav` | `field-standard.wav` |

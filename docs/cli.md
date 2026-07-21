@@ -1213,6 +1213,27 @@ Use a custom executable or timeout when needed:
 flowmpeg probe movie.mp4 --ffprobe "C:\Tools\ffmpeg\bin\ffprobe.exe" --timeout 10
 ```
 
+## Measure visual quality against a reference
+
+Measure PSNR and SSIM for matching video tracks:
+
+```console
+flowmpeg quality reference.mov candidate.mp4
+flowmpeg quality reference.mov candidate.mp4 --json
+```
+
+Use one metric or a bounded time window when a full two-pass comparison would
+take too long:
+
+```console
+flowmpeg quality reference.mov candidate.mp4 --metric psnr
+flowmpeg quality reference.mov candidate.mp4 --start 300 --duration 30 --metric ssim
+```
+
+The selected tracks must have matching dimensions. `--reference-track` and
+`--candidate-track` use video-only indexes. The [quality guide](quality.md)
+explains infinity, component values, frame alignment, and metric limits.
+
 ## Audit media against an expected shape
 
 Require both video and audio, then report missing or suspicious fields:

@@ -173,7 +173,8 @@ only a discussion or test placeholder.
 - [x] Define batch cancellation and temporary-file cleanup rules.
 - [x] Define owned artifact sets for extracted frame directories.
 - [ ] Add saved batch manifests with schema validation.
-- [ ] Measure reference quality with PSNR, SSIM, and VMAF when available.
+- [x] Measure reference quality with PSNR and SSIM.
+- [ ] Add optional VMAF measurement when the filter is available.
 - [ ] Model adaptive streaming ladders with several renditions.
 
 ## Release gates

@@ -41,6 +41,7 @@ flowmpeg examples --search subtitle
 | Find cut points from measured media | [Analysis guide](analysis.md) | Silence intervals, JSON reports, timelines |
 | Create streaming media packages | [HLS and DASH](streaming.md) | Manifests, segments, owned replacement rules |
 | Extract numbered frame images | [Frame extraction](frame-extraction.md) | Sampling, counts, owned directories |
+| Compare encoded visual quality | [PSNR and SSIM](quality.md) | Metrics, alignment, JSON reports |
 
 ## Pick an interface
 

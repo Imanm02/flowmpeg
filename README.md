@@ -43,6 +43,7 @@ flowmpeg doctor --command cut
 flowmpeg doctor --smoke-test
 flowmpeg audit input.mp4 --expect av
 flowmpeg audit delivery.mp4 --max-duration 60 --width 1920 --height 1080
+flowmpeg quality reference.mov candidate.mp4
 flowmpeg loudness episode.wav
 flowmpeg normalize-exact episode.wav -o episode-exact.wav
 flowmpeg find-silence interview.wav
@@ -88,6 +89,7 @@ flowmpeg batch "recordings/*.mov" --name-suffix=-web -o converted
 flowmpeg frames input.mp4 --fps 2 --max-frames 20 -o review-frames
 flowmpeg hls input.mp4 --segment-duration 4 -o delivery-hls
 flowmpeg dash input.mp4 --segment-duration 2 -o delivery-dash
+flowmpeg quality reference.mov delivery.mp4 --duration 30
 flowmpeg remux input.mp4 -o archive.mkv
 flowmpeg scale input.mp4 --width 1280 -o small.mp4
 flowmpeg audio input.mp4 -o audio.mp3
@@ -189,11 +191,14 @@ outputs for common jobs:
 - Create owned HLS and DASH artifact directories
 - Convert local video folders with ordered batch results
 - Extract owned numbered JPG or PNG frame sets
+- Measure PSNR and SSIM against a reference video
 
 The [streaming package guide](docs/streaming.md) explains manifests, segment
 files, staged replacement, and the marker that protects unrelated directories.
 The [frame extraction guide](docs/frame-extraction.md) covers sampling math,
 image formats, bounded sections, and the same directory safety contract.
+The [visual quality guide](docs/quality.md) explains PSNR, SSIM, time windows,
+track alignment, and JSON fields for release checks.
 
 The [real-world workflow guide](docs/workflows.md) adds 30 paired terminal and
 Python examples. It covers social formats, privacy edits, voice cleanup,
@@ -216,6 +221,7 @@ plans, see the [shortcut guide](docs/shortcuts.md).
 - Owned HLS and DASH artifact sets with failure cleanup
 - Named batches with cancellation and temporary workspace cleanup
 - Owned frame sequences with staged replacement
+- Typed PSNR and SSIM reports with component values
 - Synchronous execution with progress callbacks and timeouts
 - An installed `flowmpeg` command with editing, inspection, and help groups
 - Read-only setup checks with confirmed package manager installation

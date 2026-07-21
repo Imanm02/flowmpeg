@@ -31,3 +31,4 @@
 - Owned HLS and DASH packages with staged replacement
 - Cancellable named batches and local video folder conversion
 - Owned JPG and PNG frame sequences with staged replacement
+- Typed PSNR and SSIM reference quality reports
