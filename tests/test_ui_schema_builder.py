@@ -16,6 +16,7 @@ from flowmpeg.ui.schema_builder import (
     field_label,
     field_path_role,
     form_actions,
+    merge_ui_fields,
 )
 from flowmpeg.ui.schema import PathRole
 
@@ -123,6 +124,24 @@ def test_ui_builds_a_complete_field_from_an_action() -> None:
     assert field.required is True
     assert field.help == "Output path"
     assert field.path_role is PathRole.OUTPUT_FILE
+
+
+def test_ui_merges_negative_and_clear_actions_by_destination() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--duration", dest="duration", type=float, default=5.0)
+    parser.add_argument("--full", dest="duration", action="store_const", const=None)
+    fields = tuple(build_ui_field(action, "media") for action in form_actions(parser))
+
+    assert merge_ui_fields(fields) == (
+        UiField(
+            name="duration",
+            label="Duration",
+            kind=FieldKind.NUMBER,
+            flags=("--duration",),
+            clear_flags=("--full",),
+            default=5.0,
+        ),
+    )
 
 
 def test_ui_form_actions_hide_argparse_help() -> None:

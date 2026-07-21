@@ -131,11 +131,26 @@ def field_is_advanced(action: argparse.Action) -> bool:
 def build_ui_field(action: argparse.Action, output_kind: str) -> UiField:
     """Build one typed form field from an argparse action."""
 
+    flags = tuple(
+        flag for flag in action.option_strings if not flag.startswith("--no-")
+    )
+    negative_flags = tuple(
+        flag for flag in action.option_strings if flag.startswith("--no-")
+    )
+    if isinstance(action, argparse._StoreFalseAction):
+        flags = ()
+        negative_flags = tuple(action.option_strings)
+    clear_flags: tuple[str, ...] = ()
+    if isinstance(action, argparse._StoreConstAction) and action.const is None:
+        flags = ()
+        clear_flags = tuple(action.option_strings)
     return UiField(
         name=action.dest,
         label=field_label(action.dest),
         kind=field_kind(action),
-        flags=tuple(action.option_strings),
+        flags=flags,
+        negative_flags=negative_flags,
+        clear_flags=clear_flags,
         required=action.required,
         multiple=field_is_multiple(action),
         default=field_default(action),
@@ -144,6 +159,33 @@ def build_ui_field(action: argparse.Action, output_kind: str) -> UiField:
         path_role=field_path_role(action, output_kind),
         advanced=field_is_advanced(action),
     )
+
+
+def merge_ui_fields(fields: tuple[UiField, ...]) -> tuple[UiField, ...]:
+    """Merge parser actions that write to the same destination."""
+
+    merged: dict[str, UiField] = {}
+    for field in fields:
+        current = merged.get(field.name)
+        if current is None:
+            merged[field.name] = field
+            continue
+        merged[field.name] = UiField(
+            name=current.name,
+            label=current.label,
+            kind=current.kind,
+            flags=(*current.flags, *field.flags),
+            negative_flags=(*current.negative_flags, *field.negative_flags),
+            clear_flags=(*current.clear_flags, *field.clear_flags),
+            required=current.required or field.required,
+            multiple=current.multiple or field.multiple,
+            default=current.default,
+            help=current.help or field.help,
+            choices=current.choices or field.choices,
+            path_role=current.path_role,
+            advanced=current.advanced and field.advanced,
+        )
+    return tuple(merged.values())
 
 
 def form_actions(parser: argparse.ArgumentParser) -> tuple[argparse.Action, ...]:
@@ -162,8 +204,10 @@ def build_ui_command(
 ) -> UiCommand:
     """Build one browser command from catalog and parser metadata."""
 
-    fields = tuple(
-        build_ui_field(action, spec.output_kind) for action in form_actions(parser)
+    fields = merge_ui_fields(
+        tuple(
+            build_ui_field(action, spec.output_kind) for action in form_actions(parser)
+        )
     )
     return UiCommand(
         name=spec.name,
@@ -213,4 +257,5 @@ __all__ = [
     "field_label",
     "field_path_role",
     "form_actions",
+    "merge_ui_fields",
 ]
