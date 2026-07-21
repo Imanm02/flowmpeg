@@ -139,7 +139,8 @@ h3 {
   justify-content: space-between;
   min-height: 4.5rem;
   padding: 0.75rem 1.25rem;
-  background: rgb(255 255 255 / 88%);
+  background: var(--surface);
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
   border-bottom: 1px solid var(--border);
   backdrop-filter: blur(18px);
 }
