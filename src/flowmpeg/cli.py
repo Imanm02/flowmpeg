@@ -246,6 +246,7 @@ _BASE_EXAMPLES = (
     _Example("help", "flowmpeg explain-error FMG610"),
     _Example("help", "flowmpeg examples --category video"),
     _Example("help", "flowmpeg commands --category audio"),
+    _Example("help", "flowmpeg ui --no-browser"),
 )
 
 

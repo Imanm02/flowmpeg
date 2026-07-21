@@ -47,7 +47,7 @@ class UiRequestHandler(BaseHTTPRequestHandler):
         del format, args
 
     def do_GET(self) -> None:
-        """Serve an application GET route.""
+        """Serve an application GET route."""
 
         self._send(self._application.handle("GET", urlsplit(self.path).path))
 
@@ -98,7 +98,7 @@ class UiRequestHandler(BaseHTTPRequestHandler):
 
 
 def create_server(address: UiAddress, application: UiApplication) -> UiHttpServer:
-    """Bind a local UI server without starting its request loop.""
+    """Bind a local UI server without starting its request loop."""
 
     server_type = UiHttpServerV6 if address.host == "::1" else UiHttpServer
     return server_type(address, application)

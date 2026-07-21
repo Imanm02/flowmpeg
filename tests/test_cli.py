@@ -10,6 +10,7 @@ from datetime import timedelta
 from importlib.metadata import entry_points
 from io import StringIO
 from pathlib import Path
+from typing import TextIO
 
 import pytest
 
