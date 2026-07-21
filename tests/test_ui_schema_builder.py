@@ -182,6 +182,25 @@ def test_ui_builds_commands_from_catalog_and_parser_metadata() -> None:
     )
 
 
+def test_ui_schema_exposes_shrink_video_controls() -> None:
+    schema = build_ui_schema()
+    command = schema.command("shrink")
+    assert command is not None
+    fields = {field.name: field for field in command.fields}
+
+    assert command.name == "shrink-video"
+    assert command.aliases == ("shrink", "reduce-size", "small-video")
+    assert fields["codec"].choices == ("h264", "hevc")
+    assert fields["max_height"].default == 720
+    assert fields["fps"].default == 30
+    assert fields["audio_codec"].choices == ("aac", "opus")
+    assert fields["keep_size"].kind is FieldKind.BOOLEAN
+    assert fields["keep_fps"].kind is FieldKind.BOOLEAN
+    assert "flowmpeg shrink IMG_9357.MOV --max-height 720 --fps 30 -o IMG_9357.mp4" in (
+        command.examples
+    )
+
+
 def test_ui_command_examples_resolve_aliases() -> None:
     examples = command_examples()
 

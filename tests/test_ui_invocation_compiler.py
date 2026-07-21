@@ -3,6 +3,7 @@ import pytest
 from flowmpeg.ui.invocation import UiInvocation, UiValue
 from flowmpeg.ui.invocation_compiler import compile_invocation
 from flowmpeg.ui.schema import FieldKind, UiCommand, UiField, UiSchema
+from flowmpeg.ui.schema_builder import build_ui_schema
 from flowmpeg.ui.validation import UiValidationError
 
 
@@ -164,6 +165,37 @@ def test_ui_compiler_uses_clear_flags_for_explicit_nulls() -> None:
         _schema(command),
         UiInvocation("make-gif", (UiValue("duration", None),)),
     ) == ("make-gif", "--full")
+
+
+def test_ui_compiler_builds_shrink_video_arguments() -> None:
+    schema = build_ui_schema()
+    invocation = UiInvocation(
+        "shrink",
+        (
+            UiValue("source", "IMG_9357.MOV"),
+            UiValue("codec", "h264"),
+            UiValue("keep_size", True),
+            UiValue("keep_fps", True),
+            UiValue("audio_codec", "opus"),
+            UiValue("audio_bitrate", "32k"),
+            UiValue("output", "IMG_9357.mp4"),
+        ),
+    )
+
+    assert compile_invocation(schema, invocation) == (
+        "shrink-video",
+        "IMG_9357.MOV",
+        "--codec",
+        "h264",
+        "--keep-size",
+        "--keep-fps",
+        "--audio-codec",
+        "opus",
+        "--audio-bitrate",
+        "32k",
+        "--output",
+        "IMG_9357.mp4",
+    )
 
 
 def test_ui_compiler_expands_repeatable_values_without_shell_joining() -> None:

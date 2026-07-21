@@ -104,6 +104,26 @@ Output: an H.264 MP4 with a smaller review size and AAC audio.
 Why I use it: the CRF and width controls are easier to compare in a form than
 inside a long command line.
 
+### Shrink a large phone video
+
+Input: `IMG_9357.MOV`.
+
+```console
+flowmpeg shrink IMG_9357.MOV --max-height 720 --fps 30 --crf 28 -o IMG_9357.mp4
+```
+
+Output: a small MP4 capped at 720p and 30 fps.
+
+Why I use it: the UI shows the codec, CRF, frame size, frame rate, audio codec,
+and audio bitrate in one form. That is easier for a normal user than editing a
+long FFmpeg filter string by hand.
+
+Use the Opus audio version when size matters more than player compatibility:
+
+```console
+flowmpeg shrink IMG_9357.MOV --audio-codec opus --audio-bitrate 32k -o IMG_9357-tiny.mp4
+```
+
 ### Make a vertical social clip
 
 Input: `demo.mp4`.
