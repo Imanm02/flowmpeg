@@ -75,3 +75,21 @@ def test_ui_command_keeps_discovery_metadata() -> None:
     assert command.name == "trim"
     assert command.aliases == ("cut",)
     assert command.tags == ("creator",)
+
+
+@pytest.mark.parametrize("name", ["", "Trim", "trim_video", "trim video"])
+def test_ui_command_rejects_invalid_names(name: str) -> None:
+    with pytest.raises(ValueError, match="command name"):
+        UiCommand(name=name, category="video", summary="Cut video")
+
+
+@pytest.mark.parametrize(
+    ("category", "summary"),
+    [("", "Cut video"), ("video", "")],
+)
+def test_ui_command_requires_category_and_summary(
+    category: str,
+    summary: str,
+) -> None:
+    with pytest.raises(ValueError, match="category and summary"):
+        UiCommand(name="trim", category=category, summary=summary)

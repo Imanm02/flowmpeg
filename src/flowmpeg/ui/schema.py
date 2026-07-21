@@ -70,5 +70,14 @@ class UiCommand:
     output_kind: str = "media"
     fields: tuple[UiField, ...] = ()
 
+    def __post_init__(self) -> None:
+        if not self.name or any(
+            character not in "abcdefghijklmnopqrstuvwxyz0123456789-"
+            for character in self.name
+        ):
+            raise ValueError("command name must use lowercase letters, digits, or hyphens")
+        if not self.category or not self.summary:
+            raise ValueError("command category and summary are required")
+
 
 __all__ = ["FieldKind", "FieldValue", "PathRole", "UiCommand", "UiField"]
