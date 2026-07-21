@@ -6,7 +6,7 @@ import argparse
 
 from flowmpeg.catalog import COMMAND_CATALOG
 from flowmpeg.cli import build_parser
-from flowmpeg.ui.schema import FieldKind, FieldValue, PathRole
+from flowmpeg.ui.schema import FieldKind, FieldValue, PathRole, UiField
 
 _INPUT_FIELD_NAMES = frozenset(
     {
@@ -121,6 +121,24 @@ def field_is_advanced(action: argparse.Action) -> bool:
     return action.dest in _ADVANCED_FIELD_NAMES
 
 
+def build_ui_field(action: argparse.Action, output_kind: str) -> UiField:
+    """Build one typed form field from an argparse action."""
+
+    return UiField(
+        name=action.dest,
+        label=field_label(action.dest),
+        kind=field_kind(action),
+        flags=tuple(action.option_strings),
+        required=action.required,
+        multiple=field_is_multiple(action),
+        default=field_default(action),
+        help=field_help(action),
+        choices=field_choices(action),
+        path_role=field_path_role(action, output_kind),
+        advanced=field_is_advanced(action),
+    )
+
+
 def command_parsers() -> dict[str, argparse.ArgumentParser]:
     """Return canonical command names mapped to their parsers."""
 
@@ -134,6 +152,7 @@ def command_parsers() -> dict[str, argparse.ArgumentParser]:
 
 
 __all__ = [
+    "build_ui_field",
     "command_parsers",
     "field_choices",
     "field_default",

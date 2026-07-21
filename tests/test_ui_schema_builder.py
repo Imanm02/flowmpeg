@@ -3,6 +3,7 @@ import argparse
 from flowmpeg.catalog import COMMAND_CATALOG
 from flowmpeg.ui.schema import FieldKind
 from flowmpeg.ui.schema_builder import (
+    build_ui_field,
     command_parsers,
     field_choices,
     field_default,
@@ -101,3 +102,21 @@ def test_ui_normalizes_action_help_and_default_placeholders() -> None:
 
     assert field_help(timeout) == "Stop after 10 seconds"
     assert field_help(unnamed) == ""
+
+
+def test_ui_builds_a_complete_field_from_an_action() -> None:
+    parser = argparse.ArgumentParser()
+    action = parser.add_argument(
+        "-o",
+        "--output",
+        required=True,
+        help="Output path",
+    )
+
+    field = build_ui_field(action, "media")
+
+    assert field.name == "output"
+    assert field.flags == ("-o", "--output")
+    assert field.required is True
+    assert field.help == "Output path"
+    assert field.path_role is PathRole.OUTPUT_FILE
