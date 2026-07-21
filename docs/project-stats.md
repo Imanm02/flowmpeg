@@ -17,7 +17,7 @@ source change.
 | Stable error identifiers | 16 | CLI error guide |
 | Stable audit findings | 20 | Media audit |
 | Doctor feature groups | 18 | Doctor requirements |
-| Test function definitions | 614 | `tests/test_*.py` |
+| Test function definitions | 615 | `tests/test_*.py` |
 | UI test function definitions | 149 | `tests/test_ui_*.py` |
 | FFmpeg integration tests | 42 | Pytest markers |
 | Documentation pages | 21 | `docs/*.md` |
