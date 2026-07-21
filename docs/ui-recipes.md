@@ -556,3 +556,16 @@ flowmpeg freeze announcement.mp4 --seconds 3 -o held.mp4
 Output: an MP4 that keeps the last frame visible for 3 extra seconds.
 
 Why I use it: this gives a title, slate, or call-to-action more time on screen.
+
+### Loop to an exact duration
+
+Input: `motion.mp4`.
+
+```console
+flowmpeg loop motion.mp4 --duration 30 -o background.mp4
+```
+
+Output: a 30 second MP4 made by repeating the input.
+
+Why I use it: it creates a background plate with predictable duration for a
+title or audio bed.
