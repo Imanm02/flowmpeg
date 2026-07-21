@@ -131,3 +131,14 @@ def test_ui_preview_endpoint_rejects_invalid_json() -> None:
 
     assert response.status == 400
     assert json.loads(response.body)["error"] == "bad-request"
+
+
+def test_ui_application_owns_a_local_job_manager() -> None:
+    application = _app()
+    try:
+        queued = application.jobs.start(("errors",), "flowmpeg errors")
+        finished = application.jobs.wait(queued.id, timeout=10)
+
+        assert finished.returncode == 0
+    finally:
+        application.close()

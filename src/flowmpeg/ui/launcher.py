@@ -22,6 +22,7 @@ class UiLaunch:
     def close(self) -> None:
         """Release the bound local port."""
 
+        self.server.application.close()
         self.server.server_close()
 
 

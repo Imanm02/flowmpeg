@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from flowmpeg import __version__
 from flowmpeg.ui.assets import load_asset, render_index
 from flowmpeg.ui.http_types import ApiResponse, json_response
 from flowmpeg.ui.invocation import parse_invocation
+from flowmpeg.ui.jobs import JobManager
 from flowmpeg.ui.preview import preview_invocation
 from flowmpeg.ui.request_data import decode_json_body
 from flowmpeg.ui.schema import UiSchema
@@ -23,12 +24,18 @@ class UiApplication:
 
     schema: UiSchema
     session: UiSession
+    jobs: JobManager = field(default_factory=JobManager, compare=False)
 
     @classmethod
     def create(cls) -> UiApplication:
         """Create an application from the installed command surface."""
 
         return cls(schema=build_ui_schema(), session=UiSession.create())
+
+    def close(self) -> None:
+        """Cancel local jobs and release worker threads."""
+
+        self.jobs.close(wait=False)
 
     def handle(
         self,
