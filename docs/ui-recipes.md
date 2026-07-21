@@ -518,3 +518,16 @@ original video.
 
 Why I use it: the result looks intentional when a vertical clip must fit a
 horizontal layout.
+
+### Blur a private region
+
+Input: `street.mp4`.
+
+```console
+flowmpeg privacy-blur street.mp4 --x 20 --y 20 --width 200 --height 80 -o private.mp4
+```
+
+Output: an MP4 with one fixed rectangular region blurred.
+
+Why I use it: coordinates are easier to review in named form fields than in a
+raw filter string.
