@@ -12,3 +12,16 @@ flowmpeg ui
 
 ## Recipes
 
+### Create demo media
+
+Input: an empty folder such as `flowmpeg-demo`.
+
+```console
+flowmpeg demo-media flowmpeg-demo --overwrite
+```
+
+Output: small video, audio, image, subtitle, and image-sequence files in that
+folder.
+
+Why I use it: it gives me safe local files for testing the UI before I touch a
+real project.
