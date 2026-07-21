@@ -33,3 +33,12 @@
 - Owned JPG and PNG frame sequences with staged replacement
 - Typed PSNR and SSIM reference quality reports
 - Optional VMAF measurement through installed libvmaf filters
+- A local browser interface generated from the command parser and catalog
+- Searchable command forms with category filters and quick-start tasks
+- Local path browsing with file metadata and controlled folder creation
+- Exact command previews built from argument tuples without a shell
+- Queued local jobs with output, cancellation, and bounded log storage
+- Confirmation before overwrite or package installation actions
+- Browser-local favorites, named presets, and theme choices
+- Loopback-only serving with per-launch request tokens
+- Packaged UI assets checked in source tests and built wheels
