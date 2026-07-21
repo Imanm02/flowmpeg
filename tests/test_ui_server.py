@@ -9,6 +9,7 @@ from flowmpeg.ui.schema import UiSchema
 from flowmpeg.ui.server import create_server
 from flowmpeg.ui.server import UiRequestHandler
 from flowmpeg.ui.session import UiSession
+from flowmpeg.ui.request_data import MAX_JSON_BYTES
 
 
 def test_ui_server_serves_application_routes_on_loopback() -> None:
@@ -69,3 +70,27 @@ def test_ui_request_handler_suppresses_routine_access_logs() -> None:
     handler.log_message("%s", "request")
 
     assert StringIO().getvalue() == ""
+
+
+def test_ui_server_rejects_oversized_body_before_reading_it() -> None:
+    application = UiApplication(UiSchema(1, (), ()), UiSession("test-token"))
+    server = create_server(UiAddress(port=0), application)
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    try:
+        connection = http.client.HTTPConnection(
+            server.bound_address.host,
+            server.bound_address.port,
+            timeout=2,
+        )
+        connection.putrequest("POST", "/api/preview")
+        connection.putheader("Content-Length", str(MAX_JSON_BYTES + 1))
+        connection.endheaders()
+        response = connection.getresponse()
+
+        assert response.status == 413
+        assert json.loads(response.read())["error"] == "body-too-large"
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=2)
