@@ -41,6 +41,20 @@ flowmpeg ui --no-browser
 
 Then copy the printed local address into a browser on the same computer.
 
+## Screenshots from a local run
+
+Home view with readiness and starter actions:
+
+![Flowmpeg UI home](assets/ui-home.png)
+
+Command form with built-in one-line examples:
+
+![Flowmpeg UI command form](assets/ui-command.png)
+
+Completed local demo-media job:
+
+![Flowmpeg UI job output](assets/ui-job.png)
+
 ## First run
 
 1. Select **Check FFmpeg** in Quick start.
