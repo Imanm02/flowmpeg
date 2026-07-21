@@ -2916,9 +2916,7 @@ def _discover_batch_sources(
         elif path.is_dir():
             matches = _batch_directory_files(path, recursive=recursive)
             if not matches:
-                raise GraphError(
-                    f"No supported videos found in: {redact_text(value)}"
-                )
+                raise GraphError(f"No supported videos found in: {redact_text(value)}")
         elif glob.has_magic(value):
             matches = tuple(
                 candidate

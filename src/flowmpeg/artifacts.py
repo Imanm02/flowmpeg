@@ -248,7 +248,9 @@ class FrameWorkflow:
         if self.duration is not None:
             source_args.extend(("-t", f"{self.duration:g}"))
         video = input(_plan_source(self.source), *source_args).video()
-        output_fps = self.fps if self.fps is not None else 1 / cast(float, self.interval)
+        output_fps = (
+            self.fps if self.fps is not None else 1 / cast(float, self.interval)
+        )
         video = video.filter("fps", fps=output_fps)
         if self.width is not None:
             video = scale(video, width=self.width)
