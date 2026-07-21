@@ -3,6 +3,7 @@ import json
 from flowmpeg.ui.files import DirectoryListing, FileEntry
 from flowmpeg.ui.jobs import JobStatus, UiJobSnapshot
 from flowmpeg.ui.preview import UiPreview
+from flowmpeg.ui.readiness import SystemReadiness, ToolReadiness, ToolState
 from flowmpeg.ui.schema import FieldKind, PathRole, UiCommand, UiField, UiSchema
 from flowmpeg.ui.serialization import (
     command_data,
@@ -10,6 +11,7 @@ from flowmpeg.ui.serialization import (
     field_data,
     job_data,
     preview_data,
+    readiness_data,
     schema_data,
     schema_json,
     validation_issue_data,
@@ -125,6 +127,31 @@ def test_job_data_uses_public_safe_snapshot_fields() -> None:
         "returncode": 0,
         "output": "done",
     }
+
+
+def test_readiness_data_keeps_tool_states_separate() -> None:
+    readiness = SystemReadiness(
+        ffmpeg=ToolReadiness(
+            "ffmpeg",
+            ToolState.READY,
+            path="/usr/bin/ffmpeg",
+            version="ffmpeg version 8",
+        ),
+        ffprobe=ToolReadiness("ffprobe", ToolState.MISSING),
+    )
+
+    data = readiness_data(readiness)
+
+    assert data["ready"] is False
+    assert data["ffmpeg"] == {
+        "name": "ffmpeg",
+        "state": "ready",
+        "ready": True,
+        "path": "/usr/bin/ffmpeg",
+        "version": "ffmpeg version 8",
+        "reason": None,
+    }
+    assert data["ffprobe"]["state"] == "missing"
 
 
 def test_directory_data_keeps_path_metadata_only() -> None:
