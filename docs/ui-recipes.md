@@ -77,3 +77,16 @@ Output: a new MP4 containing the 10 second range that starts at 5 seconds.
 
 Why I use it: previewing the command makes the time math visible before the
 edit runs.
+
+### Resize for review
+
+Input: `sample.mp4`.
+
+```console
+flowmpeg resize sample.mp4 --width 1280 -o review.mp4
+```
+
+Output: a smaller MP4 whose width is 1280 pixels while the height follows the
+source aspect ratio.
+
+Why I use it: I can make a review copy without typing filter syntax.
