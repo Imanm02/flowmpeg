@@ -95,6 +95,27 @@ def _field_arguments(field: UiField, value: object) -> tuple[str, ...]:
                     field=field.name,
                 )
             )
+        if field.integer and not isinstance(value, int):
+            raise UiValidationError(
+                UiValidationIssue(
+                    code="integer-required",
+                    message=f"{field.label} must be a whole number",
+                    field=field.name,
+                )
+            )
+        below_minimum = field.minimum is not None and (
+            value < field.minimum
+            or (field.exclusive_minimum and value == field.minimum)
+        )
+        if below_minimum:
+            comparison = "greater than" if field.exclusive_minimum else "at least"
+            raise UiValidationError(
+                UiValidationIssue(
+                    code="below-minimum",
+                    message=f"{field.label} must be {comparison} {field.minimum}",
+                    field=field.name,
+                )
+            )
     if field.kind is FieldKind.TEXT and (
         not isinstance(value, str) or not value
     ):

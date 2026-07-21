@@ -251,3 +251,59 @@ def test_ui_compiler_rejects_invalid_text_values(value: object) -> None:
             _schema(command),
             UiInvocation("probe", (UiValue("source", value),)),  # type: ignore[arg-type]
         )
+
+
+def test_ui_compiler_rejects_fractional_integer_fields() -> None:
+    field = UiField(
+        "width",
+        "Width",
+        FieldKind.NUMBER,
+        flags=("--width",),
+        integer=True,
+    )
+    command = UiCommand(
+        name="resize",
+        category="video",
+        summary="Resize video",
+        fields=(field,),
+    )
+
+    with pytest.raises(UiValidationError) as caught:
+        compile_invocation(
+            _schema(command),
+            UiInvocation("resize", (UiValue("width", 640.5),)),
+        )
+
+    assert caught.value.issues[0].code == "integer-required"
+
+
+@pytest.mark.parametrize(
+    ("value", "exclusive"),
+    [(0, True), (-1, False)],
+)
+def test_ui_compiler_enforces_numeric_minimums(
+    value: int,
+    exclusive: bool,
+) -> None:
+    field = UiField(
+        "duration",
+        "Duration",
+        FieldKind.NUMBER,
+        flags=("--duration",),
+        minimum=0,
+        exclusive_minimum=exclusive,
+    )
+    command = UiCommand(
+        name="trim",
+        category="video",
+        summary="Cut video",
+        fields=(field,),
+    )
+
+    with pytest.raises(UiValidationError) as caught:
+        compile_invocation(
+            _schema(command),
+            UiInvocation("trim", (UiValue("duration", value),)),
+        )
+
+    assert caught.value.issues[0].code == "below-minimum"
