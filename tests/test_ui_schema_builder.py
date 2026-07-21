@@ -6,6 +6,7 @@ from flowmpeg.ui.schema_builder import (
     build_ui_command,
     build_ui_field,
     build_ui_schema,
+    command_examples,
     command_parsers,
     field_choices,
     field_default,
@@ -176,6 +177,18 @@ def test_ui_builds_commands_from_catalog_and_parser_metadata() -> None:
         "duration",
         "output",
     }
+    assert "flowmpeg cut input.mp4 --start 5 --duration 12 -o clip.mp4" in (
+        command.examples
+    )
+
+
+def test_ui_command_examples_resolve_aliases() -> None:
+    examples = command_examples()
+
+    assert "flowmpeg cut input.mp4 --start 5 --duration 12 -o clip.mp4" in (
+        examples["trim"]
+    )
+    assert "flowmpeg audio input.mp4 -o track.mp3" in examples["extract-audio"]
 
 
 def test_ui_schema_covers_every_catalog_command() -> None:

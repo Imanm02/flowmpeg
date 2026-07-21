@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import argparse
 
-from flowmpeg.catalog import CATEGORIES, COMMAND_CATALOG, CommandSpec
-from flowmpeg.cli import build_parser
+from flowmpeg.catalog import CATEGORIES, COMMAND_CATALOG, CommandSpec, command_spec
+from flowmpeg.cli import _EXAMPLES, build_parser
 from flowmpeg.ui.schema import (
     FieldKind,
     FieldValue,
@@ -216,6 +216,21 @@ def merge_ui_fields(fields: tuple[UiField, ...]) -> tuple[UiField, ...]:
     return tuple(merged.values())
 
 
+def command_examples() -> dict[str, tuple[str, ...]]:
+    """Return built-in terminal examples keyed by canonical command name."""
+
+    grouped: dict[str, list[str]] = {}
+    for example in _EXAMPLES:
+        parts = example.command.split(maxsplit=2)
+        if len(parts) < 2:
+            continue
+        spec = command_spec(parts[1])
+        if spec is None:
+            continue
+        grouped.setdefault(spec.name, []).append(example.command)
+    return {name: tuple(commands) for name, commands in grouped.items()}
+
+
 def form_actions(parser: argparse.ArgumentParser) -> tuple[argparse.Action, ...]:
     """Return actions that should appear in a command form."""
 
@@ -246,6 +261,7 @@ def build_ui_command(
         input_kind=spec.input_kind,
         output_kind=spec.output_kind,
         fields=fields,
+        examples=command_examples().get(spec.name, ()),
     )
 
 
