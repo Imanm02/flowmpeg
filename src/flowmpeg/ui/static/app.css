@@ -237,7 +237,7 @@ h3 {
 
 .welcome {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(14rem, 20rem);
+  grid-template-columns: minmax(0, 1fr) minmax(12rem, 15rem);
   gap: 1.25rem;
   align-items: start;
   padding: clamp(1.25rem, 3vw, 2.4rem);
