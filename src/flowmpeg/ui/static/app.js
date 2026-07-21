@@ -12,6 +12,7 @@ const state = {
   preview: null,
   favorites: new Set(),
   jobs: new Map(),
+  pollTimer: null,
 };
 
 const elements = {
@@ -429,6 +430,7 @@ async function startJob() {
     });
     state.jobs.set(job.id, job);
     renderJobs();
+    scheduleJobPoll();
     showToast("Local job started.");
   } catch (error) {
     if (error.data?.issues) {
@@ -466,6 +468,10 @@ function renderJobs() {
     command.textContent = job.display;
     header.append(status, command);
     card.append(header);
+    const timing = document.createElement("p");
+    timing.className = "job-timing";
+    timing.textContent = jobTiming(job);
+    card.append(timing);
     if (job.output) {
       const output = document.createElement("pre");
       output.className = "job-output";
@@ -474,6 +480,48 @@ function renderJobs() {
       card.append(output);
     }
     elements.jobList.append(card);
+  }
+}
+
+function jobTiming(job) {
+  const started = job.startedAt || job.createdAt;
+  const ended = job.finishedAt || Date.now() / 1000;
+  const seconds = Math.max(0, ended - started);
+  const duration = seconds < 60
+    ? `${seconds.toFixed(1)} seconds`
+    : `${Math.floor(seconds / 60)}m ${Math.round(seconds % 60)}s`;
+  return job.finishedAt ? `Finished in ${duration}` : `Elapsed ${duration}`;
+}
+
+function scheduleJobPoll() {
+  window.clearTimeout(state.pollTimer);
+  const active = [...state.jobs.values()].some((job) =>
+    ["queued", "running"].includes(job.status),
+  );
+  if (active) {
+    state.pollTimer = window.setTimeout(loadJobs, 750);
+  }
+}
+
+async function loadJobs() {
+  try {
+    const data = await api("/api/jobs");
+    for (const job of data.jobs) {
+      const previous = state.jobs.get(job.id);
+      state.jobs.set(job.id, job);
+      if (
+        previous &&
+        previous.status !== job.status &&
+        ["succeeded", "failed", "cancelled"].includes(job.status)
+      ) {
+        showToast(`Job ${job.status}.`);
+      }
+    }
+    renderJobs();
+  } catch (error) {
+    showToast(error.message);
+  } finally {
+    scheduleJobPoll();
   }
 }
 
@@ -636,6 +684,7 @@ async function boot() {
     if (selected) {
       selectCommand(selected);
     }
+    await loadJobs();
   } catch (error) {
     elements.connection.textContent = "Connection failed";
     elements.connection.title = error.message;
