@@ -185,3 +185,29 @@ def test_ui_job_endpoint_rejects_nested_ui_command() -> None:
         assert "cannot be started" in json.loads(response.body)["message"]
     finally:
         application.close()
+
+
+def test_ui_job_read_endpoints_return_session_jobs() -> None:
+    application = _app()
+    try:
+        queued = application.jobs.start(("errors",), "flowmpeg errors")
+        application.jobs.wait(queued.id, timeout=10)
+
+        listing = application.handle("GET", "/api/jobs")
+        detail = application.handle("GET", f"/api/jobs/{queued.id}")
+
+        assert json.loads(listing.body)["jobs"][0]["id"] == queued.id
+        assert json.loads(detail.body)["id"] == queued.id
+    finally:
+        application.close()
+
+
+def test_ui_job_detail_returns_structured_not_found() -> None:
+    application = _app()
+    try:
+        response = application.handle("GET", "/api/jobs/missing")
+
+        assert response.status == 404
+        assert json.loads(response.body)["error"] == "job-not-found"
+    finally:
+        application.close()

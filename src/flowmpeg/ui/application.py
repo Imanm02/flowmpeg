@@ -80,6 +80,20 @@ class UiApplication:
             ).with_security_headers()
         if method == "GET" and path == "/api/schema":
             return json_response(schema_data(self.schema)).with_security_headers()
+        if method == "GET" and path == "/api/jobs":
+            return json_response(
+                {"jobs": [job_data(job) for job in self.jobs.list()]}
+            ).with_security_headers()
+        if method == "GET" and path.startswith("/api/jobs/"):
+            job_id = path.removeprefix("/api/jobs/")
+            if "/" not in job_id:
+                job = self.jobs.get(job_id)
+                if job is not None:
+                    return json_response(job_data(job)).with_security_headers()
+                return json_response(
+                    {"error": "job-not-found", "message": "Local job not found"},
+                    status=404,
+                ).with_security_headers()
         if method == "POST" and path == "/api/preview":
             try:
                 invocation = parse_invocation(decode_json_body(body))
