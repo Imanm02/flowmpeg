@@ -414,3 +414,16 @@ flowmpeg scenes interview.mp4 --threshold 0.35
 Output: scene-change times and scores.
 
 Why I use it: strong scene changes are useful thumbnail and chapter candidates.
+
+### Suggest a crop rectangle
+
+Input: `letterboxed.mp4`.
+
+```console
+flowmpeg crop-report letterboxed.mp4 --duration 30
+```
+
+Output: ranked crop candidates and the recommended FFmpeg crop value.
+
+Why I use it: the report gives a starting rectangle before I commit to a crop
+operation.
