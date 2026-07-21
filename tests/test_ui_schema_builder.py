@@ -2,7 +2,12 @@ import argparse
 
 from flowmpeg.catalog import COMMAND_CATALOG
 from flowmpeg.ui.schema import FieldKind
-from flowmpeg.ui.schema_builder import command_parsers, field_kind, field_label
+from flowmpeg.ui.schema_builder import (
+    command_parsers,
+    field_choices,
+    field_kind,
+    field_label,
+)
 
 
 def test_ui_maps_every_canonical_command_parser() -> None:
@@ -27,3 +32,10 @@ def test_ui_field_kind_recognizes_flags_choices_and_numbers() -> None:
     assert field_kind(codec) is FieldKind.CHOICE
     assert field_kind(count) is FieldKind.NUMBER
     assert field_kind(source) is FieldKind.TEXT
+
+
+def test_ui_field_choices_convert_numeric_values_to_text() -> None:
+    parser = argparse.ArgumentParser()
+    action = parser.add_argument("--level", choices=(1, 2, 3))
+
+    assert field_choices(action) == ("1", "2", "3")

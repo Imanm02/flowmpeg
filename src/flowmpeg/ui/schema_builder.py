@@ -30,6 +30,14 @@ def field_kind(action: argparse.Action) -> FieldKind:
     return FieldKind.TEXT
 
 
+def field_choices(action: argparse.Action) -> tuple[str, ...]:
+    """Return parser choices as display-safe strings."""
+
+    if action.choices is None:
+        return ()
+    return tuple(str(choice) for choice in action.choices)
+
+
 def command_parsers() -> dict[str, argparse.ArgumentParser]:
     """Return canonical command names mapped to their parsers."""
 
@@ -42,4 +50,4 @@ def command_parsers() -> dict[str, argparse.ArgumentParser]:
     return {spec.name: subparsers.choices[spec.name] for spec in COMMAND_CATALOG}
 
 
-__all__ = ["command_parsers", "field_kind", "field_label"]
+__all__ = ["command_parsers", "field_choices", "field_kind", "field_label"]
