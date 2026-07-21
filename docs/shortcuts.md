@@ -1037,6 +1037,58 @@ ff.compress_video(
 A slower preset can spend more time finding an efficient H.264 representation.
 It does not change the meaning of CRF.
 
+### Shrink a phone MOV to a small MP4
+
+Use `shrink_video` when the goal is a smaller MP4 with codec, CRF, frame-size,
+frame-rate, and audio-bitrate controls in one call.
+
+**Input:** `IMG_9357.MOV`
+
+**Output:** `IMG_9357.mp4`, HEVC video capped at 720p and 30 fps.
+
+```python
+ff.shrink_video(
+    "IMG_9357.MOV",
+    "IMG_9357.mp4",
+    max_height=720,
+    fps=30,
+    crf=28,
+).run()
+```
+
+### Match a tiny Opus audio export
+
+```python
+ff.shrink_video(
+    "IMG_9357.MOV",
+    "IMG_9357.mp4",
+    codec="hevc",
+    max_height=720,
+    fps=30,
+    crf=28,
+    audio_codec="opus",
+    audio_bitrate="32k",
+).run()
+```
+
+Use AAC instead of Opus when the MP4 must open in more players.
+
+### Keep source size while changing codec
+
+```python
+ff.shrink_video(
+    "master.mov",
+    "master-hevc.mp4",
+    max_width=None,
+    max_height=None,
+    fps=None,
+)
+```
+
+A CLI user should run `flowmpeg shrink input.mov --keep-size --keep-fps -o output.mp4`.
+In Python, pass `max_width=None`, `max_height=None`, and `fps=None` when the
+original dimensions and frame rate should be kept.
+
 ### Fill a vertical frame
 
 ```python

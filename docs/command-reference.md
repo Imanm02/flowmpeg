@@ -6,7 +6,7 @@ This file is generated from `COMMAND_CATALOG`. Run
 Tags describe use cases. Capability groups provide broad doctor checks.
 Exact needs are checked by `flowmpeg doctor --command NAME`.
 
-## Video (23)
+## Video (24)
 
 | Command | Aliases | Input | Output | Tags | Doctor group | Exact needs |
 |---|---|---|---|---|---|---|
@@ -22,6 +22,7 @@ Exact needs are checked by `flowmpeg doctor --command NAME`.
 | `resize` | `scale` | media | media | `creator`, `delivery`, `silent-input` | `web-video` | `encoder:aac`, `encoder:libx264`, `filter:scale`, `muxer:mp4` |
 | `remove-audio` | `mute`, `strip-audio` | media | video | `creator`, `copy`, `privacy`, `silent-input` | none | `muxer:mp4` |
 | `compress-video` | `compress`, `smaller` | media | media | `creator`, `delivery`, `silent-input` | `web-video` | `encoder:aac`, `encoder:libx264`, `filter:scale`, `muxer:mp4` |
+| `shrink-video` | `shrink`, `reduce-size`, `small-video` | media | media | `creator`, `delivery`, `silent-input` | `size-video` | `encoder:aac`, `encoder:libopus`, `encoder:libx264`, `encoder:libx265`, `filter:fps`, `filter:scale`, `muxer:mp4` |
 | `reframe` | `fill-frame` | media | media | `creator`, `delivery`, `silent-input` | `composition` | `encoder:aac`, `encoder:libx264`, `filter:crop`, `filter:scale`, `filter:setsar`, `muxer:mp4` |
 | `social-video` | `social` | media | media | `creator`, `delivery`, `silent-input` | `composition` | `encoder:aac`, `encoder:libx264`, `filter:crop`, `filter:gblur`, `filter:overlay`, `filter:scale`, `filter:split`, `muxer:mp4` |
 | `set-frame-rate` | `fps` | media | media | `creator`, `archive`, `silent-input` | `creator-video` | `encoder:aac`, `encoder:libx264`, `filter:fps`, `muxer:mp4` |

@@ -26,6 +26,7 @@ flowmpeg examples --search subtitle
 | Install FFmpeg or use custom paths | [Installation](installation.md) | Platform commands, setup states, CI checks |
 | Use forms and local file browsing | [Local browser UI](ui.md) | Search, previews, jobs, presets, keyboard controls |
 | Follow UI recipes by result | [UI recipe book](ui-recipes.md) | Inputs, outputs, commands, and why each job helps |
+| Reduce large video files | [Size reduction](size-reduction.md) | Phone MOV recipes, CRF choices, codec tradeoffs |
 | Run a one-line terminal edit | [Command guide](cli.md) | Every editing command, aliases, controls |
 | Read the full command matrix | [Generated command reference](command-reference.md) | Aliases, tags, data kinds, doctor groups |
 | Call one Python function | [Shortcut guide](shortcuts.md) | Copyable plan builders and arguments |
@@ -74,7 +75,7 @@ building one does not start FFmpeg.
 
 | Domain | Useful starting commands | Python area |
 |---|---|---|
-| Video delivery | `compress`, `resize`, `social`, `reframe` | `compress_video`, `resize`, `social_video` |
+| Video delivery | `shrink`, `compress`, `resize`, `social`, `reframe` | `shrink_video`, `compress_video`, `resize`, `social_video` |
 | Timeline edits | `cut`, `speed`, `freeze`, `bounce` | `trim`, `change_speed`, `freeze_end` |
 | Audio | `audio`, `mix`, `voice`, `crossfade` | `extract_audio`, `mix_audio_files`, `podcast_voice` |
 | Composition | `pip`, `grid`, `mark`, `audiogram` | `picture_in_picture`, `grid`, `watermark` |

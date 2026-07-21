@@ -9,19 +9,19 @@ source change.
 
 | Measure | Count | Source |
 |---|---:|---|
-| Canonical terminal commands | 89 | `COMMAND_CATALOG` |
-| Generated UI command forms | 89 | UI schema builder |
-| Command aliases | 110 | `COMMAND_CATALOG` |
-| Python shortcut functions | 68 | `shortcuts.__all__` |
-| One-line terminal examples | 90 | CLI example catalog |
+| Canonical terminal commands | 90 | `COMMAND_CATALOG` |
+| Generated UI command forms | 90 | UI schema builder |
+| Command aliases | 113 | `COMMAND_CATALOG` |
+| Python shortcut functions | 69 | `shortcuts.__all__` |
+| One-line terminal examples | 91 | CLI example catalog |
 | Stable error identifiers | 16 | CLI error guide |
 | Stable audit findings | 20 | Media audit |
-| Doctor feature groups | 18 | Doctor requirements |
-| Test function definitions | 615 | `tests/test_*.py` |
+| Doctor feature groups | 19 | Doctor requirements |
+| Test function definitions | 621 | `tests/test_*.py` |
 | UI test function definitions | 149 | `tests/test_ui_*.py` |
 | FFmpeg integration tests | 42 | Pytest markers |
-| Documentation pages | 21 | `docs/*.md` |
-| Documented command lines | 536 | Markdown code lines |
+| Documentation pages | 22 | `docs/*.md` |
+| Documented command lines | 580 | Markdown code lines |
 | Completed roadmap items | 136 | `ROADMAP.md` |
 | Open roadmap items | 2 | `ROADMAP.md` |
 
@@ -32,7 +32,7 @@ counts distinct canonical commands with at least one built-in example.
 
 | Category | Commands | Aliases | Examples | Coverage | Python | Bar |
 |---|---:|---:|---:|---:|---:|---|
-| video | 23 | 30 | 24 | 23/23 (100%) | 20 | `#######################` |
+| video | 24 | 33 | 25 | 24/24 (100%) | 21 | `########################` |
 | audio | 21 | 29 | 21 | 21/21 (100%) | 14 | `#####################` |
 | composition | 9 | 9 | 9 | 9/9 (100%) | 9 | `#########` |
 | effects | 5 | 4 | 5 | 5/5 (100%) | 5 | `#####` |
@@ -51,13 +51,13 @@ The bar uses one `#` per canonical command carrying the tag.
 | accessibility | 4 | 4 | `####` |
 | archive | 21 | 21 | `#####################` |
 | copy | 7 | 7 | `#######` |
-| creator | 49 | 50 | `#################################################` |
-| delivery | 26 | 27 | `##########################` |
+| creator | 50 | 51 | `##################################################` |
+| delivery | 27 | 28 | `###########################` |
 | discover | 6 | 6 | `######` |
 | inspect | 11 | 11 | `###########` |
 | podcast | 21 | 21 | `#####################` |
 | privacy | 4 | 4 | `####` |
-| silent-input | 37 | 38 | `#####################################` |
+| silent-input | 38 | 39 | `######################################` |
 
 ## What the counts mean
 

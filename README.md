@@ -113,6 +113,7 @@ flowmpeg loop motion.mp4 --duration 30 -o background.mp4
 flowmpeg webm input.mov --crf 30 -o delivery.webm
 flowmpeg hevc input.mov --crf 28 -o archive.mp4
 flowmpeg av1 input.mov --crf 35 --speed 8 -o delivery-av1.webm
+flowmpeg shrink IMG_9357.MOV --max-height 720 --fps 30 --crf 28 -o IMG_9357.mp4
 flowmpeg batch "recordings/*.mov" --name-suffix=-web -o converted
 flowmpeg frames input.mp4 --fps 2 --max-frames 20 -o review-frames
 flowmpeg hls input.mp4 --segment-duration 4 -o delivery-hls
@@ -137,6 +138,9 @@ progress. `--dry-run` prints the redacted FFmpeg command without starting it.
 The [command guide](docs/cli.md) covers the editing and inspection commands,
 their short forms, inputs, outputs, and exit codes.
 
+For large phone videos, the [size reduction guide](docs/size-reduction.md)
+shows HEVC, H.264, Opus, AAC, 720p, 1080p, and tiny-sharing recipes.
+
 The module form runs the same interface:
 
 ```console
@@ -150,6 +154,7 @@ from flowmpeg import shortcuts as ff
 
 ff.trim("input.mp4", "clip.mp4", start=10, end=30).run()
 ff.resize("input.mp4", "small.mp4", width=1280).run()
+ff.shrink_video("IMG_9357.MOV", "IMG_9357.mp4", max_height=720, fps=30).run()
 ff.extract_audio("input.mp4", "audio.mp3").run()
 ff.watermark("input.mp4", "logo.png", "branded.mp4").run()
 ff.contact_sheet("input.mp4", "sheet.jpg").run()

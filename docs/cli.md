@@ -150,6 +150,7 @@ The table below is a compact editing index for scanning this longer guide.
 | Fill a wide canvas with blur | `blurred-background` | `blur-bg` |
 | Reverse a bounded clip | `reverse-clip` | `reverse` |
 | Compress a web video | `compress-video` | `compress`, `smaller` |
+| Shrink large video files | `shrink-video` | `shrink`, `reduce-size`, `small-video` |
 | Fill a custom frame | `reframe` | `fill-frame` |
 | Prepare a social frame | `social-video` | `social` |
 | Set a constant frame rate | `set-frame-rate` | `fps` |
@@ -880,6 +881,32 @@ flowmpeg compress master.mov --crf 30 --max-width 1920 -o upload.mp4
 
 Use a lower CRF for more retained quality or a higher CRF for a smaller file.
 The accepted range is 0 through 51.
+
+### Shrink a large phone video
+
+**Input:** `IMG_9357.MOV`
+
+**Output:** `IMG_9357.mp4`, HEVC MP4 capped at 720p and 30 fps.
+
+```console
+flowmpeg shrink IMG_9357.MOV --max-height 720 --fps 30 --crf 28 -o IMG_9357.mp4
+```
+
+Match a tiny-audio version with Opus at 32k:
+
+```console
+flowmpeg shrink IMG_9357.MOV --codec hevc --max-height 720 --fps 30 --crf 28 --audio-codec opus --audio-bitrate 32k -o IMG_9357-tiny.mp4
+```
+
+Use H.264 and AAC when the output must play on older devices:
+
+```console
+flowmpeg shrink IMG_9357.MOV --codec h264 --audio-codec aac --max-height 720 --crf 27 -o IMG_9357-safe.mp4
+```
+
+Use `--keep-size` or `--keep-fps` when only part of the shrink recipe should
+change the source. The [size reduction guide](size-reduction.md) has more
+phone, screen-recording, archive, and batch examples.
 
 ### Prepare common social frames
 
