@@ -17,6 +17,7 @@ const elements = {
   stats: document.querySelectorAll("#surface-stats dd"),
   categoryList: document.querySelector("#category-list"),
   commandList: document.querySelector("#command-list"),
+  search: document.querySelector("#command-search"),
 };
 
 async function api(path, options = {}) {
@@ -37,21 +38,94 @@ async function api(path, options = {}) {
   return data;
 }
 
-function renderInitialNavigation() {
+function visibleCommands() {
+  const query = state.query.trim().toLowerCase();
+  return state.schema.commands.filter((command) => {
+    const matchesCategory =
+      state.selectedCategory === "all" ||
+      command.category === state.selectedCategory;
+    const text = [
+      command.name,
+      command.summary,
+      ...command.aliases,
+      ...command.tags,
+    ]
+      .join(" ")
+      .toLowerCase();
+    return matchesCategory && (!query || text.includes(query));
+  });
+}
+
+function categoryButton(value, label, count) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "category-button";
+  button.classList.toggle("selected", state.selectedCategory === value);
+  button.setAttribute(
+    "aria-pressed",
+    String(state.selectedCategory === value),
+  );
+  button.textContent = `${label} ${count}`;
+  button.addEventListener("click", () => {
+    state.selectedCategory = value;
+    renderNavigation();
+  });
+  return button;
+}
+
+function selectCommand(command) {
+  state.selectedCommand = command;
+  renderNavigation();
+}
+
+function renderNavigation() {
   elements.categoryList.replaceChildren();
   elements.commandList.replaceChildren();
-  for (const command of state.schema.commands) {
+  elements.categoryList.append(
+    categoryButton("all", "All", state.schema.commands.length),
+  );
+  for (const category of state.schema.categories) {
+    const count = state.schema.commands.filter(
+      (command) => command.category === category,
+    ).length;
+    const label = category[0].toUpperCase() + category.slice(1);
+    elements.categoryList.append(categoryButton(category, label, count));
+  }
+
+  const commands = visibleCommands();
+  if (!commands.length) {
+    const empty = document.createElement("p");
+    empty.className = "empty-state";
+    empty.textContent = "No commands match this search.";
+    elements.commandList.append(empty);
+    return;
+  }
+  for (const command of commands) {
     const button = document.createElement("button");
     button.type = "button";
     button.className = "command-card";
+    button.classList.toggle(
+      "selected",
+      state.selectedCommand?.name === command.name,
+    );
+    button.setAttribute(
+      "aria-pressed",
+      String(state.selectedCommand?.name === command.name),
+    );
     const name = document.createElement("strong");
     name.textContent = command.name;
     const summary = document.createElement("small");
     summary.textContent = command.summary;
     button.append(name, summary);
+    button.addEventListener("click", () => selectCommand(command));
     elements.commandList.append(button);
   }
 }
+
+elements.search.addEventListener("input", (event) => {
+  state.query = event.target.value;
+  renderNavigation();
+});
 
 async function boot() {
   try {
@@ -65,7 +139,7 @@ async function boot() {
     elements.stats[0].textContent = String(schema.commands.length);
     elements.stats[1].textContent = String(schema.categories.length);
     elements.stats[2].textContent = "Loopback only";
-    renderInitialNavigation();
+    renderNavigation();
   } catch (error) {
     elements.connection.textContent = "Connection failed";
     elements.connection.title = error.message;
