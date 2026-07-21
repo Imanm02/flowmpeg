@@ -142,3 +142,25 @@ def test_ui_compiler_uses_positive_and_negative_boolean_flags() -> None:
         _schema(command),
         UiInvocation("transcode", (UiValue("include_audio", True),)),
     ) == ("transcode",)
+
+
+def test_ui_compiler_uses_clear_flags_for_explicit_nulls() -> None:
+    field = UiField(
+        "duration",
+        "Duration",
+        FieldKind.NUMBER,
+        flags=("--duration",),
+        clear_flags=("--full", "--full-length"),
+        default=5.0,
+    )
+    command = UiCommand(
+        name="make-gif",
+        category="images",
+        summary="Create GIF",
+        fields=(field,),
+    )
+
+    assert compile_invocation(
+        _schema(command),
+        UiInvocation("make-gif", (UiValue("duration", None),)),
+    ) == ("make-gif", "--full")

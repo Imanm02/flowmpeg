@@ -59,6 +59,8 @@ def compile_invocation(schema: UiSchema, invocation: UiInvocation) -> tuple[str,
             continue
         value = invocation.value(field.name)
         if value is None:
+            if field.clear_flags:
+                arguments.append(field.clear_flags[0])
             continue
         if field.flags and value == field.default:
             continue
