@@ -103,3 +103,16 @@ Output: an H.264 MP4 with a smaller review size and AAC audio.
 
 Why I use it: the CRF and width controls are easier to compare in a form than
 inside a long command line.
+
+### Make a vertical social clip
+
+Input: `demo.mp4`.
+
+```console
+flowmpeg social demo.mp4 --target vertical -o vertical.mp4
+```
+
+Output: a 1080 by 1920 MP4 with the source placed into a vertical frame.
+
+Why I use it: the UI exposes the target choice without asking me to remember
+the canvas dimensions.
