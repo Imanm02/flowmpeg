@@ -93,3 +93,158 @@ h3 {
 .skip-link:focus {
   transform: translateY(0);
 }
+
+.app-shell {
+  display: grid;
+  grid-template:
+    "header header header" auto
+    "browser workspace activity" minmax(0, 1fr)
+    / 19rem minmax(30rem, 1fr) 20rem;
+  min-height: 100vh;
+}
+
+.topbar {
+  grid-area: header;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 4.5rem;
+  padding: 0.75rem 1.25rem;
+  background: rgb(255 255 255 / 88%);
+  border-bottom: 1px solid var(--border);
+  backdrop-filter: blur(18px);
+}
+
+.brand {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  color: inherit;
+  text-decoration: none;
+}
+
+.brand-mark {
+  display: grid;
+  width: 2.65rem;
+  height: 2.65rem;
+  color: white;
+  font-size: 1.2rem;
+  font-weight: 800;
+  background: var(--accent);
+  border-radius: 12px;
+  place-items: center;
+}
+
+.brand strong,
+.brand small {
+  display: block;
+}
+
+.brand small {
+  margin-top: 0.1rem;
+  color: var(--text-soft);
+  font-size: 0.72rem;
+}
+
+.topbar-actions {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.connection {
+  padding: 0.4rem 0.65rem;
+  color: var(--warning);
+  font-size: 0.78rem;
+  font-weight: 700;
+  background: #fff4d6;
+  border-radius: 999px;
+}
+
+.connection.ready {
+  color: var(--accent-strong);
+  background: var(--accent-soft);
+}
+
+.theme-control {
+  display: flex;
+  gap: 0.45rem;
+  align-items: center;
+  color: var(--text-soft);
+  font-size: 0.78rem;
+}
+
+.command-browser,
+.activity-panel {
+  min-height: 0;
+  padding: 1.2rem;
+  overflow: auto;
+  background: var(--surface);
+}
+
+.command-browser {
+  grid-area: browser;
+  border-right: 1px solid var(--border);
+}
+
+.activity-panel {
+  grid-area: activity;
+  border-left: 1px solid var(--border);
+}
+
+.workspace {
+  grid-area: workspace;
+  min-width: 0;
+  padding: clamp(1.25rem, 4vw, 3.5rem);
+  overflow: auto;
+}
+
+.welcome,
+.command-panel {
+  width: min(100%, 58rem);
+  margin: 0 auto;
+}
+
+.welcome {
+  padding: clamp(1.5rem, 5vw, 4rem);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-large);
+  box-shadow: var(--shadow);
+}
+
+.welcome h2 {
+  max-width: 15ch;
+  margin-bottom: 1rem;
+  font-size: clamp(2rem, 5vw, 4.2rem);
+}
+
+.welcome > p:not(.eyebrow) {
+  max-width: 55ch;
+  color: var(--text-soft);
+  font-size: 1.05rem;
+}
+
+.surface-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+  margin: 2rem 0 0;
+}
+
+.surface-stats div {
+  padding: 1rem;
+  background: var(--surface-soft);
+  border-radius: var(--radius);
+}
+
+.surface-stats dt {
+  color: var(--text-soft);
+  font-size: 0.76rem;
+}
+
+.surface-stats dd {
+  margin: 0.2rem 0 0;
+  font-size: 1.2rem;
+  font-weight: 750;
+}
