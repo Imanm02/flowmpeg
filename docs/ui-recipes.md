@@ -286,3 +286,16 @@ seconds.
 
 Why I use it: the UI makes the output folder explicit, which matters because
 this command creates several files.
+
+### Build a contact sheet
+
+Input: `video.mp4`.
+
+```console
+flowmpeg sheet video.mp4 --interval 8 -o sheet.jpg
+```
+
+Output: one JPG contact sheet with sampled frames laid out in a grid.
+
+Why I use it: a single image is often faster to scan than scrubbing through the
+whole file.
