@@ -1,10 +1,12 @@
 import json
 
 from flowmpeg.ui.jobs import JobStatus, UiJobSnapshot
+from flowmpeg.ui.files import DirectoryListing, FileEntry
 from flowmpeg.ui.preview import UiPreview
 from flowmpeg.ui.schema import FieldKind, PathRole, UiCommand, UiField, UiSchema
 from flowmpeg.ui.serialization import (
     command_data,
+    directory_data,
     field_data,
     job_data,
     preview_data,
@@ -123,3 +125,22 @@ def test_job_data_uses_public_safe_snapshot_fields() -> None:
         "returncode": 0,
         "output": "done",
     }
+
+
+def test_directory_data_keeps_path_metadata_only() -> None:
+    listing = DirectoryListing(
+        path="C:/media",
+        parent="C:/",
+        entries=(FileEntry("clip.mp4", "C:/media/clip.mp4", False, 42, 1.0),),
+        truncated=False,
+    )
+
+    assert directory_data(listing)["entries"] == [
+        {
+            "name": "clip.mp4",
+            "path": "C:/media/clip.mp4",
+            "directory": False,
+            "size": 42,
+            "modifiedAt": 1.0,
+        }
+    ]

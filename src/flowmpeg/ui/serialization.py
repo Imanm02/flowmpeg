@@ -6,6 +6,7 @@ import json
 from typing import Any
 
 from flowmpeg.ui.jobs import UiJobSnapshot
+from flowmpeg.ui.files import DirectoryListing
 from flowmpeg.ui.preview import UiPreview
 from flowmpeg.ui.schema import UiCommand, UiField, UiSchema
 from flowmpeg.ui.validation import UiValidationIssue
@@ -99,8 +100,29 @@ def job_data(job: UiJobSnapshot) -> dict[str, Any]:
     }
 
 
+def directory_data(listing: DirectoryListing) -> dict[str, Any]:
+    """Return a local directory listing as JSON-compatible data."""
+
+    return {
+        "path": listing.path,
+        "parent": listing.parent,
+        "truncated": listing.truncated,
+        "entries": [
+            {
+                "name": entry.name,
+                "path": entry.path,
+                "directory": entry.directory,
+                "size": entry.size,
+                "modifiedAt": entry.modified_at,
+            }
+            for entry in listing.entries
+        ],
+    }
+
+
 __all__ = [
     "command_data",
+    "directory_data",
     "field_data",
     "job_data",
     "preview_data",
