@@ -43,6 +43,26 @@ flowmpeg setup --json
 Both reports include a top-level `schema_version` for scripts that validate
 their expected object shape.
 
+If a browser form is easier than terminal options, start the local interface:
+
+```console
+flowmpeg ui
+```
+
+It opens on a free loopback port and includes forms for setup, doctor, media
+inspection, editing, and delivery commands. Start with **Check FFmpeg** in the
+Quick start area. The report appears in the local job panel.
+
+If the machine has no desktop browser, print the address without opening one:
+
+```console
+flowmpeg ui --no-browser --port 8123
+```
+
+Open the printed address on that same computer. The server does not accept a
+LAN host. See the [local browser UI guide](ui.md) for file browsing, command
+previews, job cancellation, and its local security model.
+
 Require one group in CI when a job depends on it:
 
 ```console
