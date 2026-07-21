@@ -2,7 +2,7 @@ import json
 
 from flowmpeg import __version__
 from flowmpeg.ui.application import UiApplication
-from flowmpeg.ui.schema import UiSchema
+from flowmpeg.ui.schema import UiCommand, UiSchema
 from flowmpeg.ui.session import UiSession
 
 
@@ -27,3 +27,17 @@ def test_ui_application_returns_structured_not_found_response() -> None:
 
     assert response.status == 404
     assert json.loads(response.body)["error"] == "not-found"
+
+
+def test_ui_schema_endpoint_returns_command_forms() -> None:
+    command = UiCommand("errors", "help", "List errors")
+    app = UiApplication(
+        UiSchema(1, ("help",), (command,)),
+        UiSession("test-token"),
+    )
+
+    response = app.handle("GET", "/api/schema")
+    data = json.loads(response.body)
+
+    assert response.status == 200
+    assert data["commands"][0]["name"] == "errors"

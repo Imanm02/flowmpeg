@@ -8,6 +8,7 @@ from flowmpeg import __version__
 from flowmpeg.ui.http_types import ApiResponse, json_response
 from flowmpeg.ui.schema import UiSchema
 from flowmpeg.ui.schema_builder import build_ui_schema
+from flowmpeg.ui.serialization import schema_data
 from flowmpeg.ui.session import UiSession
 
 
@@ -35,6 +36,8 @@ class UiApplication:
                     "schemaVersion": self.schema.version,
                 }
             ).with_security_headers()
+        if method == "GET" and path == "/api/schema":
+            return json_response(schema_data(self.schema)).with_security_headers()
         return json_response(
             {"error": "not-found", "message": "Route not found"},
             status=404,
