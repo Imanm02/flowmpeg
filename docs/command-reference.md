@@ -129,10 +129,11 @@ Exact needs are checked by `flowmpeg doctor --command NAME`.
 | `doctor` | none | none | report | `inspect` | none | none |
 | `setup` | `install-tools` | none | report | `inspect` | none | none |
 
-## Help (5)
+## Help (6)
 
 | Command | Aliases | Input | Output | Tags | Doctor group | Exact needs |
 |---|---|---|---|---|---|---|
+| `demo-media` | `demo`, `samples` | none | media set | `discover` | none | none |
 | `ui` | `app`, `gui` | none | local application | `discover` | none | none |
 | `errors` | none | none | text | `discover` | none | none |
 | `explain-error` | none | error id | text | `discover` | none | none |
