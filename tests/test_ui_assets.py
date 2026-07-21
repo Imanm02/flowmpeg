@@ -56,3 +56,14 @@ def test_ui_index_and_script_expose_command_examples() -> None:
     assert 'id="example-list"' in index
     assert "renderExamples(command)" in script
     assert "Example command copied." in script
+
+
+def test_ui_index_and_script_expose_preset_files() -> None:
+    index = render_index("local-test-token").data.decode()
+    script = load_asset("app.js").data.decode()
+
+    assert 'id="export-presets"' in index
+    assert 'id="import-presets"' in index
+    assert 'id="preset-file"' in index
+    assert "flowmpeg-presets.json" in script
+    assert "Preset file could not be imported." in script
