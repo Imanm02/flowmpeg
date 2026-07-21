@@ -125,6 +125,8 @@ class JobManager:
 
         if not arguments:
             raise ValueError("job arguments cannot be empty")
+        if arguments[0] == "ui":
+            raise ValueError("the UI command cannot be started from the UI")
         with self._lock:
             if self._closed:
                 raise RuntimeError("job manager is closed")

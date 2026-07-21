@@ -86,3 +86,12 @@ def test_ui_job_manager_records_process_start_failures() -> None:
         assert finished.output == "test process failure"
     finally:
         manager.close()
+
+
+def test_ui_job_manager_rejects_nested_ui_servers() -> None:
+    manager = JobManager(runner=lambda job: 0)
+    try:
+        with pytest.raises(ValueError, match="cannot be started from the UI"):
+            manager.start(("ui",), "flowmpeg ui")
+    finally:
+        manager.close()
