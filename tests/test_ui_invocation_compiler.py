@@ -2,7 +2,7 @@ import pytest
 
 from flowmpeg.ui.invocation import UiInvocation, UiValue
 from flowmpeg.ui.invocation_compiler import compile_invocation
-from flowmpeg.ui.schema import UiCommand, UiSchema
+from flowmpeg.ui.schema import FieldKind, UiCommand, UiField, UiSchema
 from flowmpeg.ui.validation import UiValidationError
 
 
@@ -38,3 +38,20 @@ def test_ui_compiler_rejects_fields_from_another_command() -> None:
 
     assert caught.value.issues[0].code == "unknown-field"
     assert caught.value.issues[0].field == "source"
+
+
+def test_ui_compiler_reports_every_missing_required_field() -> None:
+    command = UiCommand(
+        name="trim",
+        category="video",
+        summary="Cut video",
+        fields=(
+            UiField("source", "Source", FieldKind.TEXT, required=True),
+            UiField("output", "Output", FieldKind.TEXT, required=True),
+        ),
+    )
+
+    with pytest.raises(UiValidationError) as caught:
+        compile_invocation(_schema(command), UiInvocation("trim"))
+
+    assert [issue.field for issue in caught.value.issues] == ["source", "output"]

@@ -33,6 +33,26 @@ def compile_invocation(schema: UiSchema, invocation: UiInvocation) -> tuple[str,
                 for name in unknown_fields
             )
         )
+    missing = [
+        field
+        for field in command.fields
+        if field.required
+        and (
+            not invocation.has(field.name)
+            or invocation.value(field.name) in {None, "", ()}
+        )
+    ]
+    if missing:
+        raise UiValidationError(
+            *(
+                UiValidationIssue(
+                    code="required",
+                    message=f"{field.label} is required",
+                    field=field.name,
+                )
+                for field in missing
+            )
+        )
     return (command.name,)
 
 
