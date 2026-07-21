@@ -2,7 +2,7 @@ import json
 
 from flowmpeg import __version__
 from flowmpeg.ui.application import UiApplication
-from flowmpeg.ui.schema import UiCommand, UiSchema
+from flowmpeg.ui.schema import FieldKind, UiCommand, UiField, UiSchema
 from flowmpeg.ui.session import UiSession
 
 
@@ -58,3 +58,25 @@ def test_ui_application_accepts_exact_session_token() -> None:
     )
 
     assert response.status == 404
+
+
+def test_ui_preview_endpoint_returns_safe_terminal_command() -> None:
+    command = UiCommand(
+        "probe",
+        "inspect",
+        "Inspect media",
+        fields=(UiField("source", "Source", FieldKind.TEXT, required=True),),
+    )
+    app = UiApplication(
+        UiSchema(1, ("inspect",), (command,)),
+        UiSession("test-token"),
+    )
+    response = app.handle(
+        "POST",
+        "/api/preview",
+        headers={"X-Flowmpeg-Token": "test-token"},
+        body=b'{"command":"probe","values":{"source":"input.mp4"}}',
+    )
+
+    assert response.status == 200
+    assert json.loads(response.body)["display"] == "flowmpeg probe input.mp4"

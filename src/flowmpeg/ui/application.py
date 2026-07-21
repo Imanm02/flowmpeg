@@ -6,6 +6,9 @@ from dataclasses import dataclass
 
 from flowmpeg import __version__
 from flowmpeg.ui.http_types import ApiResponse, json_response
+from flowmpeg.ui.invocation import parse_invocation
+from flowmpeg.ui.preview import preview_invocation
+from flowmpeg.ui.request_data import decode_json_body
 from flowmpeg.ui.schema import UiSchema
 from flowmpeg.ui.schema_builder import build_ui_schema
 from flowmpeg.ui.serialization import schema_data
@@ -35,7 +38,6 @@ class UiApplication:
     ) -> ApiResponse:
         """Handle one API request."""
 
-        del body
         request_headers = {name.lower(): value for name, value in (headers or {}).items()}
         if method in {"POST", "PUT", "PATCH", "DELETE"} and not self.session.accepts(
             request_headers.get(TOKEN_HEADER.lower())
@@ -57,6 +59,15 @@ class UiApplication:
             ).with_security_headers()
         if method == "GET" and path == "/api/schema":
             return json_response(schema_data(self.schema)).with_security_headers()
+        if method == "POST" and path == "/api/preview":
+            invocation = parse_invocation(decode_json_body(body))
+            preview = preview_invocation(self.schema, invocation)
+            return json_response(
+                {
+                    "arguments": list(preview.arguments),
+                    "display": preview.display,
+                }
+            ).with_security_headers()
         return json_response(
             {"error": "not-found", "message": "Route not found"},
             status=404,
