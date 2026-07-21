@@ -1,9 +1,10 @@
 import argparse
 
-from flowmpeg.catalog import COMMAND_CATALOG
+from flowmpeg.catalog import COMMAND_CATALOG, command_spec
 from flowmpeg.ui.schema import FieldKind
 from flowmpeg.ui.schema_builder import (
     build_ui_field,
+    build_ui_command,
     command_parsers,
     field_choices,
     field_default,
@@ -128,3 +129,19 @@ def test_ui_form_actions_hide_argparse_help() -> None:
     source = parser.add_argument("source")
 
     assert form_actions(parser) == (source,)
+
+
+def test_ui_builds_commands_from_catalog_and_parser_metadata() -> None:
+    spec = command_spec("trim")
+    assert spec is not None
+    command = build_ui_command(spec, command_parsers()["trim"])
+
+    assert command.name == "trim"
+    assert command.category == "video"
+    assert command.aliases == ("cut",)
+    assert {field.name for field in command.fields} >= {
+        "source",
+        "start",
+        "duration",
+        "output",
+    }

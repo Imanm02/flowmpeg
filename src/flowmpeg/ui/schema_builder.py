@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import argparse
 
-from flowmpeg.catalog import COMMAND_CATALOG
+from flowmpeg.catalog import COMMAND_CATALOG, CommandSpec
 from flowmpeg.cli import build_parser
-from flowmpeg.ui.schema import FieldKind, FieldValue, PathRole, UiField
+from flowmpeg.ui.schema import FieldKind, FieldValue, PathRole, UiCommand, UiField
 
 _INPUT_FIELD_NAMES = frozenset(
     {
@@ -149,6 +149,27 @@ def form_actions(parser: argparse.ArgumentParser) -> tuple[argparse.Action, ...]
     )
 
 
+def build_ui_command(
+    spec: CommandSpec,
+    parser: argparse.ArgumentParser,
+) -> UiCommand:
+    """Build one browser command from catalog and parser metadata."""
+
+    fields = tuple(
+        build_ui_field(action, spec.output_kind) for action in form_actions(parser)
+    )
+    return UiCommand(
+        name=spec.name,
+        category=spec.category,
+        summary=spec.summary,
+        aliases=spec.aliases,
+        tags=spec.tags,
+        input_kind=spec.input_kind,
+        output_kind=spec.output_kind,
+        fields=fields,
+    )
+
+
 def command_parsers() -> dict[str, argparse.ArgumentParser]:
     """Return canonical command names mapped to their parsers."""
 
@@ -163,6 +184,7 @@ def command_parsers() -> dict[str, argparse.ArgumentParser]:
 
 __all__ = [
     "build_ui_field",
+    "build_ui_command",
     "command_parsers",
     "field_choices",
     "field_default",
