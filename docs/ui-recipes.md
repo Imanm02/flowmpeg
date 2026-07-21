@@ -195,3 +195,16 @@ Output: an MP4 where caption text is rendered into the video frames.
 
 Why I use it: open captions survive players that ignore selectable subtitle
 tracks.
+
+### Add selectable captions
+
+Input: `movie.mp4` and `subtitles.srt`.
+
+```console
+flowmpeg captions movie.mp4 subtitles.srt -o captioned.mp4
+```
+
+Output: an MP4 with a selectable subtitle track.
+
+Why I use it: this keeps the video image unchanged while still carrying text
+for players that support captions.
