@@ -1228,11 +1228,13 @@ take too long:
 ```console
 flowmpeg quality reference.mov candidate.mp4 --metric psnr
 flowmpeg quality reference.mov candidate.mp4 --start 300 --duration 30 --metric ssim
+flowmpeg quality reference.mov candidate.mp4 --metric vmaf
 ```
 
 The selected tracks must have matching dimensions. `--reference-track` and
 `--candidate-track` use video-only indexes. The [quality guide](quality.md)
-explains infinity, component values, frame alignment, and metric limits.
+explains infinity, component values, frame alignment, and optional VMAF. Check
+VMAF availability with `flowmpeg doctor --require vmaf-analysis`.
 
 ## Audit media against an expected shape
 

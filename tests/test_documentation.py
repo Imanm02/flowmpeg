@@ -186,6 +186,7 @@ def test_python_documentation_examples_build(
         lambda *args, **kwargs: SimpleNamespace(
             psnr=SimpleNamespace(average_db=42.7),
             ssim=SimpleNamespace(all=0.993),
+            vmaf=SimpleNamespace(score=98.714706),
         ),
     )
     monkeypatch.setattr(

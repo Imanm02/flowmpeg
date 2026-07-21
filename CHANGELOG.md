@@ -32,3 +32,4 @@
 - Cancellable named batches and local video folder conversion
 - Owned JPG and PNG frame sequences with staged replacement
 - Typed PSNR and SSIM reference quality reports
+- Optional VMAF measurement through installed libvmaf filters

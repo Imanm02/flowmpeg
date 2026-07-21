@@ -174,7 +174,7 @@ only a discussion or test placeholder.
 - [x] Define owned artifact sets for extracted frame directories.
 - [ ] Add saved batch manifests with schema validation.
 - [x] Measure reference quality with PSNR and SSIM.
-- [ ] Add optional VMAF measurement when the filter is available.
+- [x] Add optional VMAF measurement when the filter is available.
 - [ ] Model adaptive streaming ladders with several renditions.
 
 ## Release gates

@@ -222,6 +222,7 @@ plans, see the [shortcut guide](docs/shortcuts.md).
 - Named batches with cancellation and temporary workspace cleanup
 - Owned frame sequences with staged replacement
 - Typed PSNR and SSIM reports with component values
+- Optional VMAF reports when FFmpeg provides `libvmaf`
 - Synchronous execution with progress callbacks and timeouts
 - An installed `flowmpeg` command with editing, inspection, and help groups
 - Read-only setup checks with confirmed package manager installation

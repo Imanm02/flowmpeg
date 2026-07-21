@@ -137,6 +137,7 @@ The report includes:
 | `psnr.minimum_db`, `maximum_db` | Lowest and highest frame summaries |
 | `ssim.all` | Combined SSIM value |
 | `ssim.db` | Combined SSIM in decibels |
+| `vmaf.score` | Optional VMAF score when that metric was requested |
 | `components` | Luma and chroma, or RGB values when FFmpeg reports them |
 | `elapsed` | Probe and measurement wall time |
 | `schema_version` | CLI JSON schema version |
@@ -154,6 +155,30 @@ flowmpeg doctor --require quality-analysis
 
 Both checks require the PSNR and SSIM filters. The command also needs FFprobe
 to validate tracks and dimensions.
+
+## Run optional VMAF
+
+VMAF is available only when FFmpeg was built with `libvmaf`. Check that
+capability separately:
+
+```console
+flowmpeg doctor --require vmaf-analysis
+flowmpeg quality reference.mov candidate.mp4 --metric vmaf
+flowmpeg quality reference.mov candidate.mp4 --metric vmaf --json
+```
+
+Higher VMAF scores indicate a closer perceptual match under the model selected
+by the installed filter. Flowmpeg reports the pooled score from FFmpeg without
+claiming one universal pass threshold.
+
+```text
+VMAF:
+  score: 98.714706
+```
+
+VMAF is not included by `--metric all` because that default must work on
+ordinary FFmpeg builds. Request it explicitly after the capability check. A
+missing filter returns the normal `FMG612` filter error.
 
 ## Use the Python API
 
@@ -174,8 +199,21 @@ if report.ssim is not None:
     print(report.ssim.all)
 ```
 
-Use `metric="psnr"` or `metric="ssim"` to skip the other pass. Component
-values preserve the names FFmpeg reports, such as Y, U, V or R, G, B.
+Use `metric="psnr"`, `metric="ssim"`, or `metric="vmaf"` to run one pass.
+Component values preserve the names FFmpeg reports, such as Y, U, V or R, G,
+B.
+
+```python
+import flowmpeg
+
+vmaf_report = flowmpeg.measure_quality(
+    "reference.mov",
+    "candidate.mp4",
+    metric="vmaf",
+)
+if vmaf_report.vmaf is not None:
+    print(vmaf_report.vmaf.score)
+```
 
 ## Pair quality with media comparison
 
@@ -203,5 +241,6 @@ alignment before measurement. Audio is not measured. A high score does not
 prove that text is readable, faces look natural, or a delivery file meets a
 business requirement.
 
-VMAF is not part of this first report because many FFmpeg builds omit
-`libvmaf`. It remains a separate optional-capability task on the roadmap.
+VMAF support remains dependent on the installed FFmpeg build and its model.
+Flowmpeg does not download model files or replace the filter's configured
+default model.
