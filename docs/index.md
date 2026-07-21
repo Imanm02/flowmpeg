@@ -24,6 +24,7 @@ flowmpeg examples --search subtitle
 | I want to | Start here | What it contains |
 |---|---|---|
 | Install FFmpeg or use custom paths | [Installation](installation.md) | Platform commands, setup states, CI checks |
+| Use forms and local file browsing | [Local browser UI](ui.md) | Search, previews, jobs, presets, keyboard controls |
 | Run a one-line terminal edit | [Command guide](cli.md) | Every editing command, aliases, controls |
 | Read the full command matrix | [Generated command reference](command-reference.md) | Aliases, tags, data kinds, doctor groups |
 | Call one Python function | [Shortcut guide](shortcuts.md) | Copyable plan builders and arguments |
@@ -45,11 +46,14 @@ flowmpeg examples --search subtitle
 
 ## Pick an interface
 
-Use the terminal command when the job fits on one line and should run now.
-Use a Python shortcut when paths or options come from an application. Use the
-graph API when one output needs a filter layout that no shortcut describes.
+Use the browser UI when form labels, local file browsing, and a visible job
+list are useful. Use the terminal command when the job fits on one line and
+should run now. Use a Python shortcut when paths or options come from an
+application. Use the graph API when one output needs a filter layout that no
+shortcut describes.
 
 ```text
+guided local form    -> flowmpeg ui
 one edit now          -> flowmpeg cut ...
 one edit in Python    -> ff.trim(...)
 custom stream graph   -> input(...), filter(...), output(...)
