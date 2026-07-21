@@ -929,17 +929,25 @@ function renderJobs() {
       output.tabIndex = 0;
       card.append(output);
     }
+    const actions = document.createElement("div");
+    actions.className = "job-actions";
+    const copy = document.createElement("button");
+    copy.type = "button";
+    copy.className = "quiet-button";
+    copy.textContent = "Copy command";
+    copy.addEventListener("click", () => {
+      void copyText(job.display, "Job command copied.");
+    });
+    actions.append(copy);
     if (["queued", "running"].includes(job.status)) {
-      const actions = document.createElement("div");
-      actions.className = "job-actions";
       const cancel = document.createElement("button");
       cancel.type = "button";
       cancel.className = "quiet-button";
       cancel.textContent = "Cancel job";
       cancel.addEventListener("click", () => cancelJob(job.id, cancel));
       actions.append(cancel);
-      card.append(actions);
     }
+    card.append(actions);
     elements.jobList.append(card);
   }
 }
