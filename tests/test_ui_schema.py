@@ -132,3 +132,17 @@ def test_ui_schema_rejects_unknown_command_categories() -> None:
 
     with pytest.raises(ValueError, match="command category"):
         UiSchema(version=1, categories=("audio",), commands=(command,))
+
+
+def test_ui_schema_finds_commands_by_name_or_alias() -> None:
+    command = UiCommand(
+        name="trim",
+        category="video",
+        summary="Cut video",
+        aliases=("cut",),
+    )
+    schema = UiSchema(version=1, categories=("video",), commands=(command,))
+
+    assert schema.command("trim") is command
+    assert schema.command("cut") is command
+    assert schema.command("missing") is None

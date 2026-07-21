@@ -111,6 +111,18 @@ class UiSchema:
         if unknown:
             raise ValueError("every command category must appear in the schema")
 
+    def command(self, name: str) -> UiCommand | None:
+        """Find a command by canonical name or alias."""
+
+        return next(
+            (
+                command
+                for command in self.commands
+                if name == command.name or name in command.aliases
+            ),
+            None,
+        )
+
 
 __all__ = [
     "FieldKind",
