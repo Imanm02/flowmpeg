@@ -11,6 +11,7 @@ from flowmpeg.ui.schema_builder import (
     field_default,
     field_help,
     field_is_advanced,
+    field_is_integer,
     field_is_multiple,
     field_kind,
     field_label,
@@ -42,6 +43,8 @@ def test_ui_field_kind_recognizes_flags_choices_and_numbers() -> None:
     assert field_kind(codec) is FieldKind.CHOICE
     assert field_kind(count) is FieldKind.NUMBER
     assert field_kind(source) is FieldKind.TEXT
+    assert field_is_integer(count) is True
+    assert field_is_integer(source) is False
 
 
 def test_ui_field_choices_convert_numeric_values_to_text() -> None:

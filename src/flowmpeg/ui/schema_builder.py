@@ -79,6 +79,13 @@ def field_kind(action: argparse.Action) -> FieldKind:
     return FieldKind.TEXT
 
 
+def field_is_integer(action: argparse.Action) -> bool:
+    """Return true when argparse requires an integer."""
+
+    type_name = getattr(action.type, "__name__", "")
+    return action.type is int or type_name.endswith("_int")
+
+
 def field_choices(action: argparse.Action) -> tuple[str, ...]:
     """Return parser choices as display-safe strings."""
 
@@ -158,6 +165,7 @@ def build_ui_field(action: argparse.Action, output_kind: str) -> UiField:
         choices=field_choices(action),
         path_role=field_path_role(action, output_kind),
         advanced=field_is_advanced(action),
+        integer=field_is_integer(action),
     )
 
 
@@ -184,6 +192,9 @@ def merge_ui_fields(fields: tuple[UiField, ...]) -> tuple[UiField, ...]:
             choices=current.choices or field.choices,
             path_role=current.path_role,
             advanced=current.advanced and field.advanced,
+            integer=current.integer,
+            minimum=current.minimum,
+            exclusive_minimum=current.exclusive_minimum,
         )
     return tuple(merged.values())
 
@@ -253,6 +264,7 @@ __all__ = [
     "field_help",
     "field_is_multiple",
     "field_is_advanced",
+    "field_is_integer",
     "field_kind",
     "field_label",
     "field_path_role",
