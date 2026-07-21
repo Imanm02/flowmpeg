@@ -280,6 +280,44 @@ elements.exportPresets.addEventListener("click", () => {
   showToast(`${state.presets.length} presets exported.`);
 });
 
+function presetCommandExists(preset) {
+  return state.schema?.commands.some((command) => command.name === preset.command);
+}
+
+elements.importPresets.addEventListener("click", () => {
+  elements.presetFile.value = "";
+  elements.presetFile.click();
+});
+
+elements.presetFile.addEventListener("change", async () => {
+  const file = elements.presetFile.files?.[0];
+  if (!file) {
+    return;
+  }
+  try {
+    const parsed = JSON.parse(await file.text());
+    if (!Array.isArray(parsed)) {
+      throw new Error("preset file must be an array");
+    }
+    const imported = parsed.filter(
+      (preset) => isPreset(preset) && presetCommandExists(preset),
+    );
+    if (!imported.length) {
+      throw new Error("preset file did not contain usable presets");
+    }
+    const merged = new Map(state.presets.map((preset) => [preset.id, preset]));
+    for (const preset of imported) {
+      merged.set(preset.id, preset);
+    }
+    state.presets = [...merged.values()];
+    savePresets();
+    renderPresetOptions();
+    showToast(`${imported.length} presets imported.`);
+  } catch {
+    showToast("Preset file could not be imported.");
+  }
+});
+
 function applyFormValues(values) {
   for (const field of state.selectedCommand.fields) {
     const control = elements.form.elements.namedItem(field.name);
