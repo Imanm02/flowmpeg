@@ -56,3 +56,33 @@ def test_ui_job_manager_queues_runs_and_lists_jobs() -> None:
 def test_ui_job_manager_rejects_invalid_worker_counts() -> None:
     with pytest.raises(ValueError, match="between 1 and 4"):
         JobManager(max_parallel=0)
+
+
+def test_ui_job_manager_runs_flowmpeg_without_a_shell() -> None:
+    manager = JobManager()
+    try:
+        queued = manager.start(("errors",), "flowmpeg errors")
+        finished = manager.wait(queued.id, timeout=10)
+
+        assert finished.status is JobStatus.SUCCEEDED
+        assert finished.returncode == 0
+        assert "FMG200" in finished.output
+    finally:
+        manager.close()
+
+
+def test_ui_job_manager_records_process_start_failures() -> None:
+    def fail(job: UiJob) -> int:
+        del job
+        raise OSError("test process failure")
+
+    manager = JobManager(runner=fail)
+    try:
+        queued = manager.start(("errors",), "flowmpeg errors")
+        finished = manager.wait(queued.id, timeout=2)
+
+        assert finished.status is JobStatus.FAILED
+        assert finished.returncode == -1
+        assert finished.output == "test process failure"
+    finally:
+        manager.close()

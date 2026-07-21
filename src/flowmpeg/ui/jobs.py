@@ -8,8 +8,12 @@ from dataclasses import dataclass, field
 from enum import Enum
 import subprocess
 import secrets
+import sys
 import threading
 import time
+
+from flowmpeg.diagnostics import redact_text
+from flowmpeg.processes import popen_group_options
 
 MAX_JOB_OUTPUT = 200_000
 
@@ -171,7 +175,12 @@ class JobManager:
                 return
             job.status = JobStatus.RUNNING
             job.started_at = time.time()
-        returncode = self._runner(job)
+        try:
+            returncode = self._runner(job)
+        except Exception as error:
+            with job.lock:
+                job.output = redact_text(str(error))
+            returncode = -1
         with job.lock:
             job.returncode = returncode
             job.finished_at = time.time()
@@ -184,7 +193,35 @@ class JobManager:
             )
 
     def _run_process(self, job: UiJob) -> int:
-        raise NotImplementedError
+        process = subprocess.Popen(
+            (sys.executable, "-m", "flowmpeg", *job.arguments),
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            bufsize=1,
+            shell=False,
+            **popen_group_options(),
+        )
+        output = BoundedOutput()
+        with job.lock:
+            job.process = process
+        try:
+            if process.stdout is None:
+                raise RuntimeError("job output pipe is unavailable")
+            while True:
+                chunk = process.stdout.read(4096)
+                if not chunk:
+                    break
+                output.append(chunk)
+                with job.lock:
+                    job.output = output.value
+            return process.wait()
+        finally:
+            with job.lock:
+                job.process = None
 
 
 __all__ = [
