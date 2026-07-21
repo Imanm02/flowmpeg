@@ -465,3 +465,16 @@ flowmpeg clean-metadata camera.mkv -o share.mkv
 Output: a copied media file with standard metadata fields cleared.
 
 Why I use it: I can make a sharing copy without changing the original file.
+
+### Add a title tag
+
+Input: `camera.mp4`.
+
+```console
+flowmpeg tag-media camera.mp4 --title "Camera master" -o tagged.mp4
+```
+
+Output: a media file with the selected title metadata.
+
+Why I use it: the form keeps metadata text visible and quoted correctly in the
+previewed command.
