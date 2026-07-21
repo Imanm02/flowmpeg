@@ -80,3 +80,38 @@ def test_ui_preview_endpoint_returns_safe_terminal_command() -> None:
 
     assert response.status == 200
     assert json.loads(response.body)["display"] == "flowmpeg probe input.mp4"
+
+
+def test_ui_preview_endpoint_returns_field_validation_errors() -> None:
+    command = UiCommand(
+        "probe",
+        "inspect",
+        "Inspect media",
+        fields=(UiField("source", "Source", FieldKind.TEXT, required=True),),
+    )
+    app = UiApplication(
+        UiSchema(1, ("inspect",), (command,)),
+        UiSession("test-token"),
+    )
+    response = app.handle(
+        "POST",
+        "/api/preview",
+        headers={"X-Flowmpeg-Token": "test-token"},
+        body=b'{"command":"probe","values":{}}',
+    )
+
+    data = json.loads(response.body)
+    assert response.status == 422
+    assert data["issues"][0]["field"] == "source"
+
+
+def test_ui_preview_endpoint_rejects_invalid_json() -> None:
+    response = _app().handle(
+        "POST",
+        "/api/preview",
+        headers={"X-Flowmpeg-Token": "test-token"},
+        body=b"{",
+    )
+
+    assert response.status == 400
+    assert json.loads(response.body)["error"] == "bad-request"

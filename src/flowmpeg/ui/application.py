@@ -13,6 +13,7 @@ from flowmpeg.ui.schema import UiSchema
 from flowmpeg.ui.schema_builder import build_ui_schema
 from flowmpeg.ui.serialization import schema_data
 from flowmpeg.ui.session import TOKEN_HEADER, UiSession
+from flowmpeg.ui.validation import UiValidationError
 
 
 @dataclass(frozen=True, slots=True)
@@ -60,8 +61,29 @@ class UiApplication:
         if method == "GET" and path == "/api/schema":
             return json_response(schema_data(self.schema)).with_security_headers()
         if method == "POST" and path == "/api/preview":
-            invocation = parse_invocation(decode_json_body(body))
-            preview = preview_invocation(self.schema, invocation)
+            try:
+                invocation = parse_invocation(decode_json_body(body))
+                preview = preview_invocation(self.schema, invocation)
+            except UiValidationError as error:
+                return json_response(
+                    {
+                        "error": "validation",
+                        "issues": [
+                            {
+                                "code": issue.code,
+                                "message": issue.message,
+                                "field": issue.field,
+                            }
+                            for issue in error.issues
+                        ],
+                    },
+                    status=422,
+                ).with_security_headers()
+            except ValueError as error:
+                return json_response(
+                    {"error": "bad-request", "message": str(error)},
+                    status=400,
+                ).with_security_headers()
             return json_response(
                 {
                     "arguments": list(preview.arguments),
