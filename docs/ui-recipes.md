@@ -64,3 +64,16 @@ Output: an MP4 with H.264 video and AAC audio.
 
 Why I use it: this is the plain delivery file I can send to a browser, chat
 app, or video review tool.
+
+### Cut an exact clip
+
+Input: `sample.mp4`.
+
+```console
+flowmpeg cut sample.mp4 --start 5 --duration 10 -o clip.mp4
+```
+
+Output: a new MP4 containing the 10 second range that starts at 5 seconds.
+
+Why I use it: previewing the command makes the time math visible before the
+edit runs.
