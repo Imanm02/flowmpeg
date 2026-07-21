@@ -1,7 +1,7 @@
 import argparse
 
 from flowmpeg.catalog import COMMAND_CATALOG, command_spec
-from flowmpeg.ui.schema import FieldKind
+from flowmpeg.ui.schema import FieldKind, PathRole, UiField
 from flowmpeg.ui.schema_builder import (
     build_ui_field,
     build_ui_schema,
@@ -18,7 +18,6 @@ from flowmpeg.ui.schema_builder import (
     form_actions,
     merge_ui_fields,
 )
-from flowmpeg.ui.schema import PathRole
 
 
 def test_ui_maps_every_canonical_command_parser() -> None:
