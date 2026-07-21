@@ -96,3 +96,23 @@ def test_ui_compiler_builds_positional_and_option_arguments() -> None:
         "--output",
         "clip file.mp4",
     )
+
+
+def test_ui_compiler_omits_unchanged_optional_defaults() -> None:
+    command = UiCommand(
+        name="doctor",
+        category="inspect",
+        summary="Check tools",
+        fields=(
+            UiField(
+                "timeout",
+                "Timeout",
+                FieldKind.NUMBER,
+                flags=("--timeout",),
+                default=10.0,
+            ),
+        ),
+    )
+    invocation = UiInvocation("doctor", (UiValue("timeout", 10.0),))
+
+    assert compile_invocation(_schema(command), invocation) == ("doctor",)

@@ -60,6 +60,8 @@ def compile_invocation(schema: UiSchema, invocation: UiInvocation) -> tuple[str,
         value = invocation.value(field.name)
         if value is None:
             continue
+        if field.flags and value == field.default:
+            continue
         arguments.extend(_scalar_arguments(field, value))
     return tuple(arguments)
 
