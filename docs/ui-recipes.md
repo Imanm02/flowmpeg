@@ -129,3 +129,17 @@ Output: an audio-only MP3 file from the selected media track.
 
 Why I use it: this is a quick way to prepare transcripts, voice cleanup, or
 podcast editing.
+
+### Normalize speech loudness
+
+Input: `voice.wav`.
+
+```console
+flowmpeg normalize-exact voice.wav --target-integrated -16 -o voice-ready.wav
+```
+
+Output: a measured, normalized audio file aimed at the selected integrated LUFS
+target.
+
+Why I use it: the UI keeps the target visible while Flowmpeg handles the
+measure-then-encode workflow.
