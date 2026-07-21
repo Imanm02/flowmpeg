@@ -95,7 +95,7 @@ h1,
 h2,
 h3 {
   line-height: 1.15;
-  letter-spacing: -0.02em;
+  letter-spacing: 0;
 }
 
 .eyebrow {
@@ -231,12 +231,12 @@ h3 {
 
 .welcome,
 .command-panel {
-  width: min(100%, 58rem);
+  width: min(100%, 64rem);
   margin: 0 auto;
 }
 
 .welcome {
-  padding: clamp(1.5rem, 5vw, 4rem);
+  padding: clamp(1.25rem, 3vw, 2.4rem);
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-large);
@@ -244,9 +244,9 @@ h3 {
 }
 
 .welcome h2 {
-  max-width: 15ch;
-  margin-bottom: 1rem;
-  font-size: clamp(2rem, 5vw, 4.2rem);
+  max-width: 18ch;
+  margin-bottom: 0.75rem;
+  font-size: clamp(2rem, 4vw, 3.4rem);
 }
 
 .welcome > p:not(.eyebrow) {
@@ -342,7 +342,7 @@ h3 {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 0.75rem;
-  margin: 2rem 0 0;
+  margin: 1.25rem 0 0;
 }
 
 .surface-stats div {
@@ -363,7 +363,7 @@ h3 {
 }
 
 .quick-start {
-  margin-top: 2rem;
+  margin-top: 1.25rem;
 }
 
 .quick-start h3 {
