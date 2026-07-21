@@ -116,3 +116,16 @@ Output: a 1080 by 1920 MP4 with the source placed into a vertical frame.
 
 Why I use it: the UI exposes the target choice without asking me to remember
 the canvas dimensions.
+
+### Extract audio from video
+
+Input: `interview.mp4`.
+
+```console
+flowmpeg audio interview.mp4 -o interview.mp3
+```
+
+Output: an audio-only MP3 file from the selected media track.
+
+Why I use it: this is a quick way to prepare transcripts, voice cleanup, or
+podcast editing.
