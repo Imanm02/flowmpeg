@@ -288,3 +288,35 @@ def test_ui_file_endpoint_rejects_non_directory_paths(tmp_path: Path) -> None:
         assert json.loads(response.body)["error"] == "file-request"
     finally:
         application.close()
+
+
+def test_ui_directory_endpoint_creates_one_local_folder(tmp_path: Path) -> None:
+    application = _app()
+    try:
+        response = application.handle(
+            "POST",
+            "/api/directories",
+            headers={"X-Flowmpeg-Token": "test-token"},
+            body=json.dumps({"parent": str(tmp_path), "name": "exports"}).encode(),
+        )
+
+        assert response.status == 201
+        assert Path(json.loads(response.body)["path"]).is_dir()
+    finally:
+        application.close()
+
+
+def test_ui_directory_endpoint_rejects_path_traversal(tmp_path: Path) -> None:
+    application = _app()
+    try:
+        response = application.handle(
+            "POST",
+            "/api/directories",
+            headers={"X-Flowmpeg-Token": "test-token"},
+            body=json.dumps({"parent": str(tmp_path), "name": "../outside"}).encode(),
+        )
+
+        assert response.status == 400
+        assert not (tmp_path.parent / "outside").exists()
+    finally:
+        application.close()

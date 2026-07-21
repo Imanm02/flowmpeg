@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 
 from flowmpeg import __version__
 from flowmpeg.ui.assets import load_asset, render_index
-from flowmpeg.ui.files import list_directory
+from flowmpeg.ui.files import create_directory, list_directory
 from flowmpeg.ui.http_types import ApiResponse, json_response
 from flowmpeg.ui.invocation import parse_invocation
 from flowmpeg.ui.jobs import JobManager
@@ -169,6 +169,22 @@ class UiApplication:
                     status=400,
                 ).with_security_headers()
             return json_response(directory_data(listing)).with_security_headers()
+        if method == "POST" and path == "/api/directories":
+            try:
+                request = decode_json_body(body)
+                if not isinstance(request, dict):
+                    raise ValueError("folder request must be an object")
+                parent = request.get("parent")
+                name = request.get("name")
+                if not isinstance(parent, str) or not isinstance(name, str):
+                    raise ValueError("folder parent and name must be text")
+                created = create_directory(parent, name)
+            except (OSError, ValueError) as error:
+                return json_response(
+                    {"error": "folder-request", "message": str(error)},
+                    status=400,
+                ).with_security_headers()
+            return json_response({"path": created}, status=201).with_security_headers()
         if method == "POST" and path.startswith("/api/jobs/") and path.endswith(
             "/cancel"
         ):
