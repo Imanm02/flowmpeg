@@ -1,6 +1,6 @@
 import pytest
 
-from flowmpeg.ui.jobs import BoundedOutput, JobStatus, UiJob
+from flowmpeg.ui.jobs import BoundedOutput, JobManager, JobStatus, UiJob
 
 
 def test_ui_job_starts_in_the_queue() -> None:
@@ -38,3 +38,21 @@ def test_ui_job_snapshot_excludes_process_arguments() -> None:
     assert "private" not in snapshot.display
     assert not hasattr(snapshot, "arguments")
     assert not hasattr(snapshot, "process")
+
+
+def test_ui_job_manager_queues_runs_and_lists_jobs() -> None:
+    manager = JobManager(runner=lambda job: 0)
+    try:
+        queued = manager.start(("errors",), "flowmpeg errors")
+        finished = manager.wait(queued.id, timeout=2)
+
+        assert finished.status is JobStatus.SUCCEEDED
+        assert manager.get(queued.id) == finished
+        assert manager.list() == (finished,)
+    finally:
+        manager.close()
+
+
+def test_ui_job_manager_rejects_invalid_worker_counts() -> None:
+    with pytest.raises(ValueError, match="between 1 and 4"):
+        JobManager(max_parallel=0)

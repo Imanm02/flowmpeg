@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
+from concurrent.futures import Future, ThreadPoolExecutor
 from dataclasses import dataclass, field
 from enum import Enum
 import subprocess
+import secrets
 import threading
 import time
 
@@ -89,9 +92,106 @@ class UiJobSnapshot:
     output: str
 
 
+JobRunner = Callable[[UiJob], int]
+
+
+class JobManager:
+    """Run local commands in a small ordered worker pool."""
+
+    def __init__(
+        self,
+        *,
+        max_parallel: int = 1,
+        runner: JobRunner | None = None,
+    ) -> None:
+        if max_parallel < 1 or max_parallel > 4:
+            raise ValueError("max_parallel must be between 1 and 4")
+        self._executor = ThreadPoolExecutor(
+            max_workers=max_parallel,
+            thread_name_prefix="flowmpeg-ui",
+        )
+        self._runner = runner or self._run_process
+        self._jobs: dict[str, UiJob] = {}
+        self._futures: dict[str, Future[None]] = {}
+        self._lock = threading.RLock()
+        self._closed = False
+
+    def start(self, arguments: tuple[str, ...], display: str) -> UiJobSnapshot:
+        """Queue one already validated Flowmpeg argument list."""
+
+        if not arguments:
+            raise ValueError("job arguments cannot be empty")
+        with self._lock:
+            if self._closed:
+                raise RuntimeError("job manager is closed")
+            job = UiJob(secrets.token_urlsafe(12), arguments, display)
+            self._jobs[job.id] = job
+            self._futures[job.id] = self._executor.submit(self._execute, job)
+            return job.snapshot()
+
+    def get(self, job_id: str) -> UiJobSnapshot | None:
+        """Return one current job snapshot."""
+
+        with self._lock:
+            job = self._jobs.get(job_id)
+        return None if job is None else job.snapshot()
+
+    def list(self) -> tuple[UiJobSnapshot, ...]:
+        """Return newest jobs first."""
+
+        with self._lock:
+            jobs = tuple(reversed(self._jobs.values()))
+        return tuple(job.snapshot() for job in jobs)
+
+    def wait(self, job_id: str, timeout: float | None = None) -> UiJobSnapshot:
+        """Wait for one job, primarily for callers that need synchronization.""
+
+        with self._lock:
+            future = self._futures.get(job_id)
+        if future is None:
+            raise KeyError(job_id)
+        future.result(timeout=timeout)
+        snapshot = self.get(job_id)
+        if snapshot is None:
+            raise KeyError(job_id)
+        return snapshot
+
+    def close(self, *, wait: bool = True) -> None:
+        """Stop accepting jobs and release worker threads.""
+
+        with self._lock:
+            self._closed = True
+        self._executor.shutdown(wait=wait, cancel_futures=True)
+
+    def _execute(self, job: UiJob) -> None:
+        with job.lock:
+            if job.cancel_requested:
+                job.status = JobStatus.CANCELLED
+                job.finished_at = time.time()
+                return
+            job.status = JobStatus.RUNNING
+            job.started_at = time.time()
+        returncode = self._runner(job)
+        with job.lock:
+            job.returncode = returncode
+            job.finished_at = time.time()
+            job.status = (
+                JobStatus.CANCELLED
+                if job.cancel_requested
+                else JobStatus.SUCCEEDED
+                if returncode == 0
+                else JobStatus.FAILED
+            )
+
+    def _run_process(self, job: UiJob) -> int:
+        raise NotImplementedError
+
+
 __all__ = [
     "BoundedOutput",
     "JobStatus",
+    "JobManager",
+    "JobRunner",
     "MAX_JOB_OUTPUT",
     "UiJob",
     "UiJobSnapshot",
