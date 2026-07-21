@@ -377,3 +377,16 @@ Output: PSNR and SSIM values for the compared range.
 
 Why I use it: this gives a numeric check when a smaller file still needs to
 look close to the source.
+
+### Find quiet ranges
+
+Input: `interview.wav`.
+
+```console
+flowmpeg find-silence interview.wav --threshold-db -45 --min-duration 0.5
+```
+
+Output: start, end, and duration values for detected silent intervals.
+
+Why I use it: the report gives edit candidates without changing the original
+recording.
