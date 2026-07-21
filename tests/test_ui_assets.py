@@ -21,3 +21,12 @@ def test_ui_index_receives_only_the_current_session_token() -> None:
 
     assert b'content="local-test-token"' in index.data
     assert b"__FLOWMPEG_SESSION_TOKEN__" not in index.data
+
+
+def test_ui_index_has_semantic_command_and_activity_regions() -> None:
+    index = render_index("local-test-token").data.decode()
+
+    assert 'id="command-list"' in index
+    assert 'id="command-form"' in index
+    assert 'id="job-list"' in index
+    assert 'aria-live="polite"' in index

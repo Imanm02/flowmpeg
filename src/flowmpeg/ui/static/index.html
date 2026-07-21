@@ -8,7 +8,124 @@
     <link rel="stylesheet" href="/app.css">
   </head>
   <body>
-    <main id="app">Loading Flowmpeg...</main>
+    <a class="skip-link" href="#workspace">Skip to command workspace</a>
+    <div class="app-shell" id="app">
+      <header class="topbar">
+        <a class="brand" href="/" aria-label="Flowmpeg home">
+          <span class="brand-mark" aria-hidden="true">F</span>
+          <span>
+            <strong>Flowmpeg</strong>
+            <small>Local media workbench</small>
+          </span>
+        </a>
+        <div class="topbar-actions">
+          <span class="connection" id="connection-status" role="status">
+            Connecting
+          </span>
+          <label class="theme-control">
+            <span>Theme</span>
+            <select id="theme-select">
+              <option value="system">System</option>
+              <option value="light">Light</option>
+              <option value="dark">Dark</option>
+            </select>
+          </label>
+        </div>
+      </header>
+
+      <aside class="command-browser" aria-label="Command browser">
+        <div class="browser-heading">
+          <h1>Choose a task</h1>
+          <p>Search by result, file type, or command name.</p>
+        </div>
+        <label class="search-field" for="command-search">
+          <span>Search commands</span>
+          <input
+            id="command-search"
+            type="search"
+            placeholder="Try trim, podcast, subtitles"
+            autocomplete="off"
+          >
+        </label>
+        <nav id="category-list" class="category-list" aria-label="Task categories"></nav>
+        <div id="command-list" class="command-list" aria-live="polite"></div>
+      </aside>
+
+      <main class="workspace" id="workspace" tabindex="-1">
+        <section class="welcome" id="welcome-panel">
+          <p class="eyebrow">Runs on this computer</p>
+          <h2>Pick a media task to begin</h2>
+          <p>
+            Flowmpeg turns each choice into a local command. You can inspect the
+            exact command before running it.
+          </p>
+          <dl class="surface-stats" id="surface-stats">
+            <div><dt>Commands</dt><dd>Loading</dd></div>
+            <div><dt>Categories</dt><dd>Loading</dd></div>
+            <div><dt>Server</dt><dd>Loopback only</dd></div>
+          </dl>
+        </section>
+
+        <section class="command-panel" id="command-panel" hidden>
+          <header class="command-heading">
+            <div>
+              <p class="eyebrow" id="command-category"></p>
+              <h2 id="command-title"></h2>
+              <p id="command-summary"></p>
+            </div>
+            <button type="button" class="quiet-button" id="favorite-button">
+              Save favorite
+            </button>
+          </header>
+          <div class="command-facts" id="command-facts"></div>
+
+          <form id="command-form" novalidate>
+            <div class="form-section" id="basic-fields"></div>
+            <details class="advanced-section" id="advanced-section" hidden>
+              <summary>Advanced settings</summary>
+              <div class="form-section" id="advanced-fields"></div>
+            </details>
+            <div class="form-errors" id="form-errors" role="alert" hidden></div>
+
+            <section class="preview-panel" aria-labelledby="preview-heading">
+              <div class="section-heading">
+                <div>
+                  <p class="eyebrow">Command line</p>
+                  <h3 id="preview-heading">Review before running</h3>
+                </div>
+                <button type="button" class="quiet-button" id="copy-command" disabled>
+                  Copy command
+                </button>
+              </div>
+              <pre id="command-preview" tabindex="0">Fill the required fields to preview the command.</pre>
+            </section>
+
+            <div class="form-actions">
+              <button type="button" class="secondary-button" id="preview-button">
+                Preview command
+              </button>
+              <button type="submit" class="primary-button" id="run-button">
+                Run locally
+              </button>
+            </div>
+          </form>
+        </section>
+      </main>
+
+      <aside class="activity-panel" aria-label="Job activity">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Activity</p>
+            <h2>Local jobs</h2>
+          </div>
+          <button type="button" class="quiet-button" id="clear-jobs">Clear finished</button>
+        </div>
+        <div id="job-list" class="job-list">
+          <p class="empty-state">No jobs in this session.</p>
+        </div>
+      </aside>
+    </div>
+    <div class="toast-region" id="toast-region" aria-live="polite" aria-atomic="true"></div>
     <script src="/app.js" defer></script>
   </body>
 </html>
