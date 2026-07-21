@@ -2802,6 +2802,7 @@ def _add_ui(commands: argparse._SubParsersAction[argparse.ArgumentParser]) -> No
         "--no-browser",
         action="store_false",
         dest="open_browser",
+        default=argparse.SUPPRESS,
         help="Print the address without opening a browser",
     )
     parser.set_defaults(handler=_run_ui)
@@ -4704,7 +4705,7 @@ def _run_ui(args: argparse.Namespace) -> int:
             host=cast(str, args.host),
             port=cast(int, args.port),
         ),
-        open_browser=cast(bool, args.open_browser),
+        open_browser=cast(bool, getattr(args, "open_browser", True)),
     )
     serve_ui(options, sys.stdout)
     return 0

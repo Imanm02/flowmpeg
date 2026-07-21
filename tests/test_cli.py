@@ -75,6 +75,31 @@ def test_ui_command_starts_the_local_application(
     ]
 
 
+def test_ui_command_opens_the_browser_by_default(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    launches: list[UiLaunchOptions] = []
+
+    def record(options: UiLaunchOptions, output: TextIO) -> None:
+        del output
+        launches.append(options)
+
+    monkeypatch.setattr("flowmpeg.ui.launcher.serve_ui", record)
+
+    assert cli.main(["ui"]) == 0
+    assert launches == [UiLaunchOptions()]
+
+
+def test_ui_help_does_not_mark_no_browser_as_default(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    with pytest.raises(SystemExit) as exit_info:
+        cli.main(["ui", "--help"])
+
+    assert exit_info.value.code == 0
+    assert "(default: True)" not in capsys.readouterr().out
+
+
 @pytest.mark.parametrize("port", ["-1", "65536"])
 def test_ui_command_rejects_invalid_ports(port: str) -> None:
     with pytest.raises(SystemExit):
