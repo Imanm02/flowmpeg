@@ -542,3 +542,137 @@ pre {
   border-radius: var(--radius-small);
   box-shadow: var(--shadow);
 }
+
+:focus-visible {
+  outline: 3px solid #39a983;
+  outline-offset: 2px;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #111713;
+    --surface: #18211d;
+    --surface-soft: #202c27;
+    --surface-strong: #293831;
+    --text: #edf5f0;
+    --text-soft: #a9bbb2;
+    --border: #35473f;
+    --accent: #55c49c;
+    --accent-strong: #82dbba;
+    --accent-soft: #183f31;
+    --danger: #ffaaaa;
+    --danger-soft: #492222;
+    --warning: #ffd17a;
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #111713;
+  --surface: #18211d;
+  --surface-soft: #202c27;
+  --surface-strong: #293831;
+  --text: #edf5f0;
+  --text-soft: #a9bbb2;
+  --border: #35473f;
+  --accent: #55c49c;
+  --accent-strong: #82dbba;
+  --accent-soft: #183f31;
+  --danger: #ffaaaa;
+  --danger-soft: #492222;
+  --warning: #ffd17a;
+}
+
+@media (max-width: 1120px) {
+  .app-shell {
+    grid-template:
+      "header header" auto
+      "browser workspace" minmax(0, 1fr)
+      "activity activity" auto
+      / 18rem minmax(0, 1fr);
+  }
+
+  .activity-panel {
+    max-height: 18rem;
+    border-top: 1px solid var(--border);
+    border-left: 0;
+  }
+}
+
+@media (max-width: 760px) {
+  .app-shell {
+    display: block;
+  }
+
+  .topbar {
+    position: sticky;
+    z-index: 20;
+    top: 0;
+  }
+
+  .brand small,
+  .connection {
+    display: none;
+  }
+
+  .theme-control > span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+
+  .command-browser,
+  .activity-panel {
+    border: 0;
+  }
+
+  .command-browser {
+    max-height: 28rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .workspace {
+    padding: 1rem;
+  }
+
+  .welcome,
+  .command-panel {
+    padding: 1.25rem;
+  }
+
+  .surface-stats,
+  .form-section {
+    grid-template-columns: 1fr;
+  }
+
+  .command-heading {
+    display: block;
+  }
+
+  .form-actions {
+    position: sticky;
+    bottom: 0;
+    padding: 0.75rem 0;
+    background: var(--bg);
+  }
+
+  .form-actions button {
+    flex: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
