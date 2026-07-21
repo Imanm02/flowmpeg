@@ -325,3 +325,16 @@ Output: an owned HLS folder with a playlist and media segments.
 
 Why I use it: the UI makes the artifact folder clear before a multi-file
 delivery package is created.
+
+### Package DASH delivery
+
+Input: `movie.mp4`.
+
+```console
+flowmpeg dash movie.mp4 --segment-duration 2 -o movie-dash
+```
+
+Output: an owned MPEG-DASH folder with a manifest and segments.
+
+Why I use it: the UI keeps the destination folder and segment length visible
+for a package with several files.
