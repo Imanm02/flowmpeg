@@ -1,5 +1,6 @@
 import json
 import threading
+from pathlib import Path
 
 from flowmpeg import __version__
 from flowmpeg.ui.application import UiApplication
@@ -248,4 +249,42 @@ def test_ui_job_cancel_and_clear_endpoints_manage_session_jobs() -> None:
         assert json.loads(cleared.body) == {"cleared": 1}
     finally:
         release.set()
+        application.close()
+
+
+def test_ui_file_endpoint_lists_local_paths_without_contents(tmp_path: Path) -> None:
+    source = tmp_path / "clip.mp4"
+    source.write_bytes(b"private media bytes")
+    application = _app()
+    try:
+        response = application.handle(
+            "POST",
+            "/api/files",
+            headers={"X-Flowmpeg-Token": "test-token"},
+            body=json.dumps({"path": str(tmp_path)}).encode(),
+        )
+        data = json.loads(response.body)
+
+        assert response.status == 200
+        assert data["entries"][0]["name"] == "clip.mp4"
+        assert "private media bytes" not in response.body.decode()
+    finally:
+        application.close()
+
+
+def test_ui_file_endpoint_rejects_non_directory_paths(tmp_path: Path) -> None:
+    source = tmp_path / "clip.mp4"
+    source.touch()
+    application = _app()
+    try:
+        response = application.handle(
+            "POST",
+            "/api/files",
+            headers={"X-Flowmpeg-Token": "test-token"},
+            body=json.dumps({"path": str(source)}).encode(),
+        )
+
+        assert response.status == 400
+        assert json.loads(response.body)["error"] == "file-request"
+    finally:
         application.close()

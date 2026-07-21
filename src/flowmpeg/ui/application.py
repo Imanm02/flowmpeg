@@ -6,6 +6,7 @@ from dataclasses import dataclass, field
 
 from flowmpeg import __version__
 from flowmpeg.ui.assets import load_asset, render_index
+from flowmpeg.ui.files import list_directory
 from flowmpeg.ui.http_types import ApiResponse, json_response
 from flowmpeg.ui.invocation import parse_invocation
 from flowmpeg.ui.jobs import JobManager
@@ -13,7 +14,7 @@ from flowmpeg.ui.preview import preview_invocation
 from flowmpeg.ui.request_data import decode_json_body
 from flowmpeg.ui.schema import UiSchema
 from flowmpeg.ui.schema_builder import build_ui_schema
-from flowmpeg.ui.serialization import job_data, schema_data
+from flowmpeg.ui.serialization import directory_data, job_data, schema_data
 from flowmpeg.ui.session import TOKEN_HEADER, UiSession
 from flowmpeg.ui.validation import UiValidationError
 
@@ -153,6 +154,21 @@ class UiApplication:
         if method == "POST" and path == "/api/jobs/clear":
             count = self.jobs.clear_finished()
             return json_response({"cleared": count}).with_security_headers()
+        if method == "POST" and path == "/api/files":
+            try:
+                request = decode_json_body(body)
+                if not isinstance(request, dict):
+                    raise ValueError("file request must be an object")
+                requested_path = request.get("path")
+                if requested_path is not None and not isinstance(requested_path, str):
+                    raise ValueError("file request path must be text or null")
+                listing = list_directory(requested_path)
+            except (OSError, ValueError) as error:
+                return json_response(
+                    {"error": "file-request", "message": str(error)},
+                    status=400,
+                ).with_security_headers()
+            return json_response(directory_data(listing)).with_security_headers()
         if method == "POST" and path.startswith("/api/jobs/") and path.endswith(
             "/cancel"
         ):
