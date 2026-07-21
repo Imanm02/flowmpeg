@@ -25,6 +25,7 @@ flowmpeg examples --search subtitle
 |---|---|---|
 | Install FFmpeg or use custom paths | [Installation](installation.md) | Platform commands, setup states, CI checks |
 | Use forms and local file browsing | [Local browser UI](ui.md) | Search, previews, jobs, presets, keyboard controls |
+| Follow UI recipes by result | [UI recipe book](ui-recipes.md) | Inputs, outputs, commands, and why each job helps |
 | Run a one-line terminal edit | [Command guide](cli.md) | Every editing command, aliases, controls |
 | Read the full command matrix | [Generated command reference](command-reference.md) | Aliases, tags, data kinds, doctor groups |
 | Call one Python function | [Shortcut guide](shortcuts.md) | Copyable plan builders and arguments |
