@@ -830,8 +830,7 @@ def test_shrink_video_matches_tiny_phone_export_shape() -> None:
     )
 
     assert plan.filter_graph() == (
-        "[0:v:0]scale=w=-2:h=trunc(min(ih\\,720)/2)*2[v0];"
-        "[v0]fps=fps=30[v1]"
+        "[0:v:0]scale=w=-2:h=trunc(min(ih\\,720)/2)*2[v0];[v0]fps=fps=30[v1]"
     )
     pairs = tuple(zip(plan.raw_argv(), plan.raw_argv()[1:], strict=False))
     assert ("-c:v", "libx265") in pairs
