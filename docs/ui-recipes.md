@@ -90,3 +90,16 @@ Output: a smaller MP4 whose width is 1280 pixels while the height follows the
 source aspect ratio.
 
 Why I use it: I can make a review copy without typing filter syntax.
+
+### Compress a delivery copy
+
+Input: `master.mov`.
+
+```console
+flowmpeg compress master.mov --crf 24 --width 1280 -o delivery.mp4
+```
+
+Output: an H.264 MP4 with a smaller review size and AAC audio.
+
+Why I use it: the CRF and width controls are easier to compare in a form than
+inside a long command line.
