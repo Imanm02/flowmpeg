@@ -272,3 +272,17 @@ flowmpeg thumb video.mp4 --at 12 -o moment.jpg
 Output: one JPG image from the selected timestamp.
 
 Why I use it: I can pick a review frame without typing a seek command.
+
+### Extract review frames
+
+Input: `video.mp4`.
+
+```console
+flowmpeg frames video.mp4 --interval 5 -o review-frames
+```
+
+Output: a marked folder containing numbered image files sampled every 5
+seconds.
+
+Why I use it: the UI makes the output folder explicit, which matters because
+this command creates several files.
