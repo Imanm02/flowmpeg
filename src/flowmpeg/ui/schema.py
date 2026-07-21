@@ -57,4 +57,18 @@ class UiField:
             raise ValueError("field choices must be unique")
 
 
-__all__ = ["FieldKind", "FieldValue", "PathRole", "UiField"]
+@dataclass(frozen=True, slots=True)
+class UiCommand:
+    """One terminal command presented as a browser form."""
+
+    name: str
+    category: str
+    summary: str
+    aliases: tuple[str, ...] = ()
+    tags: tuple[str, ...] = ()
+    input_kind: str = "media"
+    output_kind: str = "media"
+    fields: tuple[UiField, ...] = ()
+
+
+__all__ = ["FieldKind", "FieldValue", "PathRole", "UiCommand", "UiField"]

@@ -1,6 +1,6 @@
 import pytest
 
-from flowmpeg.ui.schema import FieldKind, PathRole, UiField
+from flowmpeg.ui.schema import FieldKind, PathRole, UiCommand, UiField
 
 
 def test_field_kinds_have_stable_json_values() -> None:
@@ -61,3 +61,17 @@ def test_ui_field_rejects_duplicate_choices() -> None:
             kind=FieldKind.CHOICE,
             choices=("aac", "aac"),
         )
+
+
+def test_ui_command_keeps_discovery_metadata() -> None:
+    command = UiCommand(
+        name="trim",
+        category="video",
+        summary="Cut an exact time range",
+        aliases=("cut",),
+        tags=("creator",),
+    )
+
+    assert command.name == "trim"
+    assert command.aliases == ("cut",)
+    assert command.tags == ("creator",)
