@@ -143,6 +143,30 @@ only a discussion or test placeholder.
 - [x] Add exact-duration media looping with silent input fallback.
 - [x] Add pitch-preserving audio tempo changes.
 
+## Local browser interface
+
+- [x] Add `flowmpeg ui` with `app` and `gui` aliases.
+- [x] Generate browser forms from the public command parser and catalog.
+- [x] Cover every canonical command in the generated form schema.
+- [x] Compile submitted fields into argument tuples without a shell.
+- [x] Preview quoted one-line commands without starting a process.
+- [x] Bind the server only to IPv4 or IPv6 loopback addresses.
+- [x] Require a random launch token for state-changing requests.
+- [x] Bound request bodies and retained process output.
+- [x] List local path metadata without serving file contents.
+- [x] Support file, folder, multi-file, and output path roles.
+- [x] Restrict new folders to direct children of the displayed folder.
+- [x] Queue local jobs and report stable job states.
+- [x] Cancel queued jobs and running process trees.
+- [x] Confirm overwrite and package installation actions.
+- [x] Store named presets and favorites in browser-local storage.
+- [x] Add command search, category filters, and quick-start tasks.
+- [x] Add light, dark, and system theme choices.
+- [x] Add keyboard controls and reduced-motion styling.
+- [x] Package HTML, CSS, and JavaScript in the Python wheel.
+- [x] Add source-backed UI form and UI test counts.
+- [x] Exercise setup checks through a real browser and local server.
+
 ## Current limits
 
 - Shortcuts select explicit first streams unless a track option says otherwise.
@@ -160,6 +184,11 @@ only a discussion or test placeholder.
   future multi-file outputs need the same contract before becoming shortcuts.
 - Native batches run one FFmpeg process at a time. They do not schedule several
   encoders in parallel. Completed final outputs remain after a later failure.
+- The browser UI is a local session. Job cards do not survive server shutdown.
+- UI favorites and presets stay in one browser profile. There is no preset
+  import or export file yet.
+- The path picker is an in-page local browser, not an operating-system file
+  dialog.
 
 ## Next work
 
