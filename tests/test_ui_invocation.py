@@ -1,6 +1,6 @@
 import pytest
 
-from flowmpeg.ui.invocation import UiInvocation, UiValue
+from flowmpeg.ui.invocation import UiInvocation, UiValue, parse_invocation
 
 
 def test_ui_value_keeps_scalar_and_multiple_values() -> None:
@@ -34,3 +34,28 @@ def test_ui_invocation_rejects_duplicate_values() -> None:
             command="trim",
             values=(UiValue("start", 2), UiValue("start", 5)),
         )
+
+
+def test_parse_ui_invocation_converts_text_lists_to_tuples() -> None:
+    invocation = parse_invocation(
+        {
+            "command": "join-matching",
+            "values": {"sources": ["one.mp4", "two.mp4"]},
+        }
+    )
+
+    assert invocation.value("sources") == ("one.mp4", "two.mp4")
+
+
+@pytest.mark.parametrize(
+    "data",
+    [
+        [],
+        {"command": 3, "values": {}},
+        {"command": "trim", "values": []},
+        {"command": "trim", "values": {"start": {"bad": True}}},
+    ],
+)
+def test_parse_ui_invocation_rejects_invalid_json_shapes(data: object) -> None:
+    with pytest.raises(ValueError, match="submission|submitted"):
+        parse_invocation(data)

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TypeAlias
+from typing import Any, TypeAlias
 
 SubmittedValue: TypeAlias = str | int | float | bool | None | tuple[str, ...]
 
@@ -44,4 +44,29 @@ class UiInvocation:
         return None if item is None else item.value
 
 
-__all__ = ["SubmittedValue", "UiInvocation", "UiValue"]
+def parse_invocation(data: object) -> UiInvocation:
+    """Parse a decoded JSON command submission."""
+
+    if not isinstance(data, dict):
+        raise ValueError("submission must be a JSON object")
+    command = data.get("command")
+    raw_values = data.get("values", {})
+    if not isinstance(command, str):
+        raise ValueError("submission command must be text")
+    if not isinstance(raw_values, dict):
+        raise ValueError("submission values must be an object")
+    values = tuple(
+        UiValue(str(name), _parse_value(value)) for name, value in raw_values.items()
+    )
+    return UiInvocation(command=command, values=values)
+
+
+def _parse_value(value: Any) -> SubmittedValue:
+    if value is None or isinstance(value, (str, int, float, bool)):
+        return value
+    if isinstance(value, list) and all(isinstance(item, str) for item in value):
+        return tuple(value)
+    raise ValueError("submitted values must be scalar or text lists")
+
+
+__all__ = ["SubmittedValue", "UiInvocation", "UiValue", "parse_invocation"]
