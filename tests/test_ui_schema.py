@@ -146,3 +146,25 @@ def test_ui_schema_finds_commands_by_name_or_alias() -> None:
     assert schema.command("trim") is command
     assert schema.command("cut") is command
     assert schema.command("missing") is None
+
+
+def test_ui_schema_rejects_alias_collisions() -> None:
+    first = UiCommand(
+        name="trim",
+        category="video",
+        summary="Cut video",
+        aliases=("cut",),
+    )
+    second = UiCommand(
+        name="cut-audio",
+        category="audio",
+        summary="Cut audio",
+        aliases=("cut",),
+    )
+
+    with pytest.raises(ValueError, match="names and aliases"):
+        UiSchema(
+            version=1,
+            categories=("video", "audio"),
+            commands=(first, second),
+        )

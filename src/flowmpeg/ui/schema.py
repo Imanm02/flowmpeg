@@ -103,6 +103,13 @@ class UiSchema:
         names = [command.name for command in self.commands]
         if len(names) != len(set(names)):
             raise ValueError("schema command names must be unique")
+        all_names = [
+            name
+            for command in self.commands
+            for name in (command.name, *command.aliases)
+        ]
+        if len(all_names) != len(set(all_names)):
+            raise ValueError("schema command names and aliases must be unique")
         unknown = {
             command.category
             for command in self.commands
