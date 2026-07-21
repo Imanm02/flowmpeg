@@ -67,6 +67,8 @@ CrossfadeCurve = Literal["tri", "qsin", "exp"]
 AudioCodec = Literal["mp3", "aac", "opus", "wav", "flac", "copy"]
 AudioLayout = Literal["mono", "stereo"]
 AudioReplacementCodec = Literal["aac", "copy"]
+ShrinkAudioCodec = Literal["aac", "opus"]
+ShrinkVideoCodec = Literal["h264", "hevc"]
 ReplacementDuration = Literal["video", "shortest"]
 NamedPosition = Literal[
     "top-left",
@@ -115,6 +117,8 @@ __all__ = [
     "NamedPosition",
     "Pathish",
     "ReplacementDuration",
+    "ShrinkAudioCodec",
+    "ShrinkVideoCodec",
     "SocialFill",
     "SocialTarget",
     "SpectrumColor",
@@ -172,6 +176,7 @@ __all__ = [
     "set_frame_rate",
     "set_audio_volume",
     "sharpen",
+    "shrink_video",
     "social_video",
     "spectrum_image",
     "still_image_video",
@@ -379,6 +384,57 @@ def compress_video(
             has_audio=clip.audio is not None,
             crf=crf,
             encoder_preset=encoder_preset,
+            audio_bitrate=audio_bitrate,
+        ),
+    )
+    return _set_overwrite(plan, overwrite)
+
+
+def shrink_video(
+    source: Pathish,
+    to: Pathish,
+    *,
+    codec: ShrinkVideoCodec = "hevc",
+    crf: int = 28,
+    encoder_preset: EncoderPreset = "medium",
+    max_width: int | None = None,
+    max_height: int | None = 720,
+    fps: int | None = 30,
+    include_audio: bool = True,
+    audio_codec: ShrinkAudioCodec = "aac",
+    audio_bitrate: str = "96k",
+    overwrite: bool = False,
+) -> Plan:
+    """Create a small MP4 with explicit scale, frame rate, and codec controls."""
+
+    if codec not in {"h264", "hevc"}:
+        raise GraphError(f"Unknown shrink video codec: {codec}")
+    if audio_codec not in {"aac", "opus"}:
+        raise GraphError(f"Unknown shrink audio codec: {audio_codec}")
+    if isinstance(crf, bool) or not isinstance(crf, int) or not 0 <= crf <= 51:
+        raise GraphError("Shrink CRF must be an integer between 0 and 51")
+    _validate_encoder_preset(encoder_preset, codec=codec.upper())
+    clip = _media_with_optional_audio(source, include_audio)
+    if clip.audio is not None:
+        _validate_bitrate(audio_bitrate)
+    video = _shrink_video_stream(
+        _require_video(clip),
+        max_width=max_width,
+        max_height=max_height,
+        fps=fps,
+    )
+    _require_suffix(to, frozenset({".mp4"}), "Shrunk video output")
+    _validate_paths((source,), to)
+    plan = output(
+        video,
+        *(stream for stream in (clip.audio,) if stream is not None),
+        to=to,
+        args=_shrink_video_args(
+            codec=codec,
+            crf=crf,
+            encoder_preset=encoder_preset,
+            has_audio=clip.audio is not None,
+            audio_codec=audio_codec,
             audio_bitrate=audio_bitrate,
         ),
     )
@@ -2612,6 +2668,106 @@ def _web_args(
     if has_audio:
         return (*args, "-c:a", "aac", "-b:a", audio_bitrate)
     return args
+
+
+def _shrink_video_stream(
+    video: VideoStream,
+    *,
+    max_width: int | None,
+    max_height: int | None,
+    fps: int | None,
+) -> VideoStream:
+    if max_width is not None:
+        _even_positive_integer("max_width", max_width)
+    if max_height is not None:
+        _even_positive_integer("max_height", max_height)
+    if fps is not None:
+        _bounded_integer("fps", fps, 1, 120)
+    if max_width is not None and max_height is not None:
+        video = video.filter(
+            "scale",
+            w=max_width,
+            h=max_height,
+            force_original_aspect_ratio="decrease",
+            force_divisible_by=2,
+        )
+    elif max_width is not None:
+        video = video.filter(
+            "scale",
+            w=expr(f"trunc(min(iw,{max_width})/2)*2"),
+            h=-2,
+        )
+    elif max_height is not None:
+        video = video.filter(
+            "scale",
+            w=-2,
+            h=expr(f"trunc(min(ih,{max_height})/2)*2"),
+        )
+    else:
+        video = video.filter(
+            "scale",
+            w=expr("trunc(iw/2)*2"),
+            h=expr("trunc(ih/2)*2"),
+        )
+    if fps is not None:
+        video = video.filter("fps", fps=fps)
+    return video
+
+
+def _shrink_video_args(
+    *,
+    codec: ShrinkVideoCodec,
+    crf: int,
+    encoder_preset: EncoderPreset,
+    has_audio: bool,
+    audio_codec: ShrinkAudioCodec,
+    audio_bitrate: str,
+) -> tuple[str, ...]:
+    if codec == "h264":
+        args = (
+            "-c:v",
+            "libx264",
+            "-crf",
+            str(crf),
+            "-preset",
+            encoder_preset,
+            "-pix_fmt",
+            "yuv420p",
+            "-movflags",
+            "+faststart",
+            "-max_muxing_queue_size",
+            "1024",
+        )
+    else:
+        args = (
+            "-c:v",
+            "libx265",
+            "-crf",
+            str(crf),
+            "-preset",
+            encoder_preset,
+            "-pix_fmt",
+            "yuv420p",
+            "-tag:v",
+            "hvc1",
+            "-movflags",
+            "+faststart",
+            "-max_muxing_queue_size",
+            "1024",
+        )
+    if not has_audio:
+        return args
+    if audio_codec == "aac":
+        return (*args, "-c:a", "aac", "-b:a", audio_bitrate)
+    return (
+        *args,
+        "-c:a",
+        "libopus",
+        "-b:a",
+        audio_bitrate,
+        "-strict",
+        "experimental",
+    )
 
 
 def _validate_encoder_preset(

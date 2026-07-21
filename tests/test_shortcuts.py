@@ -25,6 +25,8 @@ def test_shortcuts_namespace_is_public() -> None:
         "NamedPosition",
         "Pathish",
         "ReplacementDuration",
+        "ShrinkAudioCodec",
+        "ShrinkVideoCodec",
         "SocialFill",
         "SocialTarget",
         "SpectrumColor",
@@ -82,6 +84,7 @@ def test_shortcuts_namespace_is_public() -> None:
         "set_audio_volume",
         "set_frame_rate",
         "sharpen",
+        "shrink_video",
         "social_video",
         "spectrum_image",
         "still_image_video",
@@ -814,6 +817,73 @@ def test_compress_video_ignores_bitrate_without_audio() -> None:
     assert "-b:a" not in plan.raw_argv()
 
 
+def test_shrink_video_matches_tiny_phone_export_shape() -> None:
+    plan = shortcuts.shrink_video(
+        "IMG_9357.MOV",
+        "IMG_9357.mp4",
+        codec="hevc",
+        max_height=720,
+        fps=30,
+        crf=28,
+        audio_codec="opus",
+        audio_bitrate="32k",
+    )
+
+    assert plan.filter_graph() == (
+        "[0:v:0]scale=w=-2:h=trunc(min(ih\\,720)/2)*2[v0];"
+        "[v0]fps=fps=30[v1]"
+    )
+    pairs = tuple(zip(plan.raw_argv(), plan.raw_argv()[1:], strict=False))
+    assert ("-c:v", "libx265") in pairs
+    assert ("-crf", "28") in pairs
+    assert ("-c:a", "libopus") in pairs
+    assert ("-b:a", "32k") in pairs
+    assert ("-max_muxing_queue_size", "1024") in pairs
+
+
+def test_shrink_video_defaults_to_compatible_audio() -> None:
+    plan = shortcuts.shrink_video("source.mov", "small.mp4")
+    pairs = tuple(zip(plan.raw_argv(), plan.raw_argv()[1:], strict=False))
+
+    assert ("-c:v", "libx265") in pairs
+    assert ("-tag:v", "hvc1") in pairs
+    assert ("-c:a", "aac") in pairs
+    assert ("-b:a", "96k") in pairs
+
+
+def test_shrink_video_supports_h264_and_bounded_frames() -> None:
+    plan = shortcuts.shrink_video(
+        "source.mov",
+        "small.mp4",
+        codec="h264",
+        max_width=1280,
+        max_height=720,
+        fps=None,
+        crf=27,
+        encoder_preset="slow",
+    )
+
+    assert plan.filter_graph() == (
+        "[0:v:0]scale=w=1280:h=720:"
+        "force_original_aspect_ratio=decrease:force_divisible_by=2[v0]"
+    )
+    pairs = tuple(zip(plan.raw_argv(), plan.raw_argv()[1:], strict=False))
+    assert ("-c:v", "libx264") in pairs
+    assert ("-preset", "slow") in pairs
+    assert "fps=fps=30" not in (plan.filter_graph() or "")
+
+
+def test_shrink_video_ignores_audio_bitrate_without_audio() -> None:
+    plan = shortcuts.shrink_video(
+        "silent.mov",
+        "small.mp4",
+        include_audio=False,
+        audio_bitrate="not-used",
+    )
+
+    assert "-c:a" not in plan.raw_argv()
+
+
 def test_reframe_and_social_targets_build_expected_frames() -> None:
     reframed = shortcuts.reframe(
         "wide.mp4",
@@ -1272,6 +1342,20 @@ def test_shortcuts_accept_path_objects_and_overwrite() -> None:
             "in.mov",
             "out.mp4",
             encoder_preset=cast(shortcuts.EncoderPreset, "quick"),
+        ),
+        lambda: shortcuts.shrink_video(
+            "in.mov",
+            "out.mp4",
+            codec=cast(shortcuts.ShrinkVideoCodec, "vp9"),
+        ),
+        lambda: shortcuts.shrink_video("in.mov", "out.webm"),
+        lambda: shortcuts.shrink_video("in.mov", "out.mp4", crf=52),
+        lambda: shortcuts.shrink_video("in.mov", "out.mp4", max_height=721),
+        lambda: shortcuts.shrink_video("in.mov", "out.mp4", fps=0),
+        lambda: shortcuts.shrink_video(
+            "in.mov",
+            "out.mp4",
+            audio_codec=cast(shortcuts.ShrinkAudioCodec, "copy"),
         ),
         lambda: shortcuts.social_video(
             "in.mp4",
