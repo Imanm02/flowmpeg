@@ -41,8 +41,26 @@ body {
 
 button,
 input,
-select {
+select,
+textarea {
   font: inherit;
+}
+
+textarea {
+  resize: vertical;
+}
+
+.clear-field {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  color: var(--text-soft);
+  font-size: 0.75rem;
+}
+
+.clear-field input {
+  width: auto;
+  min-height: auto;
 }
 
 button,

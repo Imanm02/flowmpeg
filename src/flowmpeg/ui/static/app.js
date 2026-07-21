@@ -25,6 +25,10 @@ const elements = {
   commandSummary: document.querySelector("#command-summary"),
   commandFacts: document.querySelector("#command-facts"),
   commandPreview: document.querySelector("#command-preview"),
+  form: document.querySelector("#command-form"),
+  basicFields: document.querySelector("#basic-fields"),
+  advancedFields: document.querySelector("#advanced-fields"),
+  advancedSection: document.querySelector("#advanced-section"),
 };
 
 async function api(path, options = {}) {
@@ -102,9 +106,143 @@ function selectCommand(command) {
       factElement(`Shortcuts: ${command.aliases.join(", ")}`),
     );
   }
+  renderForm(command);
   history.replaceState(null, "", `#command=${encodeURIComponent(command.name)}`);
   renderNavigation();
   elements.commandPanel.scrollIntoView({behavior: "smooth", block: "start"});
+}
+
+function renderForm(command) {
+  elements.form.reset();
+  elements.basicFields.replaceChildren();
+  elements.advancedFields.replaceChildren();
+  for (const field of command.fields) {
+    const control = renderField(field);
+    const target = field.advanced
+      ? elements.advancedFields
+      : elements.basicFields;
+    target.append(control);
+  }
+  elements.advancedSection.hidden = !command.fields.some(
+    (field) => field.advanced,
+  );
+  elements.advancedSection.open = false;
+}
+
+function renderField(field) {
+  if (field.kind === "boolean") {
+    return renderBooleanField(field);
+  }
+  const wrapper = document.createElement("label");
+  wrapper.className = "field";
+  wrapper.classList.toggle("wide", field.multiple || field.pathRole !== "none");
+  wrapper.htmlFor = `field-${field.name}`;
+
+  const label = document.createElement("span");
+  label.className = "field-label";
+  label.textContent = field.label;
+  if (field.required) {
+    const required = document.createElement("span");
+    required.className = "required-mark";
+    required.textContent = " required";
+    label.append(required);
+  }
+
+  const control = createFieldControl(field);
+  control.id = `field-${field.name}`;
+  control.name = field.name;
+  control.required = field.required;
+  control.setAttribute("aria-describedby", `help-${field.name}`);
+
+  const help = document.createElement("span");
+  help.className = "field-help";
+  help.id = `help-${field.name}`;
+  help.textContent = field.help || pathHelp(field.pathRole);
+  wrapper.append(label, control, help);
+
+  if (field.clearFlags.length) {
+    const clearLabel = document.createElement("label");
+    clearLabel.className = "clear-field";
+    const clear = document.createElement("input");
+    clear.type = "checkbox";
+    clear.dataset.clearFor = field.name;
+    clear.addEventListener("change", () => {
+      control.disabled = clear.checked;
+    });
+    const text = document.createElement("span");
+    text.textContent = `Use ${field.clearFlags[0]} instead`;
+    clearLabel.append(clear, text);
+    wrapper.append(clearLabel);
+  }
+  return wrapper;
+}
+
+function renderBooleanField(field) {
+  const label = document.createElement("label");
+  label.className = "boolean-field";
+  const input = document.createElement("input");
+  input.type = "checkbox";
+  input.name = field.name;
+  input.checked = Boolean(field.default);
+  const text = document.createElement("span");
+  const title = document.createElement("strong");
+  title.textContent = field.label;
+  const help = document.createElement("small");
+  help.className = "field-help";
+  help.textContent = field.help;
+  text.append(title, help);
+  label.append(input, text);
+  return label;
+}
+
+function createFieldControl(field) {
+  if (field.multiple) {
+    const textarea = document.createElement("textarea");
+    textarea.rows = 3;
+    textarea.placeholder = "One path per line";
+    return textarea;
+  }
+  if (field.kind === "choice") {
+    const select = document.createElement("select");
+    if (!field.required && field.default === null) {
+      select.append(new Option("Use command default", ""));
+    }
+    for (const choice of field.choices) {
+      const option = new Option(choice, choice);
+      option.selected = String(field.default) === choice;
+      select.append(option);
+    }
+    return select;
+  }
+  const input = document.createElement("input");
+  input.type = field.kind === "number" ? "number" : "text";
+  if (field.kind === "number") {
+    input.step = field.integer ? "1" : "any";
+    if (field.minimum !== null) {
+      input.min = String(field.minimum);
+      input.dataset.exclusiveMinimum = String(field.exclusiveMinimum);
+    }
+  }
+  if (field.default !== null) {
+    input.value = String(field.default);
+  }
+  input.placeholder = pathPlaceholder(field.pathRole);
+  return input;
+}
+
+function pathPlaceholder(role) {
+  const placeholders = {
+    "input-file": "Choose or enter an input path",
+    "input-files": "Enter one input path per line",
+    "input-directory": "Choose an input folder",
+    "output-file": "Choose an output path",
+    "output-directory": "Choose an output folder",
+  };
+  return placeholders[role] || "";
+}
+
+function pathHelp(role) {
+  return role === "none" ? "" : "This path stays on your computer.";
 }
 
 function factElement(text) {
