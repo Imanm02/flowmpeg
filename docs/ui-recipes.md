@@ -124,6 +124,20 @@ Use the Opus audio version when size matters more than player compatibility:
 flowmpeg shrink IMG_9357.MOV --audio-codec opus --audio-bitrate 32k -o IMG_9357-tiny.mp4
 ```
 
+### Shrink a folder of phone videos
+
+Input: a folder or quoted pattern such as `clips/*.MOV`.
+
+```console
+flowmpeg shrink-batch "clips/*.MOV" -o small-clips
+```
+
+Output: one small MP4 per source, named like `clip-small.mp4`.
+
+Why I use it: this keeps the safe batch behavior, output checks, dry-run
+preview, and JSON report while exposing the same size controls as the single
+file shrink form.
+
 ### Make a vertical social clip
 
 Input: `demo.mp4`.

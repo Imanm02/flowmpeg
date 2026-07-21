@@ -47,6 +47,24 @@ flowmpeg batch-transcode recordings -o converted
 flowmpeg batch-convert recordings -o converted
 ```
 
+Use `shrink-batch` when the same folder needs smaller HEVC MP4 files with
+size-reduction controls:
+
+```console
+flowmpeg shrink-batch "recordings/*.MOV" -o small-recordings
+flowmpeg shrink-batch recordings -o small-recordings --recursive
+```
+
+The default shrink batch output name adds `-small`, so `recording.mov` becomes
+`small-recordings/recording-small.mp4`. The same command accepts `--codec`,
+`--crf`, `--max-height`, `--fps`, `--audio-codec`, and `--audio-bitrate`:
+
+```console
+flowmpeg shrink-batch "recordings/*.MOV" --max-height 720 --fps 30 --crf 28 -o small-recordings
+flowmpeg shrink-batch "meetings/*.MOV" --audio-codec opus --audio-bitrate 32k -o small-meetings
+flowmpeg shrink-batch "client/*.MOV" --codec h264 --audio-codec aac --crf 27 -o client-small
+```
+
 Flowmpeg recognizes common local video suffixes including MP4, MOV, MKV,
 WebM, AVI, MPEG, MTS, and M2TS. An exact file path is accepted even when its
 suffix is outside that discovery list.

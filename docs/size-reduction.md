@@ -306,10 +306,71 @@ flowmpeg probe IMG_9357.mp4
 | Older devices | `flowmpeg shrink input.mov --codec h264 --audio-codec aac -o output.mp4` |
 | No audio | `flowmpeg shrink input.mov --no-audio -o output.mp4` |
 | Keep original size | `flowmpeg shrink input.mov --keep-size --keep-fps -o output.mp4` |
+| Shrink a folder | `flowmpeg shrink-batch "clips/*.MOV" -o small-clips` |
+| Shrink folders recursively | `flowmpeg shrink-batch clips -o small-clips --recursive` |
 
-## Batch ideas
+## Shrink many files
 
-For a small folder, run the command once per file. In PowerShell:
+Use `shrink-batch` when a folder or quoted pattern needs the same settings on
+every supported local video:
+
+```console
+flowmpeg shrink-batch "clips/*.MOV" -o small-clips
+```
+
+Expected output names use `-small` by default:
+
+| Source | Output |
+| --- | --- |
+| `IMG_9357.MOV` | `small-clips/IMG_9357-small.mp4` |
+| `screen.mov` | `small-clips/screen-small.mp4` |
+| `meeting.mkv` | `small-clips/meeting-small.mp4` |
+
+Preview every FFmpeg command without creating files:
+
+```console
+flowmpeg shrink-batch "clips/*.MOV" -o small-clips --dry-run
+flowmpeg shrink-batch "clips/*.MOV" -o small-clips --dry-run --json
+```
+
+Shrink every video under a folder:
+
+```console
+flowmpeg shrink-batch clips -o small-clips --recursive
+```
+
+Use tiny audio for speech-heavy folders:
+
+```console
+flowmpeg shrink-batch "meetings/*.MOV" --audio-codec opus --audio-bitrate 32k -o small-meetings
+```
+
+Use H.264 and AAC for the safest batch:
+
+```console
+flowmpeg shrink-batch "client/*.MOV" --codec h264 --audio-codec aac --crf 27 -o client-small
+```
+
+Use a higher quality archive batch:
+
+```console
+flowmpeg shrink-batch "camera/*.MOV" --max-height 1080 --crf 24 --audio-bitrate 128k -o camera-archive
+```
+
+Keep the original frame size and frame rate while changing codec:
+
+```console
+flowmpeg shrink-batch "masters/*.MOV" --keep-size --keep-fps --crf 24 -o masters-hevc
+```
+
+Let later files continue after one bad source:
+
+```console
+flowmpeg shrink-batch clips -o small-clips --continue-on-error
+```
+
+If you need a one-off command that `shrink-batch` does not expose yet,
+PowerShell can still call `shrink` once per file:
 
 ```powershell
 Get-ChildItem . -Filter *.MOV | ForEach-Object {
@@ -317,23 +378,13 @@ Get-ChildItem . -Filter *.MOV | ForEach-Object {
 }
 ```
 
-In Bash:
+And Bash can do the same:
 
 ```bash
 for file in *.MOV; do
   flowmpeg shrink "$file" -o "${file%.*}-small.mp4"
 done
 ```
-
-For a normal H.264 batch with existing Flowmpeg batch handling:
-
-```console
-flowmpeg batch "clips/*.MOV" --name-suffix=-small -o converted
-```
-
-The batch command uses the standard web MP4 path. Use the shell loops above
-when you specifically want the `shrink` command's HEVC, frame-rate, and
-audio-codec controls.
 
 ## Python shortcut
 

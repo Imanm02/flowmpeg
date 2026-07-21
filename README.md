@@ -114,6 +114,7 @@ flowmpeg webm input.mov --crf 30 -o delivery.webm
 flowmpeg hevc input.mov --crf 28 -o archive.mp4
 flowmpeg av1 input.mov --crf 35 --speed 8 -o delivery-av1.webm
 flowmpeg shrink IMG_9357.MOV --max-height 720 --fps 30 --crf 28 -o IMG_9357.mp4
+flowmpeg shrink-batch "recordings/*.MOV" -o small-recordings
 flowmpeg batch "recordings/*.mov" --name-suffix=-web -o converted
 flowmpeg frames input.mp4 --fps 2 --max-frames 20 -o review-frames
 flowmpeg hls input.mp4 --segment-duration 4 -o delivery-hls
@@ -139,7 +140,8 @@ The [command guide](docs/cli.md) covers the editing and inspection commands,
 their short forms, inputs, outputs, and exit codes.
 
 For large phone videos, the [size reduction guide](docs/size-reduction.md)
-shows HEVC, H.264, Opus, AAC, 720p, 1080p, and tiny-sharing recipes.
+shows HEVC, H.264, Opus, AAC, 720p, 1080p, folder batches, and tiny-sharing
+recipes.
 
 The module form runs the same interface:
 

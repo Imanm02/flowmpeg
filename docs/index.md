@@ -75,7 +75,7 @@ building one does not start FFmpeg.
 
 | Domain | Useful starting commands | Python area |
 |---|---|---|
-| Video delivery | `shrink`, `compress`, `resize`, `social`, `reframe` | `shrink_video`, `compress_video`, `resize`, `social_video` |
+| Video delivery | `shrink`, `shrink-batch`, `compress`, `resize`, `social`, `reframe` | `shrink_video`, `compress_video`, `resize`, `social_video` |
 | Timeline edits | `cut`, `speed`, `freeze`, `bounce` | `trim`, `change_speed`, `freeze_end` |
 | Audio | `audio`, `mix`, `voice`, `crossfade` | `extract_audio`, `mix_audio_files`, `podcast_voice` |
 | Composition | `pip`, `grid`, `mark`, `audiogram` | `picture_in_picture`, `grid`, `watermark` |

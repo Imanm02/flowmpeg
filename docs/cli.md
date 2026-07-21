@@ -114,6 +114,7 @@ The table below is a compact editing index for scanning this longer guide.
 | --- | --- | --- |
 | Convert to web MP4 | `transcode` | `convert` |
 | Convert a local video batch | `batch-transcode` | `batch`, `batch-convert` |
+| Shrink a local video batch | `batch-shrink` | `shrink-batch`, `shrink-folder`, `shrink-all` |
 | Convert to VP9 WebM | `transcode-webm` | `webm`, `vp9` |
 | Convert to HEVC MP4 | `transcode-hevc` | `hevc`, `h265` |
 | Convert to AV1 WebM | `transcode-av1` | `av1`, `svt-av1` |
@@ -234,6 +235,31 @@ Each source gets an H.264 and optional AAC MP4. `--timeout` limits each file.
 `--no-audio` skips the automatic audio check. The
 [batch guide](batch-jobs.md) lists result states, exit codes, cancellation, and
 Python job groups.
+
+### Shrink several local videos
+
+**Input:** a folder, file list, or quoted wildcard pattern.
+
+**Output:** small MP4 files in the output directory. Names use `-small` by
+default.
+
+```console
+flowmpeg shrink-batch "clips/*.MOV" -o small-clips
+```
+
+Use the same core controls as `shrink`:
+
+```console
+flowmpeg shrink-batch clips -o small-clips --recursive --max-height 720 --fps 30 --crf 28
+flowmpeg shrink-batch "meetings/*.MOV" --audio-codec opus --audio-bitrate 32k -o small-meetings
+flowmpeg shrink-batch "client/*.MOV" --codec h264 --audio-codec aac --crf 27 -o client-small
+```
+
+Dry-run the full batch before encoding:
+
+```console
+flowmpeg shrink-batch "clips/*.MOV" -o small-clips --dry-run --json
+```
 
 ### Convert to VP9 and Opus WebM
 
