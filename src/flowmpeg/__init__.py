@@ -16,6 +16,15 @@ from flowmpeg.audit import (
     MediaAudit,
     audit_media,
 )
+from flowmpeg.batch import (
+    BatchItemResult,
+    BatchJob,
+    BatchResult,
+    BatchStatus,
+    BatchWorkspace,
+    CancellationToken,
+    run_batch,
+)
 from flowmpeg.black import BlackInterval, BlackReport, detect_black
 from flowmpeg.clip import Clip, concat_clips, media, replace_audio
 from flowmpeg.comparison import (
@@ -100,12 +109,18 @@ __all__ = [
     "AuditFinding",
     "AuditConstraints",
     "AuditSummary",
+    "BatchItemResult",
+    "BatchJob",
+    "BatchResult",
+    "BatchStatus",
+    "BatchWorkspace",
     "BinaryNotFoundError",
     "BinaryUnusableError",
     "BlackInterval",
     "BlackReport",
     "Clip",
     "CompilationError",
+    "CancellationToken",
     "CropCandidate",
     "CropReport",
     "ExecutionError",
@@ -174,6 +189,7 @@ __all__ = [
     "probe_raw",
     "replace_audio",
     "rotate_video",
+    "run_batch",
     "run",
     "scale",
     "stack_video",
