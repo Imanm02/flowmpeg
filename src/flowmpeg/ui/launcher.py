@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from collections.abc import Callable
+import webbrowser
 
 from flowmpeg.ui.application import UiApplication
 from flowmpeg.ui.config import UiAddress, UiLaunchOptions
@@ -29,4 +31,13 @@ def prepare_ui(options: UiLaunchOptions) -> UiLaunch:
     return UiLaunch(server=server, address=server.bound_address)
 
 
-__all__ = ["UiLaunch", "prepare_ui"]
+def open_ui_browser(
+    launch: UiLaunch,
+    opener: Callable[[str], object] = webbrowser.open,
+) -> None:
+    """Open the exact bound address with the platform browser."""
+
+    opener(launch.address.url)
+
+
+__all__ = ["UiLaunch", "open_ui_browser", "prepare_ui"]
