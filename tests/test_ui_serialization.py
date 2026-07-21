@@ -1,10 +1,12 @@
 import json
 
+from flowmpeg.ui.jobs import JobStatus, UiJobSnapshot
 from flowmpeg.ui.preview import UiPreview
 from flowmpeg.ui.schema import FieldKind, PathRole, UiCommand, UiField, UiSchema
 from flowmpeg.ui.serialization import (
     command_data,
     field_data,
+    job_data,
     preview_data,
     schema_data,
     schema_json,
@@ -96,4 +98,28 @@ def test_preview_data_keeps_tokens_and_display_separate() -> None:
     assert preview_data(preview) == {
         "arguments": ["trim", "input file.mp4"],
         "display": "flowmpeg trim input.mp4",
+    }
+
+
+def test_job_data_uses_public_safe_snapshot_fields() -> None:
+    snapshot = UiJobSnapshot(
+        id="job-1",
+        display="flowmpeg errors",
+        status=JobStatus.SUCCEEDED,
+        created_at=1.0,
+        started_at=2.0,
+        finished_at=3.0,
+        returncode=0,
+        output="done",
+    )
+
+    assert job_data(snapshot) == {
+        "id": "job-1",
+        "display": "flowmpeg errors",
+        "status": "succeeded",
+        "createdAt": 1.0,
+        "startedAt": 2.0,
+        "finishedAt": 3.0,
+        "returncode": 0,
+        "output": "done",
     }

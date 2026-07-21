@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 from typing import Any
 
+from flowmpeg.ui.jobs import UiJobSnapshot
 from flowmpeg.ui.preview import UiPreview
 from flowmpeg.ui.schema import UiCommand, UiField, UiSchema
 from flowmpeg.ui.validation import UiValidationIssue
@@ -83,9 +84,25 @@ def preview_data(preview: UiPreview) -> dict[str, Any]:
     }
 
 
+def job_data(job: UiJobSnapshot) -> dict[str, Any]:
+    """Return safe public job state as JSON-compatible data."""
+
+    return {
+        "id": job.id,
+        "display": job.display,
+        "status": job.status.value,
+        "createdAt": job.created_at,
+        "startedAt": job.started_at,
+        "finishedAt": job.finished_at,
+        "returncode": job.returncode,
+        "output": job.output,
+    }
+
+
 __all__ = [
     "command_data",
     "field_data",
+    "job_data",
     "preview_data",
     "schema_data",
     "schema_json",
