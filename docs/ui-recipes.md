@@ -299,3 +299,16 @@ Output: one JPG contact sheet with sampled frames laid out in a grid.
 
 Why I use it: a single image is often faster to scan than scrubbing through the
 whole file.
+
+### Draw an audio waveform
+
+Input: `song.mp3`.
+
+```console
+flowmpeg waveform song.mp3 -o waveform.png
+```
+
+Output: a PNG waveform image for the audio.
+
+Why I use it: it gives a quick visual check of silence, loud sections, and
+rough pacing.
