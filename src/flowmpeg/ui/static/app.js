@@ -18,6 +18,13 @@ const elements = {
   categoryList: document.querySelector("#category-list"),
   commandList: document.querySelector("#command-list"),
   search: document.querySelector("#command-search"),
+  welcome: document.querySelector("#welcome-panel"),
+  commandPanel: document.querySelector("#command-panel"),
+  commandCategory: document.querySelector("#command-category"),
+  commandTitle: document.querySelector("#command-title"),
+  commandSummary: document.querySelector("#command-summary"),
+  commandFacts: document.querySelector("#command-facts"),
+  commandPreview: document.querySelector("#command-preview"),
 };
 
 async function api(path, options = {}) {
@@ -75,7 +82,36 @@ function categoryButton(value, label, count) {
 
 function selectCommand(command) {
   state.selectedCommand = command;
+  state.preview = null;
+  elements.welcome.hidden = true;
+  elements.commandPanel.hidden = false;
+  elements.commandCategory.textContent = command.category;
+  elements.commandTitle.textContent = command.name
+    .split("-")
+    .map((word) => word[0].toUpperCase() + word.slice(1))
+    .join(" ");
+  elements.commandSummary.textContent = command.summary;
+  elements.commandPreview.textContent =
+    "Fill the required fields to preview the command.";
+  elements.commandFacts.replaceChildren(
+    factElement(`Input: ${command.inputKind}`),
+    factElement(`Output: ${command.outputKind}`),
+  );
+  if (command.aliases.length) {
+    elements.commandFacts.append(
+      factElement(`Shortcuts: ${command.aliases.join(", ")}`),
+    );
+  }
+  history.replaceState(null, "", `#command=${encodeURIComponent(command.name)}`);
   renderNavigation();
+  elements.commandPanel.scrollIntoView({behavior: "smooth", block: "start"});
+}
+
+function factElement(text) {
+  const fact = document.createElement("span");
+  fact.className = "fact";
+  fact.textContent = text;
+  return fact;
 }
 
 function renderNavigation() {
@@ -140,6 +176,16 @@ async function boot() {
     elements.stats[1].textContent = String(schema.categories.length);
     elements.stats[2].textContent = "Loopback only";
     renderNavigation();
+    const selectedName = new URLSearchParams(location.hash.slice(1)).get(
+      "command",
+    );
+    const selected = schema.commands.find(
+      (command) =>
+        command.name === selectedName || command.aliases.includes(selectedName),
+    );
+    if (selected) {
+      selectCommand(selected);
+    }
   } catch (error) {
     elements.connection.textContent = "Connection failed";
     elements.connection.title = error.message;
