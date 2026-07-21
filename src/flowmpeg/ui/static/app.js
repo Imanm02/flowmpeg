@@ -33,6 +33,8 @@ const elements = {
   runButton: document.querySelector("#run-button"),
   copyCommand: document.querySelector("#copy-command"),
   formErrors: document.querySelector("#form-errors"),
+  themeSelect: document.querySelector("#theme-select"),
+  toastRegion: document.querySelector("#toast-region"),
 };
 
 async function api(path, options = {}) {
@@ -350,6 +352,45 @@ elements.form.addEventListener("input", () => {
 });
 elements.form.addEventListener("submit", (event) => {
   event.preventDefault();
+});
+
+function showToast(message) {
+  const toast = document.createElement("div");
+  toast.className = "toast";
+  toast.textContent = message;
+  elements.toastRegion.append(toast);
+  window.setTimeout(() => toast.remove(), 3500);
+}
+
+elements.copyCommand.addEventListener("click", async () => {
+  if (!state.preview) {
+    return;
+  }
+  try {
+    await navigator.clipboard.writeText(state.preview.display);
+    showToast("Command copied to the clipboard.");
+  } catch {
+    showToast("The browser could not copy the command.");
+  }
+});
+
+function applyTheme(theme) {
+  if (theme === "system") {
+    document.documentElement.removeAttribute("data-theme");
+  } else {
+    document.documentElement.dataset.theme = theme;
+  }
+}
+
+const savedTheme = localStorage.getItem("flowmpeg-theme");
+if (["system", "light", "dark"].includes(savedTheme)) {
+  elements.themeSelect.value = savedTheme;
+}
+applyTheme(elements.themeSelect.value);
+elements.themeSelect.addEventListener("change", () => {
+  const theme = elements.themeSelect.value;
+  localStorage.setItem("flowmpeg-theme", theme);
+  applyTheme(theme);
 });
 
 function factElement(text) {
