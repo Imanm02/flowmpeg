@@ -23,3 +23,18 @@ def test_ui_job_output_keeps_only_the_newest_text() -> None:
 def test_ui_job_output_requires_a_positive_limit() -> None:
     with pytest.raises(ValueError, match="must be positive"):
         BoundedOutput(limit=0)
+
+
+def test_ui_job_snapshot_excludes_process_arguments() -> None:
+    job = UiJob(
+        "job-1",
+        ("probe", "https://example.com/v.mp4?token=private"),
+        "flowmpeg probe https://example.com/v.mp4?token=<redacted>",
+    )
+
+    snapshot = job.snapshot()
+
+    assert snapshot.id == "job-1"
+    assert "private" not in snapshot.display
+    assert not hasattr(snapshot, "arguments")
+    assert not hasattr(snapshot, "process")

@@ -59,5 +59,40 @@ class UiJob:
     process: subprocess.Popen[str] | None = field(default=None, repr=False)
     lock: threading.RLock = field(default_factory=threading.RLock, repr=False)
 
+    def snapshot(self) -> UiJobSnapshot:
+        """Copy public state while holding the job lock."""
 
-__all__ = ["BoundedOutput", "JobStatus", "MAX_JOB_OUTPUT", "UiJob"]
+        with self.lock:
+            return UiJobSnapshot(
+                id=self.id,
+                display=self.display,
+                status=self.status,
+                created_at=self.created_at,
+                started_at=self.started_at,
+                finished_at=self.finished_at,
+                returncode=self.returncode,
+                output=self.output,
+            )
+
+
+@dataclass(frozen=True, slots=True)
+class UiJobSnapshot:
+    """Public state returned to browser polling requests."""
+
+    id: str
+    display: str
+    status: JobStatus
+    created_at: float
+    started_at: float | None
+    finished_at: float | None
+    returncode: int | None
+    output: str
+
+
+__all__ = [
+    "BoundedOutput",
+    "JobStatus",
+    "MAX_JOB_OUTPUT",
+    "UiJob",
+    "UiJobSnapshot",
+]
