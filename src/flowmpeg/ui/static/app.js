@@ -10,6 +10,7 @@ const state = {
   selectedCommand: null,
   query: "",
   preview: null,
+  favorites: new Set(),
 };
 
 const elements = {
@@ -35,6 +36,7 @@ const elements = {
   formErrors: document.querySelector("#form-errors"),
   themeSelect: document.querySelector("#theme-select"),
   toastRegion: document.querySelector("#toast-region"),
+  favoriteButton: document.querySelector("#favorite-button"),
 };
 
 async function api(path, options = {}) {
@@ -70,6 +72,11 @@ function visibleCommands() {
       .join(" ")
       .toLowerCase();
     return matchesCategory && (!query || text.includes(query));
+  }).sort((first, second) => {
+    const favoriteDifference =
+      Number(state.favorites.has(second.name)) -
+      Number(state.favorites.has(first.name));
+    return favoriteDifference || first.name.localeCompare(second.name);
   });
 }
 
@@ -112,11 +119,53 @@ function selectCommand(command) {
       factElement(`Shortcuts: ${command.aliases.join(", ")}`),
     );
   }
+  updateFavoriteButton();
   renderForm(command);
   history.replaceState(null, "", `#command=${encodeURIComponent(command.name)}`);
   renderNavigation();
   elements.commandPanel.scrollIntoView({behavior: "smooth", block: "start"});
 }
+
+function loadFavorites() {
+  try {
+    const values = JSON.parse(localStorage.getItem("flowmpeg-favorites") || "[]");
+    if (Array.isArray(values)) {
+      state.favorites = new Set(
+        values.filter((value) => typeof value === "string"),
+      );
+    }
+  } catch {
+    state.favorites = new Set();
+  }
+}
+
+function updateFavoriteButton() {
+  const saved = state.favorites.has(state.selectedCommand?.name);
+  elements.favoriteButton.textContent = saved
+    ? "Remove favorite"
+    : "Save favorite";
+  elements.favoriteButton.setAttribute("aria-pressed", String(saved));
+}
+
+elements.favoriteButton.addEventListener("click", () => {
+  if (!state.selectedCommand) {
+    return;
+  }
+  const name = state.selectedCommand.name;
+  if (state.favorites.has(name)) {
+    state.favorites.delete(name);
+    showToast("Favorite removed.");
+  } else {
+    state.favorites.add(name);
+    showToast("Favorite saved on this computer.");
+  }
+  localStorage.setItem(
+    "flowmpeg-favorites",
+    JSON.stringify([...state.favorites].sort()),
+  );
+  updateFavoriteButton();
+  renderNavigation();
+});
 
 function renderForm(command) {
   elements.form.reset();
@@ -451,6 +500,7 @@ elements.search.addEventListener("input", (event) => {
 
 async function boot() {
   try {
+    loadFavorites();
     const [health, schema] = await Promise.all([
       api("/api/health"),
       api("/api/schema"),
