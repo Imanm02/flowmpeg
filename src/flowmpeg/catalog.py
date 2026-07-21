@@ -679,6 +679,14 @@ _BASE_COMMAND_CATALOG = (
         output_kind="report",
     ),
     CommandSpec(
+        "ui",
+        "help",
+        "Open the local browser interface",
+        ("app", "gui"),
+        input_kind="none",
+        output_kind="local application",
+    ),
+    CommandSpec(
         "errors",
         "help",
         "List stable error identifiers",

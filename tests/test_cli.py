@@ -50,7 +50,34 @@ from flowmpeg.quality import (
 from flowmpeg.runner import RunResult
 from flowmpeg.scenes import SceneChange, SceneReport
 from flowmpeg.silence import SilenceInterval, SilenceReport
+from flowmpeg.ui.config import UiAddress, UiLaunchOptions
 from flowmpeg.workflows import LoudnessWorkflow, LoudnessWorkflowResult
+
+
+def test_ui_command_starts_the_local_application(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    launches: list[UiLaunchOptions] = []
+
+    def record(options: UiLaunchOptions, output: TextIO) -> None:
+        del output
+        launches.append(options)
+
+    monkeypatch.setattr("flowmpeg.ui.launcher.serve_ui", record)
+
+    assert cli.main(["ui", "--no-browser", "--port", "8123"]) == 0
+    assert launches == [
+        UiLaunchOptions(
+            address=UiAddress(port=8123),
+            open_browser=False,
+        )
+    ]
+
+
+@pytest.mark.parametrize("port", ["-1", "65536"])
+def test_ui_command_rejects_invalid_ports(port: str) -> None:
+    with pytest.raises(SystemExit):
+        cli.main(["ui", "--port", port])
 
 
 @pytest.mark.parametrize(

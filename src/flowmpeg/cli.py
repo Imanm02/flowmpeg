@@ -633,6 +633,7 @@ def build_parser() -> argparse.ArgumentParser:
     _add_crop_detection(commands)
     _add_doctor(commands)
     _add_setup(commands)
+    _add_ui(commands)
     _add_errors(commands)
     _add_explain_error(commands)
     _add_examples(commands)
@@ -2775,6 +2776,36 @@ def _add_errors(commands: argparse._SubParsersAction[argparse.ArgumentParser]) -
     parser.set_defaults(handler=_run_errors)
 
 
+def _add_ui(commands: argparse._SubParsersAction[argparse.ArgumentParser]) -> None:
+    parser = commands.add_parser(
+        "ui",
+        aliases=["app", "gui"],
+        help="Open the local browser interface.",
+        description="Open the local browser interface.",
+        allow_abbrev=False,
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+    parser.add_argument(
+        "--host",
+        choices=("127.0.0.1", "localhost", "::1"),
+        default="127.0.0.1",
+        help="Loopback address for the local server",
+    )
+    parser.add_argument(
+        "--port",
+        type=_port_number,
+        default=0,
+        help="Local port, or 0 to choose an available port",
+    )
+    parser.add_argument(
+        "--no-browser",
+        action="store_false",
+        dest="open_browser",
+        help="Print the address without opening a browser",
+    )
+    parser.set_defaults(handler=_run_ui)
+
+
 def _add_explain_error(
     commands: argparse._SubParsersAction[argparse.ArgumentParser],
 ) -> None:
@@ -4661,6 +4692,28 @@ def _stream_counts(summary: MediaSummary) -> str:
         f"{summary.video_streams} video, {summary.audio_streams} audio, "
         f"{summary.subtitle_streams} subtitle"
     )
+
+
+def _run_ui(args: argparse.Namespace) -> int:
+    from flowmpeg.ui.config import UiAddress, UiLaunchOptions
+    from flowmpeg.ui.launcher import serve_ui
+
+    options = UiLaunchOptions(
+        address=UiAddress(
+            host=cast(str, args.host),
+            port=cast(int, args.port),
+        ),
+        open_browser=cast(bool, args.open_browser),
+    )
+    serve_ui(options, sys.stdout)
+    return 0
+
+
+def _port_number(value: str) -> int:
+    number = int(value)
+    if not 0 <= number <= 65535:
+        raise argparse.ArgumentTypeError("must be between 0 and 65535")
+    return number
 
 
 def _positive_int(value: str) -> int:
