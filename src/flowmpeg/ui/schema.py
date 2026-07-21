@@ -38,6 +38,8 @@ class UiField:
     label: str
     kind: FieldKind
     flags: tuple[str, ...] = ()
+    negative_flags: tuple[str, ...] = ()
+    clear_flags: tuple[str, ...] = ()
     required: bool = False
     multiple: bool = False
     default: FieldValue = None
@@ -55,6 +57,9 @@ class UiField:
             raise ValueError("only choice fields can define choices")
         if len(self.choices) != len(set(self.choices)):
             raise ValueError("field choices must be unique")
+        all_flags = (*self.flags, *self.negative_flags, *self.clear_flags)
+        if len(all_flags) != len(set(all_flags)):
+            raise ValueError("field flags must be unique")
 
 
 @dataclass(frozen=True, slots=True)

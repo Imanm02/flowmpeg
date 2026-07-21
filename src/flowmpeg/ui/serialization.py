@@ -16,6 +16,8 @@ def field_data(field: UiField) -> dict[str, Any]:
         "label": field.label,
         "kind": field.kind.value,
         "flags": list(field.flags),
+        "negativeFlags": list(field.negative_flags),
+        "clearFlags": list(field.clear_flags),
         "required": field.required,
         "multiple": field.multiple,
         "default": field.default,

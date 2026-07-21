@@ -32,6 +32,20 @@ def test_ui_field_keeps_form_metadata() -> None:
     assert field.path_role is PathRole.OUTPUT_FILE
 
 
+def test_ui_field_keeps_negative_and_clear_flags() -> None:
+    field = UiField(
+        name="duration",
+        label="Duration",
+        kind=FieldKind.NUMBER,
+        flags=("--duration",),
+        negative_flags=("--no-duration",),
+        clear_flags=("--full",),
+    )
+
+    assert field.negative_flags == ("--no-duration",)
+    assert field.clear_flags == ("--full",)
+
+
 @pytest.mark.parametrize("name", ["", "output path", "--output", "a/b"])
 def test_ui_field_rejects_unsafe_names(name: str) -> None:
     with pytest.raises(ValueError, match="field name"):

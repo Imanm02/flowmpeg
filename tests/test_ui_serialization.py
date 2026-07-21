@@ -19,6 +19,8 @@ def test_field_data_uses_browser_property_names() -> None:
         "label": "Output",
         "kind": "text",
         "flags": ["-o", "--output"],
+        "negativeFlags": [],
+        "clearFlags": [],
         "required": True,
         "multiple": False,
         "default": None,
