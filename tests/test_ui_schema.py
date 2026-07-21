@@ -36,3 +36,28 @@ def test_ui_field_keeps_form_metadata() -> None:
 def test_ui_field_rejects_unsafe_names(name: str) -> None:
     with pytest.raises(ValueError, match="field name"):
         UiField(name=name, label="Value", kind=FieldKind.TEXT)
+
+
+def test_ui_choice_field_requires_choices() -> None:
+    with pytest.raises(ValueError, match="must define choices"):
+        UiField(name="codec", label="Codec", kind=FieldKind.CHOICE)
+
+
+def test_ui_text_field_rejects_choices() -> None:
+    with pytest.raises(ValueError, match="only choice"):
+        UiField(
+            name="codec",
+            label="Codec",
+            kind=FieldKind.TEXT,
+            choices=("aac",),
+        )
+
+
+def test_ui_field_rejects_duplicate_choices() -> None:
+    with pytest.raises(ValueError, match="unique"):
+        UiField(
+            name="codec",
+            label="Codec",
+            kind=FieldKind.CHOICE,
+            choices=("aac", "aac"),
+        )

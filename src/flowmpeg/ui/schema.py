@@ -49,6 +49,12 @@ class UiField:
     def __post_init__(self) -> None:
         if not self.name or not self.name.replace("_", "").isalnum():
             raise ValueError("field name must contain letters, digits, or underscores")
+        if self.kind is FieldKind.CHOICE and not self.choices:
+            raise ValueError("choice fields must define choices")
+        if self.kind is not FieldKind.CHOICE and self.choices:
+            raise ValueError("only choice fields can define choices")
+        if len(self.choices) != len(set(self.choices)):
+            raise ValueError("field choices must be unique")
 
 
 __all__ = ["FieldKind", "FieldValue", "PathRole", "UiField"]
