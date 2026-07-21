@@ -1,6 +1,13 @@
 """Build inspectable FFmpeg media jobs."""
 
 from flowmpeg import shortcuts
+from flowmpeg.artifacts import (
+    ArtifactKind,
+    ArtifactSet,
+    SegmentWorkflow,
+    dash_package,
+    hls_package,
+)
 from flowmpeg.audit import (
     AUDIT_CODES,
     AuditConstraints,
@@ -86,6 +93,8 @@ __version__ = "0.1.0"
 __all__ = [
     "AudioStream",
     "AudioStreamInfo",
+    "ArtifactKind",
+    "ArtifactSet",
     "AUDIT_CODES",
     "AuditFinding",
     "AuditConstraints",
@@ -122,6 +131,7 @@ __all__ = [
     "RunResult",
     "SceneChange",
     "SceneReport",
+    "SegmentWorkflow",
     "SilenceInterval",
     "SilenceReport",
     "StreamKind",
@@ -140,6 +150,7 @@ __all__ = [
     "concat_clips",
     "crop_video",
     "delay_audio",
+    "dash_package",
     "detect_black",
     "detect_crop",
     "detect_scenes",
@@ -148,6 +159,7 @@ __all__ = [
     "expr",
     "fade_audio",
     "input",
+    "hls_package",
     "media",
     "measure_loudness",
     "mix_audio",

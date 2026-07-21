@@ -265,6 +265,7 @@ class Plan:
         self,
         *,
         ffmpeg: str = "ffmpeg",
+        cwd: str | os.PathLike[str] | None = None,
         ffprobe: str = "ffprobe",
         probe_timeout: float | None = 10.0,
         on_progress: Callable[[Progress], None] | None = None,
@@ -298,6 +299,7 @@ class Plan:
         return run(
             selected,
             ffmpeg=ffmpeg,
+            cwd=cwd,
             on_progress=on_progress,
             expected_duration=expected_duration,
             timeout=timeout,

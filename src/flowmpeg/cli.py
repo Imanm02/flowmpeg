@@ -17,6 +17,7 @@ from dataclasses import asdict, dataclass, replace
 from typing import TextIO, cast
 
 from flowmpeg import __version__, shortcuts
+from flowmpeg.artifacts import SegmentWorkflow, dash_package, hls_package
 from flowmpeg.audit import (
     AuditConstraints,
     AuditExpectation,
@@ -58,6 +59,7 @@ from flowmpeg.silence import SilenceReport, detect_silence
 from flowmpeg.workflows import normalize_loudness_two_pass
 
 _Factory = Callable[..., Plan]
+_ArtifactFactory = Callable[..., SegmentWorkflow]
 _Handler = Callable[[argparse.Namespace], int]
 _JSON_SCHEMA_VERSION = 1
 
@@ -89,6 +91,8 @@ _BASE_EXAMPLES = (
     _Example("video", "flowmpeg webm recording.mov -o recording.webm"),
     _Example("video", "flowmpeg hevc recording.mov -o recording-hevc.mp4"),
     _Example("video", "flowmpeg av1 recording.mov -o recording-av1.webm"),
+    _Example("video", "flowmpeg hls recording.mov -o hls-delivery"),
+    _Example("video", "flowmpeg dash recording.mov -o dash-delivery"),
     _Example("video", "flowmpeg convert animation.mov --no-audio -o animation.mp4"),
     _Example("video", "flowmpeg cut input.mp4 --start 5 --duration 12 -o clip.mp4"),
     _Example("video", "flowmpeg loop logo-motion.mp4 --duration 30 -o background.mp4"),
@@ -254,6 +258,12 @@ _FEATURE_REQUIREMENTS = {
         "encoder:libopus",
         "encoder:libsvtav1",
         "muxer:webm",
+    ),
+    "segmented-video": (
+        "encoder:aac",
+        "encoder:libx264",
+        "muxer:dash",
+        "muxer:hls",
     ),
     "audio-files": (
         "encoder:aac",
@@ -506,6 +516,8 @@ def build_parser() -> argparse.ArgumentParser:
     _add_transcode_webm(commands)
     _add_transcode_hevc(commands)
     _add_transcode_av1(commands)
+    _add_hls(commands)
+    _add_dash(commands)
     _add_trim(commands)
     _add_loop_video(commands)
     _add_resize(commands)
@@ -805,6 +817,77 @@ def _add_transcode_av1(
     parser.add_argument("--audio-bitrate", default="128k")
     _audio_toggle(parser)
     _output(parser)
+
+
+def _add_hls(commands: argparse._SubParsersAction[argparse.ArgumentParser]) -> None:
+    _add_artifact_command(
+        commands,
+        "package-hls",
+        ("hls", "hls-vod"),
+        "Create an owned HLS video-on-demand package.",
+        hls_package,
+        6.0,
+    )
+
+
+def _add_dash(commands: argparse._SubParsersAction[argparse.ArgumentParser]) -> None:
+    _add_artifact_command(
+        commands,
+        "package-dash",
+        ("dash", "mpeg-dash"),
+        "Create an owned MPEG-DASH package.",
+        dash_package,
+        4.0,
+    )
+
+
+def _add_artifact_command(
+    commands: argparse._SubParsersAction[argparse.ArgumentParser],
+    name: str,
+    aliases: tuple[str, ...],
+    help_text: str,
+    factory: _ArtifactFactory,
+    segment_duration: float,
+) -> None:
+    parser = commands.add_parser(
+        name,
+        aliases=list(aliases),
+        help=help_text,
+        description=help_text,
+        allow_abbrev=False,
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+    _source(parser)
+    parser.add_argument(
+        "-o",
+        "--output",
+        required=True,
+        help="Dedicated artifact directory",
+    )
+    parser.add_argument(
+        "--segment-duration",
+        type=_positive_float,
+        default=segment_duration,
+    )
+    parser.add_argument("--crf", type=_nonnegative_int, default=23)
+    parser.add_argument("--audio-bitrate", default="128k")
+    _audio_toggle(parser)
+    parser.add_argument(
+        "--overwrite",
+        action="store_true",
+        help="Replace a matching Flowmpeg-owned artifact set",
+    )
+    parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument("--ffmpeg", default="ffmpeg", help="FFmpeg executable")
+    parser.add_argument("--timeout", type=_positive_float)
+    parser.add_argument("--expected-duration", type=_positive_float)
+    parser.add_argument(
+        "--progress",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+    )
+    parser.add_argument("--explain", action="store_true")
+    parser.set_defaults(handler=_run_artifact_workflow, artifact_factory=factory)
 
 
 def _add_trim(commands: argparse._SubParsersAction[argparse.ArgumentParser]) -> None:
@@ -2597,6 +2680,43 @@ def _run_media(args: argparse.Namespace) -> int:
             progress_printer.close()
     destinations = ", ".join(redact_text(destination) for destination in result.outputs)
     print(f"Finished in {result.elapsed:.2f}s: {destinations}")
+    return 0
+
+
+def _run_artifact_workflow(args: argparse.Namespace) -> int:
+    factory = cast(_ArtifactFactory, args.artifact_factory)
+    workflow = factory(
+        cast(str, args.source),
+        cast(str, args.output),
+        segment_duration=cast(float, args.segment_duration),
+        crf=cast(int, args.crf),
+        audio_bitrate=cast(str, args.audio_bitrate),
+        include_audio=cast(bool, args.include_audio),
+        overwrite=cast(bool, args.overwrite),
+    )
+    ffmpeg = cast(str, args.ffmpeg)
+    if cast(bool, args.explain) or cast(bool, args.dry_run):
+        print(workflow.explain(ffmpeg))
+    if cast(bool, args.dry_run):
+        return 0
+
+    progress_printer = (
+        _ProgressPrinter(sys.stderr) if cast(bool, args.progress) else None
+    )
+    try:
+        result = workflow.run(
+            ffmpeg=ffmpeg,
+            on_progress=progress_printer,
+            expected_duration=cast(float | None, args.expected_duration),
+            timeout=cast(float | None, args.timeout),
+        )
+    finally:
+        if progress_printer is not None:
+            progress_printer.close()
+    print(
+        f"Created {len(result.files)} {result.kind.upper()} artifacts: "
+        f"{redact_text(result.manifest)}"
+    )
     return 0
 
 

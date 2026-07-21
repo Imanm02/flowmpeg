@@ -9,10 +9,12 @@ import sys
 from datetime import timedelta
 from importlib.metadata import entry_points
 from io import StringIO
+from pathlib import Path
 
 import pytest
 
 from flowmpeg import cli, diagnostics
+from flowmpeg.artifacts import ArtifactSet, SegmentWorkflow
 from flowmpeg.black import BlackInterval, BlackReport
 from flowmpeg.catalog import COMMAND_CATALOG
 from flowmpeg.comparison import MediaComparison, MediaSummary
@@ -962,6 +964,65 @@ def test_two_pass_loudness_runs_both_passes(
     output = capsys.readouterr().out
     assert "Measured -18.4 LUFS" in output
     assert "finished in 1.25s: exact.wav" in output
+
+
+def test_hls_dry_run_prints_owned_directory_plan(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    target = tmp_path / "hls"
+
+    assert (
+        cli.main(
+            [
+                "hls",
+                "input.mp4",
+                "-o",
+                str(target),
+                "--segment-duration",
+                "5",
+                "--dry-run",
+            ]
+        )
+        == 0
+    )
+    output = capsys.readouterr().out
+    assert "Artifact kind: hls" in output
+    assert "index.m3u8" in output
+    assert "segment-%05d.ts" in output
+    assert not target.exists()
+
+
+def test_dash_command_reports_created_artifacts(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    result = ArtifactSet(
+        "dash",
+        "delivery",
+        "delivery/manifest.mpd",
+        (
+            "delivery/manifest.mpd",
+            "delivery/init-0.m4s",
+            "delivery/chunk-0-00001.m4s",
+        ),
+        RunResult(0, 1.0, "", None, ("delivery/manifest.mpd",)),
+    )
+    monkeypatch.setattr(SegmentWorkflow, "run", lambda *args, **kwargs: result)
+
+    assert (
+        cli.main(
+            [
+                "mpeg-dash",
+                "input.mp4",
+                "-o",
+                "delivery",
+                "--no-progress",
+            ]
+        )
+        == 0
+    )
+    assert "Created 3 DASH artifacts: delivery/manifest.mpd" in capsys.readouterr().out
 
 
 def test_silence_report_prints_intervals(

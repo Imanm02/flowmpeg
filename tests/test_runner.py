@@ -293,7 +293,9 @@ def test_runner_configures_a_separate_process_group(
     monkeypatch.setattr(subprocess, "Popen", start)
     plan = output(input("movie.mp4").video(), to=tmp_path / "copy.mp4")
 
-    plan.run()
+    plan.run(cwd=tmp_path)
+
+    assert captured["cwd"] == str(tmp_path)
 
     if os.name == "nt":
         assert captured["creationflags"] == _WINDOWS_CREATE_NEW_PROCESS_GROUP

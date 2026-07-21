@@ -47,6 +47,7 @@ def run(
     plan: Plan,
     *,
     ffmpeg: str = "ffmpeg",
+    cwd: str | os.PathLike[str] | None = None,
     on_progress: Callable[[Progress], None] | None = None,
     expected_duration: float | None = None,
     timeout: float | None = None,
@@ -66,6 +67,9 @@ def run(
     if stderr_limit <= 0:
         raise ValueError("Stderr limit must be a positive integer")
     _require_nonnegative_finite("Termination grace", termination_grace)
+    working_directory = None if cwd is None else os.fspath(cwd)
+    if working_directory == "":
+        raise ValueError("Working directory cannot be empty")
 
     _check_outputs(plan)
     _check_pipes(plan)
@@ -92,6 +96,7 @@ def run(
             encoding="utf-8",
             errors="replace",
             shell=False,
+            cwd=working_directory,
             **popen_options,
         )
     except FileNotFoundError as error:
