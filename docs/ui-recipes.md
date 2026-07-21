@@ -402,3 +402,15 @@ flowmpeg find-black tape.mp4 --picture-threshold 0.98 --min-duration 0.5
 Output: time ranges where the picture is mostly black.
 
 Why I use it: this helps find slates, gaps, or capture dropouts before cutting.
+
+### Find scene changes
+
+Input: `interview.mp4`.
+
+```console
+flowmpeg scenes interview.mp4 --threshold 0.35
+```
+
+Output: scene-change times and scores.
+
+Why I use it: strong scene changes are useful thumbnail and chapter candidates.
