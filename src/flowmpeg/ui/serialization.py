@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from typing import Any
 
 from flowmpeg.ui.schema import UiCommand, UiField, UiSchema
@@ -50,4 +51,10 @@ def schema_data(schema: UiSchema) -> dict[str, Any]:
     }
 
 
-__all__ = ["command_data", "field_data", "schema_data"]
+def schema_json(schema: UiSchema) -> str:
+    """Render a deterministic compact schema response."""
+
+    return json.dumps(schema_data(schema), ensure_ascii=False, separators=(",", ":"))
+
+
+__all__ = ["command_data", "field_data", "schema_data", "schema_json"]

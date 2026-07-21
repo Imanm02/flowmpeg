@@ -1,5 +1,7 @@
+import json
+
 from flowmpeg.ui.schema import FieldKind, PathRole, UiCommand, UiField, UiSchema
-from flowmpeg.ui.serialization import command_data, field_data, schema_data
+from flowmpeg.ui.serialization import command_data, field_data, schema_data, schema_json
 
 
 def test_field_data_uses_browser_property_names() -> None:
@@ -54,3 +56,11 @@ def test_schema_data_contains_categories_and_commands() -> None:
         "categories": ["video"],
         "commands": [command_data(command)],
     }
+
+
+def test_schema_json_round_trips_without_extra_whitespace() -> None:
+    schema = UiSchema(version=1, categories=(), commands=())
+    rendered = schema_json(schema)
+
+    assert rendered == '{"version":1,"categories":[],"commands":[]}'
+    assert json.loads(rendered) == schema_data(schema)
