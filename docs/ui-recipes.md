@@ -338,3 +338,15 @@ Output: an owned MPEG-DASH folder with a manifest and segments.
 
 Why I use it: the UI keeps the destination folder and segment length visible
 for a package with several files.
+
+### Audit delivery shape
+
+Input: `delivery.mp4`.
+
+```console
+flowmpeg audit delivery.mp4 --expect av --max-duration 60 --width 1920 --height 1080
+```
+
+Output: a pass or finding report with stable finding codes.
+
+Why I use it: I can check the file against a delivery policy before I send it.
