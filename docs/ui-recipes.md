@@ -491,3 +491,16 @@ Output: an MP4 created from the numbered image sequence.
 
 Why I use it: the UI keeps the pattern and output file together, which reduces
 mistakes with frame sequence names.
+
+### Make a podcast audiogram
+
+Input: `episode.wav` and `cover.jpg`.
+
+```console
+flowmpeg audiogram episode.wav cover.jpg -o episode.mp4
+```
+
+Output: a video with cover art and waveform-style motion for the audio.
+
+Why I use it: it turns an audio-only file into a shareable video without a
+custom composition graph.
