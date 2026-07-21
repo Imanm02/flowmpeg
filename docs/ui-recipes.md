@@ -25,3 +25,16 @@ folder.
 
 Why I use it: it gives me safe local files for testing the UI before I touch a
 real project.
+
+### Check local tools
+
+Input: the current computer.
+
+```console
+flowmpeg doctor --smoke-test
+```
+
+Output: a capability report with the FFmpeg and FFprobe paths, feature groups,
+and a tiny encode-and-probe test result.
+
+Why I use it: I want setup problems to appear before a long encode starts.
