@@ -234,3 +234,16 @@ Output: an MP4 with the second video placed over the first.
 
 Why I use it: this is a common tutorial layout, and the UI keeps the base and
 inset clips separate.
+
+### Compare clips in a grid
+
+Input: `cam-1.mp4`, `cam-2.mp4`, `cam-3.mp4`, and `cam-4.mp4`.
+
+```console
+flowmpeg grid cam-1.mp4 cam-2.mp4 cam-3.mp4 cam-4.mp4 --columns 2 -o grid.mp4
+```
+
+Output: a two-column MP4 grid built from the selected videos.
+
+Why I use it: the multi-input field is easier to review than a hand-built
+filter graph.
