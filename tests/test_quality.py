@@ -22,6 +22,7 @@ _SSIM = (
     "[Parsed_ssim_0] SSIM Y:0.991000 (20.457000) U:0.995000 (23.010300) "
     "V:0.994000 (22.218500) All:0.993000 (21.549000)\n"
 )
+_VMAF = "[Parsed_libvmaf_0] VMAF score: 98.714706\n"
 
 
 def _info(width: int = 1920, height: int = 1080) -> MediaInfo:
@@ -65,6 +66,7 @@ def test_quality_measurement_returns_both_metrics(
     assert report.ssim is not None
     assert report.ssim.all == 0.993
     assert report.ssim.db == 21.549
+    assert report.vmaf is None
     assert len(calls) == 2
     for argv in calls:
         assert argv[argv.index("-i") + 1] == "candidate.mp4"
@@ -76,7 +78,11 @@ def test_quality_measurement_returns_both_metrics(
 
 @pytest.mark.parametrize(
     ("metric", "expected_marker"),
-    [("psnr", "psnr=shortest=1"), ("ssim", "ssim=shortest=1")],
+    [
+        ("psnr", "psnr=shortest=1"),
+        ("ssim", "ssim=shortest=1"),
+        ("vmaf", "libvmaf=shortest=1"),
+    ],
 )
 def test_quality_measurement_can_select_one_metric(
     metric: str,
@@ -92,7 +98,7 @@ def test_quality_measurement_can_select_one_metric(
     ) -> tuple[str, int]:
         del kwargs
         calls.append(argv)
-        return (_PSNR if metric == "psnr" else _SSIM), 0
+        return {"psnr": _PSNR, "ssim": _SSIM, "vmaf": _VMAF}[metric], 0
 
     monkeypatch.setattr(quality, "run_ffmpeg_analysis", run)
 
@@ -106,6 +112,7 @@ def test_quality_measurement_can_select_one_metric(
     assert any(expected_marker in value for value in calls[0])
     assert (report.psnr is not None) is (metric == "psnr")
     assert (report.ssim is not None) is (metric == "ssim")
+    assert (report.vmaf is not None) is (metric == "vmaf")
 
 
 def test_quality_preserves_infinite_identical_scores() -> None:
@@ -126,6 +133,13 @@ def test_quality_parser_accepts_rgb_components() -> None:
 
     assert psnr is not None
     assert [item.name for item in psnr.components] == ["r", "g", "b"]
+
+
+def test_quality_parser_reads_vmaf_score() -> None:
+    score = quality._parse_vmaf(_VMAF)
+
+    assert score is not None
+    assert score.score == 98.714706
 
 
 def test_quality_rejects_mismatched_dimensions(
@@ -150,7 +164,7 @@ def test_quality_rejects_missing_video_track(
 @pytest.mark.parametrize(
     "kwargs",
     [
-        {"metric": "vmaf"},
+        {"metric": "butter"},
         {"reference_track": -1},
         {"candidate_track": True},
         {"start": -1},
@@ -255,3 +269,67 @@ def test_quality_measurement_runs_on_generated_video(tmp_path: Path) -> None:
     assert 10 < report.psnr.average_db < math.inf
     assert report.ssim is not None
     assert 0 < report.ssim.all < 1
+
+
+@pytest.mark.integration
+def test_vmaf_measurement_runs_when_filter_is_available(tmp_path: Path) -> None:
+    ffmpeg = shutil.which("ffmpeg")
+    ffprobe = shutil.which("ffprobe")
+    if ffmpeg is None or ffprobe is None:
+        pytest.skip("FFmpeg and FFprobe are required")
+    filters = subprocess.run(
+        (ffmpeg, "-hide_banner", "-filters"),
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    if "libvmaf" not in filters.stdout:
+        pytest.skip("The libvmaf filter is not available")
+    reference = tmp_path / "reference.mkv"
+    candidate = tmp_path / "candidate.mkv"
+    subprocess.run(
+        (
+            ffmpeg,
+            "-hide_banner",
+            "-loglevel",
+            "error",
+            "-y",
+            "-f",
+            "lavfi",
+            "-i",
+            "testsrc2=size=96x64:rate=10:duration=0.4",
+            "-c:v",
+            "ffv1",
+            str(reference),
+        ),
+        check=True,
+    )
+    subprocess.run(
+        (
+            ffmpeg,
+            "-hide_banner",
+            "-loglevel",
+            "error",
+            "-y",
+            "-i",
+            str(reference),
+            "-vf",
+            "eq=brightness=0.03",
+            "-c:v",
+            "ffv1",
+            str(candidate),
+        ),
+        check=True,
+    )
+
+    report = measure_quality(
+        reference,
+        candidate,
+        metric="vmaf",
+        ffmpeg=ffmpeg,
+        ffprobe=ffprobe,
+        timeout=20,
+    )
+
+    assert report.vmaf is not None
+    assert report.vmaf.score > 0

@@ -366,6 +366,7 @@ _FEATURE_REQUIREMENTS = {
         "filter:psnr",
         "filter:ssim",
     ),
+    "vmaf-analysis": ("filter:libvmaf",),
     "audio-processing": (
         "filter:acrossfade",
         "filter:adelay",
@@ -2515,7 +2516,7 @@ def _add_quality(commands: argparse._SubParsersAction[argparse.ArgumentParser]) 
     parser.add_argument("candidate", help="Candidate media path")
     parser.add_argument(
         "--metric",
-        choices=("all", "psnr", "ssim"),
+        choices=("all", "psnr", "ssim", "vmaf"),
         default="all",
     )
     parser.add_argument("--reference-track", type=_nonnegative_int, default=0)
@@ -3986,6 +3987,8 @@ def _format_quality(result: QualityReport) -> str:
                 for item in result.ssim.components
             )
             lines.append(f"  components: {values}")
+    if result.vmaf is not None:
+        lines.extend(("VMAF:", f"  score: {result.vmaf.score:.6f}"))
     lines.append(f"Elapsed: {result.elapsed:.2f}s")
     return "\n".join(lines)
 

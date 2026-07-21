@@ -14,10 +14,14 @@ from flowmpeg.diagnostics import display_argv, redact_text
 from flowmpeg.errors import BinaryNotFoundError, ExecutionError, GraphError
 from flowmpeg.probe import MediaInfo, VideoStreamInfo, probe
 
-QualityMetric: TypeAlias = Literal["all", "psnr", "ssim"]
+QualityMetric: TypeAlias = Literal["all", "psnr", "ssim", "vmaf"]
 _PAIR = re.compile(
     r"\b([A-Za-z]+):([-+]?(?:\d+(?:\.\d*)?|\.\d+|inf))"
     r"(?:\s+\(([-+]?(?:\d+(?:\.\d*)?|\.\d+|inf))\))?",
+    re.IGNORECASE,
+)
+_VMAF = re.compile(
+    r"\bVMAF score:\s*([-+]?(?:\d+(?:\.\d*)?|\.\d+|inf))",
     re.IGNORECASE,
 )
 
@@ -51,6 +55,13 @@ class SsimScore:
 
 
 @dataclass(frozen=True, slots=True)
+class VmafScore:
+    """Video Multi-Method Assessment Fusion score."""
+
+    score: float
+
+
+@dataclass(frozen=True, slots=True)
 class QualityReport:
     """Quality measurements between one reference and one candidate video."""
 
@@ -64,6 +75,7 @@ class QualityReport:
     duration: float | None
     psnr: PsnrScore | None
     ssim: SsimScore | None
+    vmaf: VmafScore | None
     elapsed: float
 
 
@@ -85,8 +97,8 @@ def measure_quality(
 
     reference_text = _source("Reference", reference)
     candidate_text = _source("Candidate", candidate)
-    if metric not in {"all", "psnr", "ssim"}:
-        raise GraphError("Quality metric must be all, psnr, or ssim")
+    if metric not in {"all", "psnr", "ssim", "vmaf"}:
+        raise GraphError("Quality metric must be all, psnr, ssim, or vmaf")
     _track("Reference", reference_track)
     _track("Candidate", candidate_track)
     if start is not None:
@@ -132,6 +144,7 @@ def measure_quality(
 
     psnr = None
     ssim = None
+    vmaf = None
     if metric in {"all", "psnr"}:
         argv = _metric_argv(
             reference_text,
@@ -162,6 +175,21 @@ def measure_quality(
         ssim = _parse_ssim(stderr)
         if ssim is None:
             raise _missing_measurement("SSIM", argv, stderr)
+    if metric == "vmaf":
+        argv = _metric_argv(
+            reference_text,
+            candidate_text,
+            reference_track=reference_track,
+            candidate_track=candidate_track,
+            metric="libvmaf",
+            start=start,
+            duration=duration,
+            ffmpeg=ffmpeg,
+        )
+        stderr = _run_metric(argv, "VMAF measurement", timeout)
+        vmaf = _parse_vmaf(stderr)
+        if vmaf is None:
+            raise _missing_measurement("VMAF", argv, stderr)
 
     return QualityReport(
         reference_text,
@@ -174,6 +202,7 @@ def measure_quality(
         None if duration is None else float(duration),
         psnr,
         ssim,
+        vmaf,
         time.monotonic() - started,
     )
 
@@ -224,7 +253,7 @@ def _metric_argv(
     *,
     reference_track: int,
     candidate_track: int,
-    metric: Literal["psnr", "ssim"],
+    metric: Literal["psnr", "ssim", "libvmaf"],
     start: float | None,
     duration: float | None,
     ffmpeg: str,
@@ -322,6 +351,21 @@ def _parse_ssim(stderr: str) -> SsimScore | None:
     return SsimScore(all_value[0], all_value[1], components)
 
 
+def _parse_vmaf(stderr: str) -> VmafScore | None:
+    match = next(
+        (
+            found
+            for line in reversed(stderr.splitlines())
+            if (found := _VMAF.search(line)) is not None
+        ),
+        None,
+    )
+    if match is None:
+        return None
+    score = _number(match.group(1))
+    return None if score is None else VmafScore(score)
+
+
 def _summary_values(
     stderr: str,
     marker: str,
@@ -375,5 +419,6 @@ __all__ = [
     "QualityMetric",
     "QualityReport",
     "SsimScore",
+    "VmafScore",
     "measure_quality",
 ]

@@ -71,6 +71,7 @@ from flowmpeg.quality import (
     QualityMetric,
     QualityReport,
     SsimScore,
+    VmafScore,
     measure_quality,
 )
 from flowmpeg.recipes.audio import (
@@ -177,6 +178,7 @@ __all__ = [
     "SubtitleStreamInfo",
     "VideoStream",
     "VideoStreamInfo",
+    "VmafScore",
     "__version__",
     "apply_filter",
     "audit_media",

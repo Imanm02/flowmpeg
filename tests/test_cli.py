@@ -40,7 +40,13 @@ from flowmpeg.probe import (
     VideoStreamInfo,
 )
 from flowmpeg.progress import Progress
-from flowmpeg.quality import PsnrScore, QualityComponent, QualityReport, SsimScore
+from flowmpeg.quality import (
+    PsnrScore,
+    QualityComponent,
+    QualityReport,
+    SsimScore,
+    VmafScore,
+)
 from flowmpeg.runner import RunResult
 from flowmpeg.scenes import SceneChange, SceneReport
 from flowmpeg.silence import SilenceInterval, SilenceReport
@@ -1117,6 +1123,7 @@ def test_quality_prints_psnr_and_ssim(
     assert "maximum: inf dB" in output
     assert "all: 0.993000 (21.549 dB)" in output
     assert "Y 0.991000 (20.457 dB)" in output
+    assert "score: 98.714706" in output
 
 
 def test_quality_json_serializes_infinite_psnr(
@@ -1133,6 +1140,7 @@ def test_quality_json_serializes_infinite_psnr(
     assert report["schema_version"] == 1
     assert report["psnr"]["maximum_db"] == "inf"
     assert report["ssim"]["all"] == 0.993
+    assert report["vmaf"]["score"] == 98.714706
     assert report["width"] == 1920
 
 
@@ -2798,6 +2806,7 @@ def _quality() -> QualityReport:
             21.549,
             (QualityComponent("y", 0.991, 20.457),),
         ),
+        VmafScore(98.714706),
         1.25,
     )
 

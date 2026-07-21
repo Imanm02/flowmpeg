@@ -15,9 +15,9 @@ source change.
 | One-line terminal examples | 88 | CLI example catalog |
 | Stable error identifiers | 16 | CLI error guide |
 | Stable audit findings | 20 | Media audit |
-| Doctor feature groups | 17 | Doctor requirements |
-| Test function definitions | 448 | `tests/test_*.py` |
-| FFmpeg integration tests | 41 | Pytest markers |
+| Doctor feature groups | 18 | Doctor requirements |
+| Test function definitions | 450 | `tests/test_*.py` |
+| FFmpeg integration tests | 42 | Pytest markers |
 | Documentation pages | 19 | `docs/*.md` |
 | Documented command lines | 475 | Markdown code lines |
 | Completed roadmap items | 114 | `ROADMAP.md` |
