@@ -6,6 +6,7 @@ import json
 from typing import Any
 
 from flowmpeg.ui.schema import UiCommand, UiField, UiSchema
+from flowmpeg.ui.validation import UiValidationIssue
 
 
 def field_data(field: UiField) -> dict[str, Any]:
@@ -59,4 +60,20 @@ def schema_json(schema: UiSchema) -> str:
     return json.dumps(schema_data(schema), ensure_ascii=False, separators=(",", ":"))
 
 
-__all__ = ["command_data", "field_data", "schema_data", "schema_json"]
+def validation_issue_data(issue: UiValidationIssue) -> dict[str, str | None]:
+    """Return a field error as JSON-compatible data."""
+
+    return {
+        "code": issue.code,
+        "message": issue.message,
+        "field": issue.field,
+    }
+
+
+__all__ = [
+    "command_data",
+    "field_data",
+    "schema_data",
+    "schema_json",
+    "validation_issue_data",
+]
