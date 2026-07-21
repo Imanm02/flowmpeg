@@ -139,6 +139,16 @@ def build_ui_field(action: argparse.Action, output_kind: str) -> UiField:
     )
 
 
+def form_actions(parser: argparse.ArgumentParser) -> tuple[argparse.Action, ...]:
+    """Return actions that should appear in a command form."""
+
+    return tuple(
+        action
+        for action in parser._actions
+        if not isinstance(action, argparse._HelpAction)
+    )
+
+
 def command_parsers() -> dict[str, argparse.ArgumentParser]:
     """Return canonical command names mapped to their parsers."""
 
@@ -162,4 +172,5 @@ __all__ = [
     "field_kind",
     "field_label",
     "field_path_role",
+    "form_actions",
 ]

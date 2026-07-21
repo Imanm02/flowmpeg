@@ -13,6 +13,7 @@ from flowmpeg.ui.schema_builder import (
     field_kind,
     field_label,
     field_path_role,
+    form_actions,
 )
 from flowmpeg.ui.schema import PathRole
 
@@ -120,3 +121,10 @@ def test_ui_builds_a_complete_field_from_an_action() -> None:
     assert field.required is True
     assert field.help == "Output path"
     assert field.path_role is PathRole.OUTPUT_FILE
+
+
+def test_ui_form_actions_hide_argparse_help() -> None:
+    parser = argparse.ArgumentParser()
+    source = parser.add_argument("source")
+
+    assert form_actions(parser) == (source,)
