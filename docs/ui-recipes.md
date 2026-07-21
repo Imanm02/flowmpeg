@@ -427,3 +427,16 @@ Output: ranked crop candidates and the recommended FFmpeg crop value.
 
 Why I use it: the report gives a starting rectangle before I commit to a crop
 operation.
+
+### Convert a folder batch
+
+Input: local files matching `recordings/*.mov`.
+
+```console
+flowmpeg batch "recordings/*.mov" --name-suffix=-web -o converted
+```
+
+Output: converted MP4 files in the selected output folder, processed in order.
+
+Why I use it: the UI makes the input pattern, suffix, and output folder easy to
+review before a batch starts.
