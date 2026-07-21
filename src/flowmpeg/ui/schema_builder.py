@@ -162,11 +162,14 @@ def build_ui_field(action: argparse.Action, output_kind: str) -> UiField:
     if isinstance(action, argparse._StoreConstAction) and action.const is None:
         flags = ()
         clear_flags = tuple(action.option_strings)
+    kind = field_kind(action)
     minimum, exclusive_minimum = field_minimum(action)
+    if kind is not FieldKind.NUMBER:
+        minimum, exclusive_minimum = None, False
     return UiField(
         name=action.dest,
         label=field_label(action.dest),
-        kind=field_kind(action),
+        kind=kind,
         flags=flags,
         negative_flags=negative_flags,
         clear_flags=clear_flags,
@@ -177,7 +180,7 @@ def build_ui_field(action: argparse.Action, output_kind: str) -> UiField:
         choices=field_choices(action),
         path_role=field_path_role(action, output_kind),
         advanced=field_is_advanced(action),
-        integer=field_is_integer(action),
+        integer=kind is FieldKind.NUMBER and field_is_integer(action),
         minimum=minimum,
         exclusive_minimum=exclusive_minimum,
     )

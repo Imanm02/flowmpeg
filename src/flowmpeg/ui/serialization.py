@@ -5,8 +5,8 @@ from __future__ import annotations
 import json
 from typing import Any
 
-from flowmpeg.ui.schema import UiCommand, UiField, UiSchema
 from flowmpeg.ui.preview import UiPreview
+from flowmpeg.ui.schema import UiCommand, UiField, UiSchema
 from flowmpeg.ui.validation import UiValidationIssue
 
 
