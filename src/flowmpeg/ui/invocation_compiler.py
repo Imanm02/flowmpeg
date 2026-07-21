@@ -18,6 +18,21 @@ def compile_invocation(schema: UiSchema, invocation: UiInvocation) -> tuple[str,
                 message="The selected command is not available",
             )
         )
+    known_fields = {field.name for field in command.fields}
+    unknown_fields = [
+        item.name for item in invocation.values if item.name not in known_fields
+    ]
+    if unknown_fields:
+        raise UiValidationError(
+            *(
+                UiValidationIssue(
+                    code="unknown-field",
+                    message=f"{name} is not accepted by {command.name}",
+                    field=name,
+                )
+                for name in unknown_fields
+            )
+        )
     return (command.name,)
 
 
