@@ -9,7 +9,8 @@ from urllib.parse import urlsplit
 
 from flowmpeg.ui.application import UiApplication
 from flowmpeg.ui.config import UiAddress
-from flowmpeg.ui.http_types import ApiResponse
+from flowmpeg.ui.http_types import ApiResponse, json_response
+from flowmpeg.ui.request_data import MAX_JSON_BYTES
 
 
 class UiHttpServer(ThreadingHTTPServer):
@@ -44,6 +45,38 @@ class UiRequestHandler(BaseHTTPRequestHandler):
         """Serve an application GET route.""
 
         self._send(self._application.handle("GET", urlsplit(self.path).path))
+
+    def do_POST(self) -> None:
+        """Serve an application POST route with a bounded body."""
+
+        raw_length = self.headers.get("Content-Length")
+        try:
+            length = int(raw_length or "0")
+        except ValueError:
+            self._send(
+                json_response(
+                    {"error": "bad-length", "message": "Invalid Content-Length"},
+                    status=400,
+                ).with_security_headers()
+            )
+            return
+        if length < 0 or length > MAX_JSON_BYTES:
+            self._send(
+                json_response(
+                    {"error": "body-too-large", "message": "Request body is too large"},
+                    status=413,
+                ).with_security_headers()
+            )
+            return
+        body = self.rfile.read(length)
+        headers = {name: value for name, value in self.headers.items()}
+        response = self._application.handle(
+            "POST",
+            urlsplit(self.path).path,
+            headers=headers,
+            body=body,
+        )
+        self._send(response)
 
     def _send(self, response: ApiResponse) -> None:
         self.send_response(response.status)
