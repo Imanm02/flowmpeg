@@ -31,4 +31,20 @@ def load_asset(name: str) -> StaticAsset | None:
     return StaticAsset(name, resource.read_bytes(), content_type)
 
 
-__all__ = ["StaticAsset", "load_asset"]
+def render_index(token: str) -> StaticAsset:
+    """Render the application shell with its per-launch request token."""
+
+    asset = load_asset("index.html")
+    if asset is None:
+        raise RuntimeError("packaged UI index is missing")
+    marker = b"__FLOWMPEG_SESSION_TOKEN__"
+    if marker not in asset.data:
+        raise RuntimeError("packaged UI index has no session token marker")
+    return StaticAsset(
+        asset.name,
+        asset.data.replace(marker, token.encode("ascii")),
+        asset.content_type,
+    )
+
+
+__all__ = ["StaticAsset", "load_asset", "render_index"]
