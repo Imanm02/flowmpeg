@@ -113,13 +113,14 @@ Exact needs are checked by `flowmpeg doctor --command NAME`.
 | `remux` | `rewrap`, `copy-container` | media | media | `archive`, `copy`, `delivery` | none | `muxer:matroska` |
 | `tag-media` | `label-media` | media | media | `archive`, `copy` | none | `muxer:mp4` |
 
-## Inspect (10)
+## Inspect (11)
 
 | Command | Aliases | Input | Output | Tags | Doctor group | Exact needs |
 |---|---|---|---|---|---|---|
 | `probe` | none | media | report | `inspect`, `archive` | none | none |
 | `audit-media` | `audit`, `check-media` | media | report | `inspect` | none | none |
 | `compare` | none | two media files | report | `inspect` | none | none |
+| `quality` | `metrics`, `compare-quality` | reference and candidate video | report | `inspect`, `archive`, `delivery` | `quality-analysis` | `filter:psnr`, `filter:ssim` |
 | `analyze-loudness` | `loudness`, `measure-loudness` | audio | report | `inspect`, `archive` | `audio-processing` | `filter:loudnorm` |
 | `detect-silence` | `silence-report`, `find-silence` | audio | report | `inspect`, `archive` | `audio-processing` | `filter:silencedetect` |
 | `detect-black` | `black-report`, `find-black` | video | report | `inspect`, `archive` | `video-processing` | `filter:blackdetect` |

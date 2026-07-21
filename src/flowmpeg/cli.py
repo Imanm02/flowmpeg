@@ -63,6 +63,7 @@ from flowmpeg.probe import (
 )
 from flowmpeg.processes import popen_group_options, stop_process_tree
 from flowmpeg.progress import Progress
+from flowmpeg.quality import QualityMetric, QualityReport, measure_quality
 from flowmpeg.scenes import SceneReport, detect_scenes
 from flowmpeg.shortcuts import AudioCodec
 from flowmpeg.silence import SilenceReport, detect_silence
@@ -233,6 +234,7 @@ _BASE_EXAMPLES = (
     _Example("inspect", "flowmpeg probe input.mp4"),
     _Example("inspect", "flowmpeg audit input.mp4 --expect av"),
     _Example("inspect", "flowmpeg compare original.mp4 smaller.mp4"),
+    _Example("inspect", "flowmpeg quality reference.mp4 candidate.mp4"),
     _Example("inspect", "flowmpeg loudness episode.wav"),
     _Example("inspect", "flowmpeg find-silence interview.wav"),
     _Example("inspect", "flowmpeg find-black tape.mp4"),
@@ -359,6 +361,10 @@ _FEATURE_REQUIREMENTS = {
         "filter:showwavespic",
         "filter:tile",
         "muxer:image2",
+    ),
+    "quality-analysis": (
+        "filter:psnr",
+        "filter:ssim",
     ),
     "audio-processing": (
         "filter:acrossfade",
@@ -618,6 +624,7 @@ def build_parser() -> argparse.ArgumentParser:
     _add_probe(commands)
     _add_audit(commands)
     _add_compare(commands)
+    _add_quality(commands)
     _add_loudness(commands)
     _add_silence_detection(commands)
     _add_black_detection(commands)
@@ -2495,6 +2502,34 @@ def _add_compare(commands: argparse._SubParsersAction[argparse.ArgumentParser]) 
     parser.set_defaults(handler=_run_compare)
 
 
+def _add_quality(commands: argparse._SubParsersAction[argparse.ArgumentParser]) -> None:
+    parser = commands.add_parser(
+        "quality",
+        aliases=["metrics", "compare-quality"],
+        help="Measure PSNR and SSIM against a reference video.",
+        description="Compare matching video frames without writing an output file.",
+        allow_abbrev=False,
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+    parser.add_argument("reference", help="Reference media path")
+    parser.add_argument("candidate", help="Candidate media path")
+    parser.add_argument(
+        "--metric",
+        choices=("all", "psnr", "ssim"),
+        default="all",
+    )
+    parser.add_argument("--reference-track", type=_nonnegative_int, default=0)
+    parser.add_argument("--candidate-track", type=_nonnegative_int, default=0)
+    parser.add_argument("--start", type=_nonnegative_float)
+    parser.add_argument("--duration", type=_positive_float)
+    parser.add_argument("--ffmpeg", default="ffmpeg", help="FFmpeg executable")
+    parser.add_argument("--ffprobe", default="ffprobe", help="FFprobe executable")
+    parser.add_argument("--timeout", type=_positive_float)
+    parser.add_argument("--probe-timeout", type=_positive_float, default=10.0)
+    parser.add_argument("--json", action="store_true", help="Print quality JSON")
+    parser.set_defaults(handler=_run_quality)
+
+
 def _add_loudness(
     commands: argparse._SubParsersAction[argparse.ArgumentParser],
 ) -> None:
@@ -3307,6 +3342,29 @@ def _run_compare(args: argparse.Namespace) -> int:
     return 0
 
 
+def _run_quality(args: argparse.Namespace) -> int:
+    result = measure_quality(
+        cast(str, args.reference),
+        cast(str, args.candidate),
+        metric=cast(QualityMetric, args.metric),
+        reference_track=cast(int, args.reference_track),
+        candidate_track=cast(int, args.candidate_track),
+        start=cast(float | None, args.start),
+        duration=cast(float | None, args.duration),
+        ffmpeg=cast(str, args.ffmpeg),
+        ffprobe=cast(str, args.ffprobe),
+        timeout=cast(float | None, args.timeout),
+        probe_timeout=cast(float, args.probe_timeout),
+    )
+    if cast(bool, args.json):
+        data = asdict(result)
+        data["schema_version"] = _JSON_SCHEMA_VERSION
+        print(json.dumps(_redact_json(data), indent=2, sort_keys=True))
+    else:
+        print(redact_text(_format_quality(result)))
+    return 0
+
+
 def _run_loudness(args: argparse.Namespace) -> int:
     result = measure_loudness(
         cast(str, args.source),
@@ -3884,6 +3942,56 @@ def _format_comparison(result: MediaComparison) -> str:
     ]
     lines.extend(" | ".join(row) for row in rows)
     return "\n".join(lines)
+
+
+def _format_quality(result: QualityReport) -> str:
+    window = "full shared timeline"
+    if result.start is not None or result.duration is not None:
+        start = 0 if result.start is None else result.start
+        duration = "to end" if result.duration is None else f"{result.duration:g}s"
+        window = f"start {start:g}s, duration {duration}"
+    lines = [
+        "Visual quality report",
+        f"Reference: {result.reference} (video track {result.reference_track})",
+        f"Candidate: {result.candidate} (video track {result.candidate_track})",
+        f"Dimensions: {result.width}x{result.height}",
+        f"Window: {window}",
+    ]
+    if result.psnr is not None:
+        lines.extend(
+            (
+                "PSNR:",
+                f"  average: {_quality_db(result.psnr.average_db)}",
+                f"  minimum: {_quality_db(result.psnr.minimum_db)}",
+                f"  maximum: {_quality_db(result.psnr.maximum_db)}",
+            )
+        )
+        if result.psnr.components:
+            values = ", ".join(
+                f"{item.name.upper()} {_quality_db(item.value)}"
+                for item in result.psnr.components
+            )
+            lines.append(f"  components: {values}")
+    if result.ssim is not None:
+        lines.extend(
+            (
+                "SSIM:",
+                f"  all: {result.ssim.all:.6f} ({_quality_db(result.ssim.db)})",
+            )
+        )
+        if result.ssim.components:
+            values = ", ".join(
+                f"{item.name.upper()} {item.value:.6f}"
+                + ("" if item.db is None else f" ({_quality_db(item.db)})")
+                for item in result.ssim.components
+            )
+            lines.append(f"  components: {values}")
+    lines.append(f"Elapsed: {result.elapsed:.2f}s")
+    return "\n".join(lines)
+
+
+def _quality_db(value: float) -> str:
+    return "inf dB" if math.isinf(value) else f"{value:.3f} dB"
 
 
 def _format_loudness(result: LoudnessMeasurement) -> str:
@@ -4498,6 +4606,10 @@ def _format_doctor(report: dict[str, object]) -> str:
 def _redact_json(value: object) -> object:
     if isinstance(value, str):
         return redact_text(value)
+    if isinstance(value, float) and not math.isfinite(value):
+        if math.isnan(value):
+            return None
+        return "inf" if value > 0 else "-inf"
     if isinstance(value, dict):
         return {str(key): _redact_json(item) for key, item in value.items()}
     if isinstance(value, list | tuple):

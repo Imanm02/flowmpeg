@@ -610,6 +610,15 @@ _BASE_COMMAND_CATALOG = (
         output_kind="report",
     ),
     CommandSpec(
+        "quality",
+        "inspect",
+        "Measure PSNR and SSIM against a reference",
+        ("metrics", "compare-quality"),
+        input_kind="reference and candidate video",
+        output_kind="report",
+        capability_group="quality-analysis",
+    ),
+    CommandSpec(
         "analyze-loudness",
         "inspect",
         "Measure EBU R128 audio loudness",
@@ -784,6 +793,7 @@ _COMMAND_TAGS = {
     "detect-scenes": ("archive", "creator"),
     "suggest-crop": ("archive", "creator"),
     "tag-media": ("archive", "copy"),
+    "quality": ("archive", "delivery"),
 }
 
 _MP4 = ("encoder:aac", "encoder:libx264", "muxer:mp4")
@@ -1029,6 +1039,7 @@ _COMMAND_REQUIREMENTS = {
     "detect-black": ("filter:blackdetect",),
     "detect-scenes": _requirements("filter:metadata", "filter:select"),
     "suggest-crop": ("filter:cropdetect",),
+    "quality": ("filter:psnr", "filter:ssim"),
 }
 
 COMMAND_CATALOG = tuple(

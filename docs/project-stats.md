@@ -9,15 +9,15 @@ source change.
 
 | Measure | Count | Source |
 |---|---:|---|
-| Canonical terminal commands | 86 | `COMMAND_CATALOG` |
-| Command aliases | 104 | `COMMAND_CATALOG` |
+| Canonical terminal commands | 87 | `COMMAND_CATALOG` |
+| Command aliases | 106 | `COMMAND_CATALOG` |
 | Python shortcut functions | 68 | `shortcuts.__all__` |
-| One-line terminal examples | 87 | CLI example catalog |
+| One-line terminal examples | 88 | CLI example catalog |
 | Stable error identifiers | 16 | CLI error guide |
 | Stable audit findings | 20 | Media audit |
-| Doctor feature groups | 16 | Doctor requirements |
-| Test function definitions | 436 | `tests/test_*.py` |
-| FFmpeg integration tests | 40 | Pytest markers |
+| Doctor feature groups | 17 | Doctor requirements |
+| Test function definitions | 448 | `tests/test_*.py` |
+| FFmpeg integration tests | 41 | Pytest markers |
 | Documentation pages | 18 | `docs/*.md` |
 | Documented command lines | 455 | Markdown code lines |
 | Completed roadmap items | 113 | `ROADMAP.md` |
@@ -37,7 +37,7 @@ counts distinct canonical commands with at least one built-in example.
 | images | 7 | 9 | 7 | 7/7 (100%) | 6 | `#######` |
 | subtitles | 4 | 5 | 4 | 4/4 (100%) | 4 | `####` |
 | metadata | 3 | 4 | 3 | 3/3 (100%) | 2 | `###` |
-| inspect | 10 | 14 | 10 | 10/10 (100%) | 0 | `##########` |
+| inspect | 11 | 16 | 11 | 11/11 (100%) | 0 | `###########` |
 | help | 4 | 0 | 4 | 4/4 (100%) | 0 | `####` |
 
 ## Use-case coverage
@@ -47,12 +47,12 @@ The bar uses one `#` per canonical command carrying the tag.
 | Tag | Commands | Examples | Bar |
 |---|---:|---:|---|
 | accessibility | 4 | 4 | `####` |
-| archive | 20 | 20 | `####################` |
+| archive | 21 | 21 | `#####################` |
 | copy | 7 | 7 | `#######` |
 | creator | 49 | 50 | `#################################################` |
-| delivery | 25 | 26 | `#########################` |
+| delivery | 26 | 27 | `##########################` |
 | discover | 4 | 4 | `####` |
-| inspect | 10 | 10 | `##########` |
+| inspect | 11 | 11 | `###########` |
 | podcast | 21 | 21 | `#####################` |
 | privacy | 4 | 4 | `####` |
 | silent-input | 37 | 38 | `#####################################` |

@@ -65,6 +65,14 @@ from flowmpeg.probe import (
     probe_raw,
 )
 from flowmpeg.progress import Progress
+from flowmpeg.quality import (
+    PsnrScore,
+    QualityComponent,
+    QualityMetric,
+    QualityReport,
+    SsimScore,
+    measure_quality,
+)
 from flowmpeg.recipes.audio import (
     change_audio_speed,
     delay_audio,
@@ -151,6 +159,10 @@ __all__ = [
     "Plan",
     "ProbeError",
     "Progress",
+    "PsnrScore",
+    "QualityComponent",
+    "QualityMetric",
+    "QualityReport",
     "Rational",
     "RunResult",
     "SceneChange",
@@ -158,6 +170,7 @@ __all__ = [
     "SegmentWorkflow",
     "SilenceInterval",
     "SilenceReport",
+    "SsimScore",
     "StreamKind",
     "StreamInfo",
     "SubtitleStream",
@@ -187,6 +200,7 @@ __all__ = [
     "hls_package",
     "media",
     "measure_loudness",
+    "measure_quality",
     "mix_audio",
     "normalize_loudness",
     "normalize_loudness_measured",

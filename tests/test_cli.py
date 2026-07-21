@@ -40,6 +40,7 @@ from flowmpeg.probe import (
     VideoStreamInfo,
 )
 from flowmpeg.progress import Progress
+from flowmpeg.quality import PsnrScore, QualityComponent, QualityReport, SsimScore
 from flowmpeg.runner import RunResult
 from flowmpeg.scenes import SceneChange, SceneReport
 from flowmpeg.silence import SilenceInterval, SilenceReport
@@ -1099,6 +1100,40 @@ def test_compare_json_reports_source_values(
     assert report["size_delta"] == -400
     assert report["before"]["video_codec"] == "h264"
     assert report["after"]["width"] == 1280
+
+
+def test_quality_prints_psnr_and_ssim(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    monkeypatch.setattr(cli, "measure_quality", lambda *args, **kwargs: _quality())
+
+    assert cli.main(["metrics", "reference.mp4", "candidate.mp4"]) == 0
+    output = capsys.readouterr().out
+
+    assert "Visual quality report" in output
+    assert "Dimensions: 1920x1080" in output
+    assert "average: 42.700 dB" in output
+    assert "maximum: inf dB" in output
+    assert "all: 0.993000 (21.549 dB)" in output
+    assert "Y 0.991000 (20.457 dB)" in output
+
+
+def test_quality_json_serializes_infinite_psnr(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    monkeypatch.setattr(cli, "measure_quality", lambda *args, **kwargs: _quality())
+
+    assert (
+        cli.main(["compare-quality", "reference.mp4", "candidate.mp4", "--json"]) == 0
+    )
+    report = json.loads(capsys.readouterr().out)
+
+    assert report["schema_version"] == 1
+    assert report["psnr"]["maximum_db"] == "inf"
+    assert report["ssim"]["all"] == 0.993
+    assert report["width"] == 1920
 
 
 def test_loudness_prints_measured_values(
@@ -2740,6 +2775,31 @@ def _comparison() -> MediaComparison:
         0,
     )
     return MediaComparison(before, after, -400, -40.0, -0.5)
+
+
+def _quality() -> QualityReport:
+    return QualityReport(
+        "reference.mp4",
+        "candidate.mp4",
+        0,
+        0,
+        1920,
+        1080,
+        None,
+        None,
+        PsnrScore(
+            42.7,
+            40.1,
+            float("inf"),
+            (QualityComponent("y", 42.1),),
+        ),
+        SsimScore(
+            0.993,
+            21.549,
+            (QualityComponent("y", 0.991, 20.457),),
+        ),
+        1.25,
+    )
 
 
 def _loudness() -> LoudnessMeasurement:
