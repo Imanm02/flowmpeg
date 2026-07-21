@@ -5,6 +5,7 @@ from pathlib import Path
 from flowmpeg import __version__
 from flowmpeg.ui.application import UiApplication
 from flowmpeg.ui.jobs import JobManager, UiJob
+from flowmpeg.ui.readiness import SystemReadiness, ToolReadiness, ToolState
 from flowmpeg.ui.schema import FieldKind, UiCommand, UiField, UiSchema
 from flowmpeg.ui.session import UiSession
 
@@ -60,6 +61,26 @@ def test_ui_schema_endpoint_returns_command_forms() -> None:
 
     assert response.status == 200
     assert data["commands"][0]["name"] == "errors"
+
+
+def test_ui_readiness_endpoint_reports_both_media_tools() -> None:
+    readiness = SystemReadiness(
+        ToolReadiness("ffmpeg", ToolState.READY, path="ffmpeg"),
+        ToolReadiness("ffprobe", ToolState.MISSING),
+    )
+    application = UiApplication(
+        UiSchema(1, (), ()),
+        UiSession("test-token"),
+        readiness_provider=lambda: readiness,
+    )
+
+    response = application.handle("GET", "/api/readiness")
+    data = json.loads(response.body)
+
+    assert response.status == 200
+    assert data["ready"] is False
+    assert data["ffmpeg"]["state"] == "ready"
+    assert data["ffprobe"]["state"] == "missing"
 
 
 def test_ui_application_rejects_post_without_session_token() -> None:
