@@ -143,3 +143,16 @@ target.
 
 Why I use it: the UI keeps the target visible while Flowmpeg handles the
 measure-then-encode workflow.
+
+### Clean a voice recording
+
+Input: `recording.wav`.
+
+```console
+flowmpeg voice recording.wav -o finished.wav
+```
+
+Output: a speech-focused audio file with the voice chain applied.
+
+Why I use it: one form collects the common voice cleanup settings I would
+otherwise repeat by hand.
