@@ -83,6 +83,8 @@ timelines, and threshold choices for different recordings.
 flowmpeg ui
 ```
 
+![Flowmpeg UI home](docs/assets/ui-home.png)
+
 This opens a local media workbench with searchable forms for the installed
 commands. I can browse to input files, preview the exact one-line command, run
 it on my computer, follow its output, and cancel it from the job panel.
