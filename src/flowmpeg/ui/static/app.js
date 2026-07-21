@@ -323,13 +323,13 @@ function renderField(field) {
   if (field.kind === "boolean") {
     return renderBooleanField(field);
   }
-  const wrapper = document.createElement("label");
+  const wrapper = document.createElement("div");
   wrapper.className = "field";
   wrapper.classList.toggle("wide", field.multiple || field.pathRole !== "none");
-  wrapper.htmlFor = `field-${field.name}`;
 
-  const label = document.createElement("span");
+  const label = document.createElement("label");
   label.className = "field-label";
+  label.htmlFor = `field-${field.name}`;
   label.textContent = field.label;
   if (field.required) {
     const required = document.createElement("span");
