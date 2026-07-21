@@ -31,3 +31,18 @@ def test_ui_index_has_semantic_command_and_activity_regions() -> None:
     assert 'id="job-list"' in index
     assert 'aria-live="polite"' in index
     assert 'id="file-dialog"' in index
+
+
+def test_ui_index_exposes_readiness_targets() -> None:
+    index = render_index("local-test-token").data.decode()
+
+    assert 'id="readiness-card"' in index
+    assert 'id="ffmpeg-status"' in index
+    assert 'id="ffprobe-status"' in index
+
+
+def test_ui_script_loads_readiness_endpoint() -> None:
+    script = load_asset("app.js").data.decode()
+
+    assert 'api("/api/readiness")' in script
+    assert "renderReadiness(readiness)" in script
