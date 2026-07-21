@@ -440,3 +440,16 @@ Output: converted MP4 files in the selected output folder, processed in order.
 
 Why I use it: the UI makes the input pattern, suffix, and output folder easy to
 review before a batch starts.
+
+### Remux without re-encoding
+
+Input: `camera.mp4`.
+
+```console
+flowmpeg remux camera.mp4 -o camera.mkv
+```
+
+Output: a new container file that copies selected streams when compatible.
+
+Why I use it: the UI keeps this separate from transcoding, so I do not choose a
+slower encode by mistake.
