@@ -939,6 +939,16 @@ function renderJobs() {
       void copyText(job.display, "Job command copied.");
     });
     actions.append(copy);
+    if (job.output) {
+      const copyOutput = document.createElement("button");
+      copyOutput.type = "button";
+      copyOutput.className = "quiet-button";
+      copyOutput.textContent = "Copy output";
+      copyOutput.addEventListener("click", () => {
+        void copyText(job.output, "Job output copied.");
+      });
+      actions.append(copyOutput);
+    }
     if (["queued", "running"].includes(job.status)) {
       const cancel = document.createElement("button");
       cancel.type = "button";
