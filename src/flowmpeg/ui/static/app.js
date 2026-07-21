@@ -1047,6 +1047,19 @@ elements.search.addEventListener("input", (event) => {
   renderNavigation();
 });
 
+document.querySelectorAll("[data-command]").forEach((button) => {
+  button.addEventListener("click", () => {
+    const command = state.schema?.commands.find(
+      (item) => item.name === button.dataset.command,
+    );
+    if (!command) {
+      showToast("This command is not available in the installed version.");
+      return;
+    }
+    selectCommand(command);
+  });
+});
+
 async function boot() {
   try {
     loadFavorites();
