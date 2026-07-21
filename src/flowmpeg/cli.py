@@ -1807,6 +1807,16 @@ def _add_shrink_video(
     parser.add_argument("--max-width", type=_positive_int)
     parser.add_argument("--max-height", type=_positive_int, default=720)
     parser.add_argument("--fps", type=_positive_int, default=30)
+    parser.add_argument(
+        "--keep-size",
+        action="store_true",
+        help="Keep source dimensions apart from even-pixel rounding",
+    )
+    parser.add_argument(
+        "--keep-fps",
+        action="store_true",
+        help="Keep the original frame rate",
+    )
     parser.add_argument("--audio-codec", choices=("aac", "opus"), default="aac")
     parser.add_argument("--audio-bitrate", default="96k")
     _audio_toggle(parser)
@@ -2955,6 +2965,11 @@ def _run_media(args: argparse.Namespace) -> int:
     timeout = cast(float | None, values["timeout"])
     expected_duration = cast(float | None, values["expected_duration"])
     show_progress = cast(bool, values["progress"])
+    if values.pop("keep_size", False):
+        values["max_width"] = None
+        values["max_height"] = None
+    if values.pop("keep_fps", False):
+        values["fps"] = None
     if expected_duration is None and factory in _DURATION_FACTORIES:
         known_duration = values.get("duration")
         if isinstance(known_duration, float):

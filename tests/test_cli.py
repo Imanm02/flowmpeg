@@ -316,6 +316,28 @@ def test_shrink_command_builds_small_phone_export(
     assert "-max_muxing_queue_size 1024" in output
 
 
+def test_shrink_command_can_keep_size_and_frame_rate(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    assert (
+        cli.main(
+            [
+                "shrink",
+                "input.mov",
+                "--keep-size",
+                "--keep-fps",
+                "-o",
+                "output.mp4",
+                "--dry-run",
+            ]
+        )
+        == 0
+    )
+    output = capsys.readouterr().out
+    assert "scale=w=trunc(iw/2)*2:h=trunc(ih/2)*2" in output
+    assert "fps=fps=" not in output
+
+
 @pytest.mark.parametrize(
     "arguments",
     [
