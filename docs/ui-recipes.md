@@ -531,3 +531,16 @@ Output: an MP4 with one fixed rectangular region blurred.
 
 Why I use it: coordinates are easier to review in named form fields than in a
 raw filter string.
+
+### Change clip speed
+
+Input: `lesson.mp4`.
+
+```console
+flowmpeg speed lesson.mp4 --factor 1.5 -o lesson-fast.mp4
+```
+
+Output: a faster MP4 with matching video timing and audio tempo.
+
+Why I use it: previewing the factor helps avoid accidentally making a clip too
+slow or too fast.
