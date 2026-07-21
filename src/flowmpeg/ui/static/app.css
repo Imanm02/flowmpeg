@@ -278,6 +278,46 @@ h3 {
   font-weight: 750;
 }
 
+.quick-start {
+  margin-top: 2rem;
+}
+
+.quick-start h3 {
+  margin-bottom: 1rem;
+  font-size: 1.2rem;
+}
+
+.quick-start-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.quick-start-grid button {
+  padding: 1rem;
+  color: inherit;
+  text-align: left;
+  background: var(--surface-soft);
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+}
+
+.quick-start-grid button:hover {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+
+.quick-start-grid strong,
+.quick-start-grid span {
+  display: block;
+}
+
+.quick-start-grid span {
+  margin-top: 0.25rem;
+  color: var(--text-soft);
+  font-size: 0.76rem;
+}
+
 .browser-heading h1,
 .activity-panel h2 {
   margin-bottom: 0.35rem;
@@ -870,7 +910,8 @@ pre {
   }
 
   .surface-stats,
-  .form-section {
+  .form-section,
+  .quick-start-grid {
     grid-template-columns: 1fr;
   }
 
