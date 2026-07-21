@@ -6,11 +6,12 @@ This file is generated from `COMMAND_CATALOG`. Run
 Tags describe use cases. Capability groups provide broad doctor checks.
 Exact needs are checked by `flowmpeg doctor --command NAME`.
 
-## Video (22)
+## Video (23)
 
 | Command | Aliases | Input | Output | Tags | Doctor group | Exact needs |
 |---|---|---|---|---|---|---|
 | `transcode` | `convert` | media | media | `creator`, `delivery`, `silent-input` | `web-video` | `encoder:aac`, `encoder:libx264`, `muxer:mp4` |
+| `batch-transcode` | `batch`, `batch-convert` | files, directories, or patterns | media directory | `creator`, `delivery`, `silent-input` | `web-video` | `encoder:aac`, `encoder:libx264`, `muxer:mp4` |
 | `transcode-webm` | `webm`, `vp9` | media | media | `creator`, `delivery`, `silent-input` | `webm-video` | `encoder:libopus`, `encoder:libvpx-vp9`, `muxer:webm` |
 | `transcode-hevc` | `hevc`, `h265` | media | media | `creator`, `archive`, `delivery`, `silent-input` | `hevc-video` | `encoder:aac`, `encoder:libx265`, `muxer:mp4` |
 | `transcode-av1` | `av1`, `svt-av1` | media | media | `creator`, `archive`, `delivery`, `silent-input` | `av1-video` | `encoder:libopus`, `encoder:libsvtav1`, `muxer:webm` |

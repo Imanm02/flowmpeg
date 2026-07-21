@@ -53,6 +53,7 @@ class BatchItemResult:
     elapsed: float = 0.0
     outputs: tuple[str, ...] = ()
     error: str | None = None
+    error_type: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -224,6 +225,7 @@ def run_batch(
                 "cancelled",
                 time.monotonic() - job_started,
                 error=redact_text(str(error)),
+                error_type=type(error).__name__,
             )
             items.append(item)
             _notify(on_item, item)
@@ -235,6 +237,7 @@ def run_batch(
                 "failed",
                 time.monotonic() - job_started,
                 error=redact_text(str(error)),
+                error_type=type(error).__name__,
             )
             items.append(item)
             _notify(on_item, item)

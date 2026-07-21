@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import shutil
+import subprocess
 from pathlib import Path
 from typing import cast
 
@@ -15,6 +17,7 @@ from flowmpeg import (
     input,
     output,
     run_batch,
+    shortcuts,
 )
 from flowmpeg.plan import Plan
 from flowmpeg.runner import RunResult
@@ -153,6 +156,7 @@ def test_batch_cancels_current_and_remaining_jobs(
 
     assert result.cancelled == 2
     assert result.items[0].error == "FFmpeg job was cancelled"
+    assert result.items[0].error_type == "JobCancelledError"
     assert result.items[1].error is None
 
 
@@ -217,3 +221,41 @@ def test_workspace_rejects_use_after_cleanup(tmp_path: Path) -> None:
 
     with pytest.raises(RuntimeError, match="closed"):
         _ = workspace.root
+
+
+@pytest.mark.integration
+def test_batch_runs_generated_videos(tmp_path: Path) -> None:
+    ffmpeg = shutil.which("ffmpeg")
+    ffprobe = shutil.which("ffprobe")
+    if ffmpeg is None or ffprobe is None:
+        pytest.skip("FFmpeg and FFprobe are required")
+    sources = (tmp_path / "one.mov", tmp_path / "two.mov")
+    for index, source in enumerate(sources, start=1):
+        subprocess.run(
+            (
+                ffmpeg,
+                "-hide_banner",
+                "-loglevel",
+                "error",
+                "-y",
+                "-f",
+                "lavfi",
+                "-i",
+                f"color=c=0x{index}{index}{index}{index}{index}{index}:s=32x32:d=0.2",
+                "-c:v",
+                "mpeg4",
+                str(source),
+            ),
+            check=True,
+        )
+    targets = (tmp_path / "one.mp4", tmp_path / "two.mp4")
+    jobs = tuple(
+        BatchJob(source.name, shortcuts.transcode(source, target, include_audio=False))
+        for source, target in zip(sources, targets, strict=True)
+    )
+
+    result = run_batch(jobs, ffmpeg=ffmpeg, ffprobe=ffprobe)
+
+    assert result.ok
+    assert result.completed == 2
+    assert all(target.is_file() for target in targets)

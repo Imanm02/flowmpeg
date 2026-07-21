@@ -29,6 +29,15 @@ _BASE_COMMAND_CATALOG = (
         capability_group="web-video",
     ),
     CommandSpec(
+        "batch-transcode",
+        "video",
+        "Convert local videos as one ordered batch",
+        ("batch", "batch-convert"),
+        input_kind="files, directories, or patterns",
+        output_kind="media directory",
+        capability_group="web-video",
+    ),
+    CommandSpec(
         "transcode-webm",
         "video",
         "Encode VP9 and Opus WebM",
@@ -709,6 +718,7 @@ _CATEGORY_TAGS = {
 
 _COMMAND_TAGS = {
     "transcode": ("delivery", "silent-input"),
+    "batch-transcode": ("delivery", "silent-input"),
     "transcode-webm": ("delivery", "silent-input"),
     "transcode-hevc": ("archive", "delivery", "silent-input"),
     "transcode-av1": ("archive", "delivery", "silent-input"),
@@ -777,6 +787,7 @@ def _requirements(*names: str) -> tuple[str, ...]:
 
 _COMMAND_REQUIREMENTS = {
     "transcode": _MP4,
+    "batch-transcode": _MP4,
     "transcode-webm": (
         "encoder:libopus",
         "encoder:libvpx-vp9",

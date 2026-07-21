@@ -9,15 +9,15 @@ source change.
 
 | Measure | Count | Source |
 |---|---:|---|
-| Canonical terminal commands | 84 | `COMMAND_CATALOG` |
-| Command aliases | 100 | `COMMAND_CATALOG` |
+| Canonical terminal commands | 85 | `COMMAND_CATALOG` |
+| Command aliases | 102 | `COMMAND_CATALOG` |
 | Python shortcut functions | 68 | `shortcuts.__all__` |
-| One-line terminal examples | 85 | CLI example catalog |
+| One-line terminal examples | 86 | CLI example catalog |
 | Stable error identifiers | 16 | CLI error guide |
 | Stable audit findings | 20 | Media audit |
 | Doctor feature groups | 16 | Doctor requirements |
-| Test function definitions | 398 | `tests/test_*.py` |
-| FFmpeg integration tests | 38 | Pytest markers |
+| Test function definitions | 423 | `tests/test_*.py` |
+| FFmpeg integration tests | 39 | Pytest markers |
 | Documentation pages | 17 | `docs/*.md` |
 | Documented command lines | 416 | Markdown code lines |
 | Completed roadmap items | 111 | `ROADMAP.md` |
@@ -30,7 +30,7 @@ counts distinct canonical commands with at least one built-in example.
 
 | Category | Commands | Aliases | Examples | Coverage | Python | Bar |
 |---|---:|---:|---:|---:|---:|---|
-| video | 22 | 28 | 23 | 22/22 (100%) | 20 | `######################` |
+| video | 23 | 30 | 24 | 23/23 (100%) | 20 | `#######################` |
 | audio | 21 | 29 | 21 | 21/21 (100%) | 14 | `#####################` |
 | composition | 9 | 9 | 9 | 9/9 (100%) | 9 | `#########` |
 | effects | 5 | 4 | 5 | 5/5 (100%) | 5 | `#####` |
@@ -49,13 +49,13 @@ The bar uses one `#` per canonical command carrying the tag.
 | accessibility | 4 | 4 | `####` |
 | archive | 19 | 19 | `###################` |
 | copy | 7 | 7 | `#######` |
-| creator | 47 | 48 | `###############################################` |
-| delivery | 24 | 25 | `########################` |
+| creator | 48 | 49 | `################################################` |
+| delivery | 25 | 26 | `#########################` |
 | discover | 4 | 4 | `####` |
 | inspect | 10 | 10 | `##########` |
 | podcast | 21 | 21 | `#####################` |
 | privacy | 4 | 4 | `####` |
-| silent-input | 35 | 36 | `###################################` |
+| silent-input | 36 | 37 | `####################################` |
 
 ## What the counts mean
 

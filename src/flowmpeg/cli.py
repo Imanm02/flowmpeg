@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import glob
 import json
 import math
 import os
@@ -14,6 +15,7 @@ import sys
 import tempfile
 from collections.abc import Callable, Sequence
 from dataclasses import asdict, dataclass, replace
+from pathlib import Path
 from typing import TextIO, cast
 
 from flowmpeg import __version__, shortcuts
@@ -25,6 +27,7 @@ from flowmpeg.audit import (
     MediaAudit,
     audit_media,
 )
+from flowmpeg.batch import BatchJob, BatchResult, run_batch
 from flowmpeg.black import BlackReport, detect_black
 from flowmpeg.catalog import CATEGORIES, COMMAND_CATALOG, TAGS, command_spec
 from flowmpeg.comparison import MediaComparison, MediaSummary, compare_media
@@ -63,6 +66,24 @@ _Factory = Callable[..., Plan]
 _ArtifactFactory = Callable[..., SegmentWorkflow]
 _Handler = Callable[[argparse.Namespace], int]
 _JSON_SCHEMA_VERSION = 1
+_VIDEO_INPUT_SUFFIXES = frozenset(
+    {
+        ".3gp",
+        ".avi",
+        ".flv",
+        ".m2ts",
+        ".m4v",
+        ".mkv",
+        ".mov",
+        ".mp4",
+        ".mpeg",
+        ".mpg",
+        ".mts",
+        ".ts",
+        ".webm",
+        ".wmv",
+    }
+)
 
 _CONTROL_NAMES = {
     "command",
@@ -89,6 +110,7 @@ class _Example:
 
 _BASE_EXAMPLES = (
     _Example("video", "flowmpeg convert recording.mov -o recording.mp4"),
+    _Example("video", 'flowmpeg batch "recordings/*.mov" -o converted'),
     _Example("video", "flowmpeg webm recording.mov -o recording.webm"),
     _Example("video", "flowmpeg hevc recording.mov -o recording-hevc.mp4"),
     _Example("video", "flowmpeg av1 recording.mov -o recording-av1.webm"),
@@ -514,6 +536,7 @@ def build_parser() -> argparse.ArgumentParser:
     commands = parser.add_subparsers(dest="command", metavar="COMMAND")
 
     _add_transcode(commands)
+    _add_batch_transcode(commands)
     _add_transcode_webm(commands)
     _add_transcode_hevc(commands)
     _add_transcode_av1(commands)
@@ -750,6 +773,71 @@ def _add_transcode(
     _source(parser)
     _audio_toggle(parser)
     _output(parser)
+
+
+def _add_batch_transcode(
+    commands: argparse._SubParsersAction[argparse.ArgumentParser],
+) -> None:
+    parser = commands.add_parser(
+        "batch-transcode",
+        aliases=["batch", "batch-convert"],
+        help="Convert several local videos to web MP4 files.",
+        description=(
+            "Convert local files, directories, or quoted patterns to web MP4 files."
+        ),
+        allow_abbrev=False,
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+    parser.add_argument(
+        "sources",
+        nargs="+",
+        help="Input files, directories, or quoted wildcard patterns",
+    )
+    parser.add_argument(
+        "-o",
+        "--output-dir",
+        required=True,
+        help="Directory for converted MP4 files",
+    )
+    parser.add_argument(
+        "--recursive",
+        action="store_true",
+        help="Search directory inputs and double-star patterns recursively",
+    )
+    parser.add_argument(
+        "--name-suffix",
+        default="",
+        help="Text added after each source stem",
+    )
+    _audio_toggle(parser)
+    parser.add_argument(
+        "--continue-on-error",
+        action="store_true",
+        help="Run later files after one conversion fails",
+    )
+    parser.add_argument("--overwrite", action="store_true")
+    parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument("--json", action="store_true", help="Print result JSON")
+    parser.add_argument("--ffmpeg", default="ffmpeg", help="FFmpeg executable")
+    parser.add_argument("--ffprobe", default="ffprobe", help="FFprobe executable")
+    parser.add_argument(
+        "--probe-timeout",
+        type=_positive_float,
+        default=10.0,
+        help="Maximum seconds for each audio stream check",
+    )
+    parser.add_argument(
+        "--timeout",
+        type=_positive_float,
+        help="Maximum run time per file in seconds",
+    )
+    parser.add_argument(
+        "--progress",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Show FFmpeg progress",
+    )
+    parser.set_defaults(handler=_run_batch_transcode)
 
 
 def _add_transcode_webm(
@@ -2685,6 +2773,260 @@ def _run_media(args: argparse.Namespace) -> int:
     destinations = ", ".join(redact_text(destination) for destination in result.outputs)
     print(f"Finished in {result.elapsed:.2f}s: {destinations}")
     return 0
+
+
+def _run_batch_transcode(args: argparse.Namespace) -> int:
+    sources = _discover_batch_sources(
+        cast(Sequence[str], args.sources),
+        recursive=cast(bool, args.recursive),
+    )
+    output_value = cast(str, args.output_dir)
+    if not output_value:
+        raise GraphError("Batch output directories cannot be empty")
+    output_dir = Path(output_value)
+    name_suffix = _batch_name_suffix(cast(str, args.name_suffix))
+    overwrite = cast(bool, args.overwrite)
+    jobs = _batch_transcode_jobs(
+        sources,
+        output_dir,
+        name_suffix=name_suffix,
+        include_audio=cast(bool, args.include_audio),
+        overwrite=overwrite,
+        timeout=cast(float | None, args.timeout),
+    )
+    ffmpeg = cast(str, args.ffmpeg)
+    if cast(bool, args.dry_run):
+        _print_batch_dry_run(jobs, ffmpeg=ffmpeg, as_json=cast(bool, args.json))
+        return 0
+
+    _prepare_batch_output_dir(output_dir)
+    if not overwrite:
+        _check_batch_outputs(jobs)
+    progress_printer = (
+        _ProgressPrinter(sys.stderr) if cast(bool, args.progress) else None
+    )
+    try:
+        result = run_batch(
+            jobs,
+            ffmpeg=ffmpeg,
+            ffprobe=cast(str, args.ffprobe),
+            probe_timeout=cast(float, args.probe_timeout),
+            continue_on_error=cast(bool, args.continue_on_error),
+            on_progress=(
+                (lambda job, event: progress_printer(event))
+                if progress_printer is not None
+                else None
+            ),
+        )
+    finally:
+        if progress_printer is not None:
+            progress_printer.close()
+
+    if cast(bool, args.json):
+        _print_batch_json(result)
+    else:
+        _print_batch_result(result)
+    return _batch_exit_code(result)
+
+
+def _discover_batch_sources(
+    values: Sequence[str],
+    *,
+    recursive: bool,
+) -> tuple[Path, ...]:
+    discovered: list[Path] = []
+    seen: set[str] = set()
+    for value in values:
+        path = Path(value)
+        matches: tuple[Path, ...]
+        if path.is_file():
+            matches = (path,)
+        elif path.is_dir():
+            matches = _batch_directory_files(path, recursive=recursive)
+            if not matches:
+                raise GraphError(
+                    f"No supported videos found in: {redact_text(value)}"
+                )
+        elif glob.has_magic(value):
+            matches = tuple(
+                candidate
+                for candidate in sorted(
+                    (Path(match) for match in glob.glob(value, recursive=recursive)),
+                    key=lambda candidate: os.fspath(candidate).casefold(),
+                )
+                if candidate.is_file()
+                and candidate.suffix.casefold() in _VIDEO_INPUT_SUFFIXES
+            )
+            if not matches:
+                raise GraphError(
+                    f"Source pattern matched no supported videos: {redact_text(value)}"
+                )
+        else:
+            raise GraphError(f"Batch source is not a local file: {redact_text(value)}")
+
+        for match in matches:
+            key = os.path.normcase(os.path.abspath(match))
+            if key not in seen:
+                discovered.append(match)
+                seen.add(key)
+    if not discovered:
+        raise GraphError("Batch conversion requires at least one source file")
+    return tuple(discovered)
+
+
+def _batch_directory_files(directory: Path, *, recursive: bool) -> tuple[Path, ...]:
+    candidates = directory.rglob("*") if recursive else directory.iterdir()
+    return tuple(
+        sorted(
+            (
+                candidate
+                for candidate in candidates
+                if candidate.is_file()
+                and candidate.suffix.casefold() in _VIDEO_INPUT_SUFFIXES
+            ),
+            key=lambda candidate: os.fspath(candidate).casefold(),
+        )
+    )
+
+
+def _batch_name_suffix(value: str) -> str:
+    if any(separator in value for separator in ("/", "\\")):
+        raise GraphError("Batch name suffixes cannot contain path separators")
+    if value in {".", ".."}:
+        raise GraphError("Batch name suffixes cannot be dot paths")
+    return value
+
+
+def _batch_transcode_jobs(
+    sources: tuple[Path, ...],
+    output_dir: Path,
+    *,
+    name_suffix: str,
+    include_audio: bool,
+    overwrite: bool,
+    timeout: float | None,
+) -> tuple[BatchJob, ...]:
+    destinations: dict[str, Path] = {}
+    jobs: list[BatchJob] = []
+    for source in sources:
+        destination = output_dir / f"{source.stem}{name_suffix}.mp4"
+        key = os.path.normcase(os.path.abspath(destination))
+        previous = destinations.get(key)
+        if previous is not None:
+            raise GraphError(
+                "Batch sources produce the same output name: "
+                f"{redact_text(os.fspath(previous))}"
+            )
+        destinations[key] = destination
+        plan = shortcuts.transcode(
+            source,
+            destination,
+            include_audio=include_audio,
+            overwrite=overwrite,
+        )
+        jobs.append(BatchJob(source.name, plan, timeout=timeout))
+    return tuple(jobs)
+
+
+def _prepare_batch_output_dir(directory: Path) -> None:
+    if directory.exists() and not directory.is_dir():
+        raise GraphError(
+            f"Batch output is not a directory: {redact_text(os.fspath(directory))}"
+        )
+    try:
+        directory.mkdir(parents=True, exist_ok=True)
+    except OSError as error:
+        raise FlowmpegError(
+            "Batch output directory could not be created: "
+            f"{redact_text(os.fspath(directory))}"
+        ) from error
+
+
+def _check_batch_outputs(jobs: tuple[BatchJob, ...]) -> None:
+    existing = tuple(
+        output.destination
+        for job in jobs
+        for output in job.plan.outputs
+        if os.path.lexists(output.destination)
+    )
+    if existing:
+        raise OutputExistsError(
+            f"Batch output already exists: {redact_text(existing[0])}"
+        )
+
+
+def _print_batch_dry_run(
+    jobs: tuple[BatchJob, ...],
+    *,
+    ffmpeg: str,
+    as_json: bool,
+) -> None:
+    if as_json:
+        report = {
+            "schema_version": _JSON_SCHEMA_VERSION,
+            "jobs": [
+                {
+                    "command": job.plan.command(ffmpeg),
+                    "name": job.name,
+                    "outputs": [output.destination for output in job.plan.outputs],
+                }
+                for job in jobs
+            ],
+        }
+        print(json.dumps(_redact_json(report), indent=2, sort_keys=True))
+        return
+    for index, job in enumerate(jobs, start=1):
+        print(f"Job {index}/{len(jobs)}: {redact_text(job.name)}")
+        print(job.plan.command(ffmpeg))
+
+
+def _print_batch_json(result: BatchResult) -> None:
+    report = {
+        "schema_version": _JSON_SCHEMA_VERSION,
+        "elapsed": result.elapsed,
+        "counts": {
+            "completed": result.completed,
+            "failed": result.failed,
+            "cancelled": result.cancelled,
+            "skipped": result.skipped,
+        },
+        "ok": result.ok,
+        "items": [asdict(item) for item in result.items],
+    }
+    print(json.dumps(_redact_json(report), indent=2, sort_keys=True))
+
+
+def _print_batch_result(result: BatchResult) -> None:
+    for item in result.items:
+        line = f"{item.status.upper():9} {redact_text(item.name)}"
+        if item.outputs:
+            line += ": " + ", ".join(redact_text(value) for value in item.outputs)
+        elif item.error:
+            line += f": {item.error}"
+        print(line)
+    print(
+        f"Batch finished in {result.elapsed:.2f}s: "
+        f"{result.completed} completed, {result.failed} failed, "
+        f"{result.cancelled} cancelled, {result.skipped} skipped"
+    )
+
+
+def _batch_exit_code(result: BatchResult) -> int:
+    if result.cancelled:
+        return 130
+    first_failure = next(
+        (item for item in result.items if item.status == "failed"),
+        None,
+    )
+    if first_failure is None:
+        return 0
+    return {
+        "BinaryNotFoundError": 3,
+        "BinaryUnusableError": 3,
+        "ExecutionError": 6,
+        "JobTimeoutError": 7,
+        "OutputExistsError": 4,
+    }.get(first_failure.error_type or "", 1)
 
 
 def _run_artifact_workflow(args: argparse.Namespace) -> int:

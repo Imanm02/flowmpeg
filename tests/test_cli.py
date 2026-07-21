@@ -15,6 +15,7 @@ import pytest
 
 from flowmpeg import cli, diagnostics
 from flowmpeg.artifacts import ArtifactSet, SegmentWorkflow
+from flowmpeg.batch import BatchItemResult, BatchResult
 from flowmpeg.black import BlackInterval, BlackReport
 from flowmpeg.catalog import COMMAND_CATALOG
 from flowmpeg.comparison import MediaComparison, MediaSummary
@@ -393,6 +394,233 @@ def test_no_audio_drops_the_audio_mapping(capsys: pytest.CaptureFixture[str]) ->
         == 0
     )
     assert "0:a:0" not in capsys.readouterr().out
+
+
+def test_batch_dry_run_discovers_directory_in_order(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    source_dir = tmp_path / "recordings"
+    source_dir.mkdir()
+    (source_dir / "b.mov").touch()
+    (source_dir / "a.mkv").touch()
+    (source_dir / "notes.txt").touch()
+    output_dir = tmp_path / "converted"
+
+    code = cli.main(
+        [
+            "batch",
+            str(source_dir),
+            "-o",
+            str(output_dir),
+            "--dry-run",
+        ]
+    )
+
+    output = capsys.readouterr().out
+    assert code == 0
+    assert output.index("a.mkv") < output.index("b.mov")
+    assert "a.mp4" in output
+    assert "b.mp4" in output
+    assert "notes.txt" not in output
+    assert not output_dir.exists()
+
+
+def test_batch_dry_run_expands_quoted_pattern(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    (tmp_path / "one.mov").touch()
+    (tmp_path / "two.mov").touch()
+
+    code = cli.main(
+        [
+            "batch-convert",
+            str(tmp_path / "*.mov"),
+            "-o",
+            str(tmp_path / "converted"),
+            "--name-suffix=-web",
+            "--dry-run",
+        ]
+    )
+
+    output = capsys.readouterr().out
+    assert code == 0
+    assert "one-web.mp4" in output
+    assert "two-web.mp4" in output
+
+
+def test_batch_recursive_directory_discovery(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    source_dir = tmp_path / "recordings"
+    nested = source_dir / "day-one"
+    nested.mkdir(parents=True)
+    (nested / "clip.mov").touch()
+    output_dir = tmp_path / "converted"
+
+    code = cli.main(["batch", str(source_dir), "-o", str(output_dir), "--dry-run"])
+
+    assert code == 2
+    assert "No supported videos" in capsys.readouterr().err
+
+    code = cli.main(
+        [
+            "batch",
+            str(source_dir),
+            "-o",
+            str(output_dir),
+            "--recursive",
+            "--dry-run",
+        ]
+    )
+
+    assert code == 0
+    assert "clip.mov" in capsys.readouterr().out
+
+
+def test_batch_rejects_duplicate_output_names(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    first = tmp_path / "first" / "clip.mov"
+    second = tmp_path / "second" / "clip.mkv"
+    first.parent.mkdir()
+    second.parent.mkdir()
+    first.touch()
+    second.touch()
+
+    code = cli.main(
+        [
+            "batch",
+            str(first),
+            str(second),
+            "-o",
+            str(tmp_path / "converted"),
+            "--dry-run",
+        ]
+    )
+
+    assert code == 2
+    assert "same output name" in capsys.readouterr().err
+
+
+def test_batch_preflights_existing_outputs(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    source = tmp_path / "clip.mov"
+    source.touch()
+    output_dir = tmp_path / "converted"
+    output_dir.mkdir()
+    (output_dir / "clip.mp4").touch()
+    monkeypatch.setattr(
+        cli,
+        "run_batch",
+        lambda *args, **kwargs: pytest.fail("Preflight must run before the batch"),
+    )
+
+    code = cli.main(["batch", str(source), "-o", str(output_dir)])
+
+    assert code == 4
+    assert "already exists" in capsys.readouterr().err
+
+
+def test_batch_prints_result_summary(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    source = tmp_path / "clip.mov"
+    source.touch()
+    output_dir = tmp_path / "converted"
+    result = BatchResult(
+        (
+            BatchItemResult(
+                "clip.mov",
+                "completed",
+                0.4,
+                (str(output_dir / "clip.mp4"),),
+            ),
+        ),
+        0.5,
+    )
+    monkeypatch.setattr(cli, "run_batch", lambda *args, **kwargs: result)
+
+    code = cli.main(
+        ["batch-transcode", str(source), "-o", str(output_dir), "--no-progress"]
+    )
+
+    output = capsys.readouterr().out
+    assert code == 0
+    assert "COMPLETED clip.mov" in output
+    assert "1 completed, 0 failed" in output
+    assert output_dir.is_dir()
+
+
+def test_batch_json_reports_failure_exit_code(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    source = tmp_path / "clip.mov"
+    source.touch()
+    result = BatchResult(
+        (
+            BatchItemResult(
+                "clip.mov",
+                "failed",
+                0.1,
+                error="FFmpeg exited with code 1",
+                error_type="ExecutionError",
+            ),
+        ),
+        0.1,
+    )
+    monkeypatch.setattr(cli, "run_batch", lambda *args, **kwargs: result)
+
+    code = cli.main(
+        [
+            "batch",
+            str(source),
+            "-o",
+            str(tmp_path / "converted"),
+            "--json",
+            "--no-progress",
+        ]
+    )
+
+    report = json.loads(capsys.readouterr().out)
+    assert code == 6
+    assert report["ok"] is False
+    assert report["counts"]["failed"] == 1
+    assert report["items"][0]["error_type"] == "ExecutionError"
+
+
+def test_batch_json_dry_run_lists_commands(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    source = tmp_path / "clip.mov"
+    source.touch()
+
+    code = cli.main(
+        [
+            "batch",
+            str(source),
+            "-o",
+            str(tmp_path / "converted"),
+            "--json",
+            "--dry-run",
+        ]
+    )
+
+    report = json.loads(capsys.readouterr().out)
+    assert code == 0
+    assert report["jobs"][0]["name"] == "clip.mov"
+    assert report["jobs"][0]["command"].startswith("ffmpeg ")
 
 
 def test_gif_full_omits_trim_filter(capsys: pytest.CaptureFixture[str]) -> None:
