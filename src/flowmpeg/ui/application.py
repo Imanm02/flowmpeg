@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass, field
 
 from flowmpeg import __version__
@@ -11,10 +12,16 @@ from flowmpeg.ui.http_types import ApiResponse, json_response
 from flowmpeg.ui.invocation import parse_invocation
 from flowmpeg.ui.jobs import JobManager
 from flowmpeg.ui.preview import preview_invocation
+from flowmpeg.ui.readiness import SystemReadiness, check_readiness
 from flowmpeg.ui.request_data import decode_json_body
 from flowmpeg.ui.schema import UiSchema
 from flowmpeg.ui.schema_builder import build_ui_schema
-from flowmpeg.ui.serialization import directory_data, job_data, schema_data
+from flowmpeg.ui.serialization import (
+    directory_data,
+    job_data,
+    readiness_data,
+    schema_data,
+)
 from flowmpeg.ui.session import TOKEN_HEADER, UiSession
 from flowmpeg.ui.validation import UiValidationError
 
@@ -26,6 +33,11 @@ class UiApplication:
     schema: UiSchema
     session: UiSession
     jobs: JobManager = field(default_factory=JobManager, compare=False)
+    readiness_provider: Callable[[], SystemReadiness] = field(
+        default=check_readiness,
+        compare=False,
+        repr=False,
+    )
 
     @classmethod
     def create(cls) -> UiApplication:
@@ -85,6 +97,10 @@ class UiApplication:
             ).with_security_headers()
         if method == "GET" and path == "/api/schema":
             return json_response(schema_data(self.schema)).with_security_headers()
+        if method == "GET" and path == "/api/readiness":
+            return json_response(
+                readiness_data(self.readiness_provider())
+            ).with_security_headers()
         if method == "GET" and path == "/api/jobs":
             return json_response(
                 {"jobs": [job_data(job) for job in self.jobs.list()]}
