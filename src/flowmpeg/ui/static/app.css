@@ -362,6 +362,11 @@ select {
   gap: 0.4rem;
   padding-bottom: 0.8rem;
   overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.category-list::-webkit-scrollbar {
+  display: none;
 }
 
 .category-button,
