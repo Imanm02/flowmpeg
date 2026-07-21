@@ -15,6 +15,7 @@ from flowmpeg.ui.schema_builder import (
     field_is_multiple,
     field_kind,
     field_label,
+    field_minimum,
     field_path_role,
     form_actions,
     merge_ui_fields,
@@ -61,6 +62,14 @@ def test_ui_field_default_hides_suppressed_values() -> None:
 
     assert field_default(hidden) is None
     assert field_default(timeout) == 10.0
+
+
+def test_ui_infers_positive_and_nonnegative_bounds() -> None:
+    parser = command_parsers()["trim"]
+    actions = {action.dest: action for action in form_actions(parser)}
+
+    assert field_minimum(actions["duration"]) == (0, True)
+    assert field_minimum(actions["start"]) == (0, False)
 
 
 def test_ui_detects_repeatable_and_fixed_group_fields() -> None:

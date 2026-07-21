@@ -86,6 +86,17 @@ def field_is_integer(action: argparse.Action) -> bool:
     return action.type is int or type_name.endswith("_int")
 
 
+def field_minimum(action: argparse.Action) -> tuple[int | float | None, bool]:
+    """Return the known lower bound and its exclusivity."""
+
+    type_name = getattr(action.type, "__name__", "")
+    if type_name.startswith("_positive_"):
+        return 0, True
+    if type_name.startswith("_nonnegative_"):
+        return 0, False
+    return None, False
+
+
 def field_choices(action: argparse.Action) -> tuple[str, ...]:
     """Return parser choices as display-safe strings."""
 
@@ -151,6 +162,7 @@ def build_ui_field(action: argparse.Action, output_kind: str) -> UiField:
     if isinstance(action, argparse._StoreConstAction) and action.const is None:
         flags = ()
         clear_flags = tuple(action.option_strings)
+    minimum, exclusive_minimum = field_minimum(action)
     return UiField(
         name=action.dest,
         label=field_label(action.dest),
@@ -166,6 +178,8 @@ def build_ui_field(action: argparse.Action, output_kind: str) -> UiField:
         path_role=field_path_role(action, output_kind),
         advanced=field_is_advanced(action),
         integer=field_is_integer(action),
+        minimum=minimum,
+        exclusive_minimum=exclusive_minimum,
     )
 
 
@@ -267,6 +281,7 @@ __all__ = [
     "field_is_integer",
     "field_kind",
     "field_label",
+    "field_minimum",
     "field_path_role",
     "form_actions",
     "merge_ui_fields",
