@@ -312,3 +312,16 @@ Output: a PNG waveform image for the audio.
 
 Why I use it: it gives a quick visual check of silence, loud sections, and
 rough pacing.
+
+### Package HLS delivery
+
+Input: `movie.mp4`.
+
+```console
+flowmpeg hls movie.mp4 --segment-duration 4 -o movie-hls
+```
+
+Output: an owned HLS folder with a playlist and media segments.
+
+Why I use it: the UI makes the artifact folder clear before a multi-file
+delivery package is created.
