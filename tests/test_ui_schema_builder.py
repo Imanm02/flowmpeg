@@ -185,8 +185,9 @@ def test_ui_builds_commands_from_catalog_and_parser_metadata() -> None:
 def test_ui_command_examples_resolve_aliases() -> None:
     examples = command_examples()
 
-    assert "flowmpeg cut input.mp4 --start 5 --duration 12 -o clip.mp4" in (
-        examples["trim"]
+    assert (
+        "flowmpeg cut input.mp4 --start 5 --duration 12 -o clip.mp4"
+        in (examples["trim"])
     )
     assert "flowmpeg audio input.mp4 -o track.mp3" in examples["extract-audio"]
 

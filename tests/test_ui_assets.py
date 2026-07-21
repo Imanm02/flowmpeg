@@ -1,6 +1,13 @@
 from flowmpeg.ui.assets import load_asset, render_index
 
 
+def asset_text(name: str) -> str:
+    asset = load_asset(name)
+
+    assert asset is not None
+    return asset.data.decode()
+
+
 def test_ui_assets_load_from_the_installed_package() -> None:
     index = load_asset("index.html")
     script = load_asset("app.js")
@@ -42,7 +49,7 @@ def test_ui_index_exposes_readiness_targets() -> None:
 
 
 def test_ui_script_loads_readiness_endpoint() -> None:
-    script = load_asset("app.js").data.decode()
+    script = asset_text("app.js")
 
     assert 'api("/api/readiness")' in script
     assert "renderReadiness(readiness)" in script
@@ -50,7 +57,7 @@ def test_ui_script_loads_readiness_endpoint() -> None:
 
 def test_ui_index_and_script_expose_command_examples() -> None:
     index = render_index("local-test-token").data.decode()
-    script = load_asset("app.js").data.decode()
+    script = asset_text("app.js")
 
     assert 'id="example-panel"' in index
     assert 'id="example-list"' in index
@@ -60,7 +67,7 @@ def test_ui_index_and_script_expose_command_examples() -> None:
 
 def test_ui_index_and_script_expose_preset_files() -> None:
     index = render_index("local-test-token").data.decode()
-    script = load_asset("app.js").data.decode()
+    script = asset_text("app.js")
 
     assert 'id="export-presets"' in index
     assert 'id="import-presets"' in index
@@ -70,7 +77,7 @@ def test_ui_index_and_script_expose_preset_files() -> None:
 
 
 def test_ui_script_exposes_job_copy_actions() -> None:
-    script = load_asset("app.js").data.decode()
+    script = asset_text("app.js")
 
     assert "Copy command" in script
     assert "Job command copied." in script
