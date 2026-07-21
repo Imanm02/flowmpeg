@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 DEFAULT_UI_HOST = "127.0.0.1"
+_LOOPBACK_HOSTS = frozenset({"127.0.0.1", "::1", "localhost"})
 
 
 @dataclass(frozen=True, slots=True)
@@ -15,6 +16,8 @@ class UiAddress:
     port: int = 0
 
     def __post_init__(self) -> None:
+        if self.host.lower() not in _LOOPBACK_HOSTS:
+            raise ValueError("host must be a loopback address")
         if isinstance(self.port, bool) or not isinstance(self.port, int):
             raise TypeError("port must be an integer")
         if not 0 <= self.port <= 65535:

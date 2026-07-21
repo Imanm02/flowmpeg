@@ -16,3 +16,14 @@ def test_ui_address_rejects_ports_outside_tcp_range(port: int) -> None:
 def test_ui_address_rejects_non_integer_ports(port: object) -> None:
     with pytest.raises(TypeError, match="port must be an integer"):
         UiAddress(port=port)  # type: ignore[arg-type]
+
+
+@pytest.mark.parametrize("host", ["0.0.0.0", "192.168.1.4", "example.com"])
+def test_ui_address_rejects_non_loopback_hosts(host: str) -> None:
+    with pytest.raises(ValueError, match="loopback"):
+        UiAddress(host=host)
+
+
+@pytest.mark.parametrize("host", ["127.0.0.1", "::1", "LOCALHOST"])
+def test_ui_address_accepts_loopback_names(host: str) -> None:
+    assert UiAddress(host=host).host == host
