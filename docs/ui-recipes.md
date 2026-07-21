@@ -169,3 +169,16 @@ Output: one mixed audio file containing both inputs.
 
 Why I use it: the UI makes source order obvious before FFmpeg combines the
 tracks.
+
+### Duck music under speech
+
+Input: `talk.mp4` and `music.mp3`.
+
+```console
+flowmpeg duck talk.mp4 music.mp3 -o ducked.mp4
+```
+
+Output: an MP4 where the music lowers under the spoken track.
+
+Why I use it: sidechain-style audio work is easier to trust when the form names
+the speech and music sources separately.
