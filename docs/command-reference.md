@@ -6,6 +6,21 @@ This file is generated from `COMMAND_CATALOG`. Run
 Tags describe use cases. Capability groups provide broad doctor checks.
 Exact needs are checked by `flowmpeg doctor --command NAME`.
 
+## Composition (10)
+
+| Command | Aliases | Input | Output | Tags | Doctor group | Exact needs |
+|---|---|---|---|---|---|---|
+| `run-manifest` | `manifest` | JSON manifest | media | `creator` | none | `encoder:aac`, `encoder:libmp3lame`, `encoder:libopus`, `encoder:libx264`, `encoder:libx265`, `encoder:pcm_s16le`, `filter:acompressor`, `filter:aresample`, `filter:asetpts`, `filter:atrim`, `filter:fps`, `filter:loudnorm`, `filter:scale`, `filter:setpts`, `filter:trim`, `muxer:matroska`, `muxer:mp3`, `muxer:mp4`, `muxer:wav` |
+| `watermark` | `mark` | media | video | `creator`, `delivery`, `silent-input` | `composition` | `encoder:aac`, `encoder:libx264`, `filter:overlay`, `muxer:mp4` |
+| `join-matching` | `join` | media | media | `creator`, `archive` | `composition` | `encoder:aac`, `encoder:libx264`, `filter:asetpts`, `filter:concat`, `filter:setpts`, `muxer:mp4` |
+| `join-normalized` | `join-any`, `normalize-join` | two or more media files | media | `creator`, `delivery`, `silent-input` | `composition` | `encoder:aac`, `encoder:libx264`, `filter:aformat`, `filter:aresample`, `filter:asetpts`, `filter:concat`, `filter:fps`, `filter:pad`, `filter:scale`, `filter:setpts`, `filter:setsar`, `muxer:mp4` |
+| `grid` | none | media | video | `creator`, `silent-input` | `composition` | `encoder:libx264`, `filter:scale`, `filter:xstack`, `muxer:mp4` |
+| `fit-canvas` | `fit` | media | video | `creator`, `delivery`, `silent-input` | `composition` | `encoder:aac`, `encoder:libx264`, `filter:pad`, `filter:scale`, `filter:setsar`, `muxer:mp4` |
+| `picture-in-picture` | `pip` | media | video | `creator`, `silent-input` | `composition` | `encoder:aac`, `encoder:libx264`, `filter:overlay`, `filter:scale`, `filter:setpts`, `muxer:mp4` |
+| `blurred-background` | `blur-bg` | media | video | `creator`, `delivery`, `silent-input` | `composition` | `encoder:aac`, `encoder:libx264`, `filter:crop`, `filter:gblur`, `filter:overlay`, `filter:scale`, `filter:split`, `muxer:mp4` |
+| `still-image-video` | `still-video` | image and audio | video | `creator` | `web-video` | `encoder:aac`, `encoder:libx264`, `filter:pad`, `filter:scale`, `filter:setsar`, `muxer:mp4` |
+| `podcast-audiogram` | `audiogram` | image and audio | video | `creator` | `audiogram` | `encoder:aac`, `encoder:libx264`, `filter:asplit`, `filter:colorkey`, `filter:overlay`, `filter:pad`, `filter:scale`, `filter:setsar`, `filter:showwaves`, `muxer:mp4` |
+
 ## Video (25)
 
 | Command | Aliases | Input | Output | Tags | Doctor group | Exact needs |
@@ -61,20 +76,6 @@ Exact needs are checked by `flowmpeg doctor --command NAME`.
 | `add-music` | `music` | media | video | `podcast` | `audio-processing` | `encoder:aac`, `encoder:libx264`, `filter:amix`, `filter:volume`, `muxer:mp4` |
 | `duck-music` | `duck` | media | video | `podcast` | `audio-processing` | `encoder:aac`, `encoder:libx264`, `filter:amix`, `filter:asplit`, `filter:sidechaincompress`, `filter:volume`, `muxer:mp4` |
 | `tag-audio` | `tag` | audio | audio | `podcast`, `archive` | `audio-files` | `muxer:ipod` |
-
-## Composition (9)
-
-| Command | Aliases | Input | Output | Tags | Doctor group | Exact needs |
-|---|---|---|---|---|---|---|
-| `watermark` | `mark` | media | video | `creator`, `delivery`, `silent-input` | `composition` | `encoder:aac`, `encoder:libx264`, `filter:overlay`, `muxer:mp4` |
-| `join-matching` | `join` | media | media | `creator`, `archive` | `composition` | `encoder:aac`, `encoder:libx264`, `filter:asetpts`, `filter:concat`, `filter:setpts`, `muxer:mp4` |
-| `join-normalized` | `join-any`, `normalize-join` | two or more media files | media | `creator`, `delivery`, `silent-input` | `composition` | `encoder:aac`, `encoder:libx264`, `filter:aformat`, `filter:aresample`, `filter:asetpts`, `filter:concat`, `filter:fps`, `filter:pad`, `filter:scale`, `filter:setpts`, `filter:setsar`, `muxer:mp4` |
-| `grid` | none | media | video | `creator`, `silent-input` | `composition` | `encoder:libx264`, `filter:scale`, `filter:xstack`, `muxer:mp4` |
-| `fit-canvas` | `fit` | media | video | `creator`, `delivery`, `silent-input` | `composition` | `encoder:aac`, `encoder:libx264`, `filter:pad`, `filter:scale`, `filter:setsar`, `muxer:mp4` |
-| `picture-in-picture` | `pip` | media | video | `creator`, `silent-input` | `composition` | `encoder:aac`, `encoder:libx264`, `filter:overlay`, `filter:scale`, `filter:setpts`, `muxer:mp4` |
-| `blurred-background` | `blur-bg` | media | video | `creator`, `delivery`, `silent-input` | `composition` | `encoder:aac`, `encoder:libx264`, `filter:crop`, `filter:gblur`, `filter:overlay`, `filter:scale`, `filter:split`, `muxer:mp4` |
-| `still-image-video` | `still-video` | image and audio | video | `creator` | `web-video` | `encoder:aac`, `encoder:libx264`, `filter:pad`, `filter:scale`, `filter:setsar`, `muxer:mp4` |
-| `podcast-audiogram` | `audiogram` | image and audio | video | `creator` | `audiogram` | `encoder:aac`, `encoder:libx264`, `filter:asplit`, `filter:colorkey`, `filter:overlay`, `filter:pad`, `filter:scale`, `filter:setsar`, `filter:showwaves`, `muxer:mp4` |
 
 ## Effects (5)
 

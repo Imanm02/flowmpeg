@@ -52,6 +52,7 @@ from flowmpeg.errors import (
     ProbeError,
 )
 from flowmpeg.loudness import LoudnessMeasurement, measure_loudness
+from flowmpeg.manifests import load_batch_manifest
 from flowmpeg.model import Expression, MediaGraph, StreamKind, expr
 from flowmpeg.plan import OutputSpec, Plan, output
 from flowmpeg.probe import (
@@ -149,6 +150,7 @@ __all__ = [
     "JobTimeoutError",
     "ImageFormat",
     "LoudnessMeasurement",
+    "load_batch_manifest",
     "LoudnessWorkflow",
     "LoudnessWorkflowResult",
     "MediaGraph",

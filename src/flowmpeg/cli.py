@@ -53,6 +53,7 @@ from flowmpeg.errors import (
     ProbeError,
 )
 from flowmpeg.loudness import LoudnessMeasurement, measure_loudness
+from flowmpeg.manifests import load_batch_manifest
 from flowmpeg.plan import Plan
 from flowmpeg.probe import (
     AudioStreamInfo,
@@ -118,6 +119,7 @@ class _Example:
 
 
 _BASE_EXAMPLES = (
+    _Example("composition", "flowmpeg run-manifest jobs.json --dry-run"),
     _Example("video", "flowmpeg convert recording.mov -o recording.mp4"),
     _Example("video", 'flowmpeg batch "recordings/*.mov" -o converted'),
     _Example("video", 'flowmpeg shrink-batch "clips/*.MOV" -o small-clips'),
@@ -574,6 +576,7 @@ def build_parser() -> argparse.ArgumentParser:
     _add_transcode_hevc(commands)
     _add_transcode_av1(commands)
     _add_hls(commands)
+    _add_manifest(commands)
     _add_dash(commands)
     _add_frame_sequence(commands)
     _add_trim(commands)
@@ -1044,6 +1047,30 @@ def _add_transcode_av1(
     parser.add_argument("--audio-bitrate", default="128k")
     _audio_toggle(parser)
     _output(parser)
+
+
+def _add_manifest(
+    commands: argparse._SubParsersAction[argparse.ArgumentParser],
+) -> None:
+    parser = commands.add_parser(
+        "run-manifest",
+        aliases=["manifest"],
+        help="Run a validated saved JSON batch.",
+        allow_abbrev=False,
+    )
+    parser.add_argument("source", help="JSON batch manifest")
+    parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument("--json", action="store_true")
+    parser.add_argument("--continue-on-error", action="store_true")
+    parser.add_argument("--overwrite", action="store_true")
+    parser.add_argument("--ffmpeg", default="ffmpeg")
+    parser.add_argument("--ffprobe", default="ffprobe")
+    parser.add_argument("--probe-timeout", type=_positive_float, default=10.0)
+    parser.add_argument("--timeout", type=_positive_float)
+    parser.add_argument(
+        "--progress", action=argparse.BooleanOptionalAction, default=True
+    )
+    parser.set_defaults(handler=_run_manifest)
 
 
 def _add_hls(commands: argparse._SubParsersAction[argparse.ArgumentParser]) -> None:
@@ -3049,21 +3076,14 @@ def _add_commands(
     parser.set_defaults(handler=_run_commands)
 
 
-def _run_media(args: argparse.Namespace) -> int:
+def _build_media_plan(args: argparse.Namespace) -> tuple[Plan, float | None]:
     values = vars(args).copy()
     factory = cast(_Factory, values["media_factory"])
     positionals = cast(tuple[str, ...], values["positionals"])
     positional_values = [values.pop(name) for name in positionals]
     output_path = values.pop("output")
 
-    dry_run = cast(bool, values["dry_run"])
-    explain = cast(bool, values["explain"])
-    ffmpeg = cast(str, values["ffmpeg"])
-    ffprobe = cast(str, values["ffprobe"])
-    probe_timeout = cast(float, values["probe_timeout"])
-    timeout = cast(float | None, values["timeout"])
     expected_duration = cast(float | None, values["expected_duration"])
-    show_progress = cast(bool, values["progress"])
     if values.pop("keep_size", False):
         values["max_width"] = None
         values["max_height"] = None
@@ -3085,21 +3105,27 @@ def _run_media(args: argparse.Namespace) -> int:
         values.pop(name, None)
 
     plan = factory(*positional_values, output_path, **values)
-    if explain:
+    return plan, expected_duration
+
+
+def _run_media(args: argparse.Namespace) -> int:
+    plan, expected_duration = _build_media_plan(args)
+    ffmpeg = cast(str, args.ffmpeg)
+    if cast(bool, args.explain):
         print(plan.explain())
-    if dry_run:
+    if cast(bool, args.dry_run):
         print(plan.command(ffmpeg))
         return 0
 
-    progress_printer = _ProgressPrinter(sys.stderr) if show_progress else None
+    progress_printer = _ProgressPrinter(sys.stderr) if args.progress else None
     try:
         result = plan.run(
             ffmpeg=ffmpeg,
-            ffprobe=ffprobe,
-            probe_timeout=probe_timeout,
+            ffprobe=cast(str, args.ffprobe),
+            probe_timeout=cast(float, args.probe_timeout),
             on_progress=progress_printer,
             expected_duration=expected_duration,
-            timeout=timeout,
+            timeout=cast(float | None, args.timeout),
         )
     finally:
         if progress_printer is not None:
@@ -3169,7 +3195,7 @@ def _run_batch_jobs(
     args: argparse.Namespace,
     jobs: tuple[BatchJob, ...],
     *,
-    output_dir: Path,
+    output_dir: Path | None,
     overwrite: bool,
 ) -> int:
     ffmpeg = cast(str, args.ffmpeg)
@@ -3177,7 +3203,8 @@ def _run_batch_jobs(
         _print_batch_dry_run(jobs, ffmpeg=ffmpeg, as_json=cast(bool, args.json))
         return 0
 
-    _prepare_batch_output_dir(output_dir)
+    if output_dir is not None:
+        _prepare_batch_output_dir(output_dir)
     if not overwrite:
         _check_batch_outputs(jobs)
     progress_printer = (
@@ -3450,6 +3477,20 @@ def _batch_exit_code(result: BatchResult) -> int:
         "JobTimeoutError": 7,
         "OutputExistsError": 4,
     }.get(first_failure.error_type or "", 1)
+
+
+def _run_manifest(args: argparse.Namespace) -> int:
+    jobs = load_batch_manifest(cast(str, args.source))
+    overwrite = cast(bool, args.overwrite)
+    jobs = tuple(
+        replace(
+            job,
+            plan=job.plan.overwrite(overwrite),
+            timeout=args.timeout if args.timeout is not None else job.timeout,
+        )
+        for job in jobs
+    )
+    return _run_batch_jobs(args, jobs, output_dir=None, overwrite=overwrite)
 
 
 def _run_artifact_workflow(args: argparse.Namespace) -> int:

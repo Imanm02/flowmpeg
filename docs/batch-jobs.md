@@ -1,5 +1,60 @@
 # Batch jobs from CMD, PowerShell, and Bash
 
+## Save a repeatable batch
+
+I keep repeated jobs in a JSON file so I can review their inputs and settings
+before running them again. Save this as `jobs.json` beside the input files:
+
+```json
+{
+  "schema_version": 1,
+  "jobs": [
+    {
+      "name": "Small phone video",
+      "command": ["shrink", "phone.mov", "--max-height", "720", "-o", "phone-small.mp4"],
+      "timeout": 600
+    },
+    {
+      "name": "Interview audio",
+      "command": ["audio", "interview.mp4", "-o", "interview.mp3"]
+    }
+  ]
+}
+```
+
+```console
+flowmpeg manifest jobs.json --dry-run --json
+flowmpeg manifest jobs.json
+flowmpeg manifest jobs.json --continue-on-error --json
+```
+
+Each `command` is a list of terminal arguments without the word `flowmpeg`.
+Relative media paths are resolved beside the manifest, even when the terminal
+is in a different directory. All jobs are validated before the first encode.
+Dry runs build commands without reading media or creating outputs.
+
+Supported commands are `transcode`, `shrink-video`, `trim`, `resize`,
+`extract-audio`, `remux`, `compress-audio`, and `normalize-loudness`, including
+their aliases. Setup, browser startup, and nested manifests are not job types.
+`doctor --command run-manifest` checks the default capabilities for all of
+these operations. Check an individual operation when using fewer formats.
+
+Version 1 accepts only `schema_version` and `jobs` at the root. Each job accepts
+`name`, `command`, and optional positive `timeout` in seconds. Names must be
+unique. Unknown fields, duplicate JSON keys, more than 1000 jobs, and files
+larger than 1 MiB are rejected. Parent output directories must already exist.
+
+Set execution flags on the outer command. Existing files require an explicit
+`flowmpeg manifest jobs.json --overwrite`. The outer `--timeout` overrides
+job timeouts. Failed jobs use the same ordered result and cancellation rules
+as native folder batches. A manifest is a local text file; keep credentials
+out of it and review files received from someone else before execution.
+
+Python callers can load the same validated plans with
+`flowmpeg.load_batch_manifest("jobs.json")`, then pass them to `run_batch`.
+
+## Convert folders
+
 I wrote the native batch command for the common case where a directory of
 local videos needs the same web MP4 conversion. It works the same way in CMD,
 PowerShell, and Bash because Flowmpeg performs file discovery itself.

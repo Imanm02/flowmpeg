@@ -20,7 +20,28 @@ class CommandSpec:
     requirements: tuple[str, ...] = ()
 
 
+MANIFEST_COMMANDS = frozenset(
+    {
+        "transcode",
+        "shrink-video",
+        "trim",
+        "resize",
+        "extract-audio",
+        "remux",
+        "compress-audio",
+        "normalize-loudness",
+    }
+)
+
 _BASE_COMMAND_CATALOG = (
+    CommandSpec(
+        "run-manifest",
+        "composition",
+        "Run a saved JSON batch",
+        ("manifest",),
+        input_kind="JSON manifest",
+        output_kind="media",
+    ),
     CommandSpec(
         "transcode",
         "video",
@@ -1093,6 +1114,14 @@ _COMMAND_REQUIREMENTS = {
     "suggest-crop": ("filter:cropdetect",),
     "quality": ("filter:psnr", "filter:ssim"),
 }
+
+_COMMAND_REQUIREMENTS["run-manifest"] = _requirements(
+    *{
+        requirement
+        for name in MANIFEST_COMMANDS
+        for requirement in _COMMAND_REQUIREMENTS[name]
+    }
+)
 
 COMMAND_CATALOG = tuple(
     replace(

@@ -322,6 +322,12 @@ def test_documented_edit_commands_build(
 ) -> None:
     batch_source = tmp_path / "batch-input.mov"
     batch_source.touch()
+    manifest_path = tmp_path / "jobs.json"
+    manifest_path.write_text(
+        '{"schema_version":1,"jobs":[{"name":"Example",'
+        '"command":["convert","in.mov","-o","out.mp4"]}]}',
+        encoding="utf-8",
+    )
     monkeypatch.setattr(
         cli,
         "_discover_batch_sources",
@@ -345,6 +351,8 @@ def test_documented_edit_commands_build(
             argv = shlex.split(line)[1:]
             if not argv or argv[0] not in editing_names:
                 continue
+            if argv[0] in {"manifest", "run-manifest"}:
+                argv[1] = str(manifest_path)
             if "--help" in argv or "--version" in argv:
                 continue
             if any(token in argv for token in ("|", ">", "<", "&&")):

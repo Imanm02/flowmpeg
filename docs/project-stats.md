@@ -9,21 +9,21 @@ source change.
 
 | Measure | Count | Source |
 |---|---:|---|
-| Canonical terminal commands | 91 | `COMMAND_CATALOG` |
-| Generated UI command forms | 91 | UI schema builder |
-| Command aliases | 116 | `COMMAND_CATALOG` |
+| Canonical terminal commands | 92 | `COMMAND_CATALOG` |
+| Generated UI command forms | 92 | UI schema builder |
+| Command aliases | 117 | `COMMAND_CATALOG` |
 | Python shortcut functions | 69 | `shortcuts.__all__` |
-| One-line terminal examples | 92 | CLI example catalog |
+| One-line terminal examples | 93 | CLI example catalog |
 | Stable error identifiers | 16 | CLI error guide |
 | Stable audit findings | 20 | Media audit |
 | Doctor feature groups | 19 | Doctor requirements |
-| Test function definitions | 626 | `tests/test_*.py` |
+| Test function definitions | 635 | `tests/test_*.py` |
 | UI test function definitions | 151 | `tests/test_ui_*.py` |
-| FFmpeg integration tests | 43 | Pytest markers |
+| FFmpeg integration tests | 44 | Pytest markers |
 | Documentation pages | 22 | `docs/*.md` |
-| Documented command lines | 607 | Markdown code lines |
-| Completed roadmap items | 136 | `ROADMAP.md` |
-| Open roadmap items | 2 | `ROADMAP.md` |
+| Documented command lines | 610 | Markdown code lines |
+| Completed roadmap items | 137 | `ROADMAP.md` |
+| Open roadmap items | 1 | `ROADMAP.md` |
 
 ## Category matrix
 
@@ -32,9 +32,9 @@ counts distinct canonical commands with at least one built-in example.
 
 | Category | Commands | Aliases | Examples | Coverage | Python | Bar |
 |---|---:|---:|---:|---:|---:|---|
+| composition | 10 | 10 | 10 | 10/10 (100%) | 9 | `##########` |
 | video | 25 | 36 | 26 | 25/25 (100%) | 21 | `#########################` |
 | audio | 21 | 29 | 21 | 21/21 (100%) | 14 | `#####################` |
-| composition | 9 | 9 | 9 | 9/9 (100%) | 9 | `#########` |
 | effects | 5 | 4 | 5 | 5/5 (100%) | 5 | `#####` |
 | images | 7 | 9 | 7 | 7/7 (100%) | 6 | `#######` |
 | subtitles | 4 | 5 | 4 | 4/4 (100%) | 4 | `####` |
@@ -51,7 +51,7 @@ The bar uses one `#` per canonical command carrying the tag.
 | accessibility | 4 | 4 | `####` |
 | archive | 21 | 21 | `#####################` |
 | copy | 7 | 7 | `#######` |
-| creator | 51 | 52 | `###################################################` |
+| creator | 52 | 53 | `####################################################` |
 | delivery | 28 | 29 | `############################` |
 | discover | 6 | 6 | `######` |
 | inspect | 11 | 11 | `###########` |
