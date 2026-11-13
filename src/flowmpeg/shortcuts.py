@@ -2686,8 +2686,8 @@ def _shrink_video_stream(
     if max_width is not None and max_height is not None:
         video = video.filter(
             "scale",
-            w=max_width,
-            h=max_height,
+            w=expr(f"trunc(min(iw,{max_width})/2)*2"),
+            h=expr(f"trunc(min(ih,{max_height})/2)*2"),
             force_original_aspect_ratio="decrease",
             force_divisible_by=2,
         )

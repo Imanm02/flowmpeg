@@ -82,6 +82,10 @@ the codec.
 
 ## Pixel and frame impact
 
+Width and height limits never enlarge a smaller source. For example, a
+640 by 360 clip stays 640 by 360 when both limits are 1280 by 720. Dimensions
+are rounded down to even values for the selected MP4 encoder.
+
 These are rough shape numbers before codec decisions:
 
 | Source shape | Pixels per frame | Compared with 4K |
@@ -284,11 +288,19 @@ Compare source and output file size, duration, codecs, and dimensions:
 flowmpeg compare IMG_9357.MOV IMG_9357.mp4
 ```
 
-Measure PSNR and SSIM on a short section:
+PSNR and SSIM require the same dimensions in both files. The default shrink
+changes dimensions for large inputs, so a direct quality comparison will be
+rejected. To compare an encode at the original size and frame rate, make a
+separate candidate:
 
 ```console
-flowmpeg quality IMG_9357.MOV IMG_9357.mp4 --duration 30
+flowmpeg shrink IMG_9357.MOV --keep-size --keep-fps -o IMG_9357-quality.mp4
+flowmpeg quality IMG_9357.MOV IMG_9357-quality.mp4 --duration 30
 ```
+
+This measures the full-size encode, not the 720p export. For a resized export,
+prepare a reference with matching dimensions and timing first, as described in
+the [quality guide](quality.md). Inspect the resized result in a player too.
 
 Probe exact stream details:
 

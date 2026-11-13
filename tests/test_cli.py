@@ -841,6 +841,8 @@ def test_batch_shrink_json_dry_run_lists_commands(
             str(tmp_path / "small"),
             "--keep-size",
             "--keep-fps",
+            "--max-width",
+            "1280",
             "--json",
             "--dry-run",
         ]
@@ -852,6 +854,8 @@ def test_batch_shrink_json_dry_run_lists_commands(
     assert "clip-small.mp4" in report["jobs"][0]["outputs"][0]
     assert "--keep-size" not in report["jobs"][0]["command"]
     assert "fps=fps=" not in report["jobs"][0]["command"]
+    assert "min(iw" not in report["jobs"][0]["command"]
+    assert "min(ih" not in report["jobs"][0]["command"]
 
 
 def test_gif_full_omits_trim_filter(capsys: pytest.CaptureFixture[str]) -> None:

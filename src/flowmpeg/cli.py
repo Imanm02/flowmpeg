@@ -3149,7 +3149,9 @@ def _run_batch_shrink(args: argparse.Namespace) -> int:
         codec=cast(shortcuts.ShrinkVideoCodec, args.codec),
         crf=cast(int, args.crf),
         encoder_preset=cast(shortcuts.EncoderPreset, args.encoder_preset),
-        max_width=cast(int | None, args.max_width),
+        max_width=None
+        if cast(bool, args.keep_size)
+        else cast(int | None, args.max_width),
         max_height=None
         if cast(bool, args.keep_size)
         else cast(int | None, args.max_height),

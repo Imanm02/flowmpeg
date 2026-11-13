@@ -863,7 +863,8 @@ def test_shrink_video_supports_h264_and_bounded_frames() -> None:
     )
 
     assert plan.filter_graph() == (
-        "[0:v:0]scale=w=1280:h=720:"
+        "[0:v:0]scale=w=trunc(min(iw\\,1280)/2)*2:"
+        "h=trunc(min(ih\\,720)/2)*2:"
         "force_original_aspect_ratio=decrease:force_divisible_by=2[v0]"
     )
     pairs = tuple(zip(plan.raw_argv(), plan.raw_argv()[1:], strict=False))
@@ -1643,6 +1644,34 @@ def test_watermark_shortcut_runs_with_still_image(
     assert result.returncode == 0
     assert probe(target).duration is not None
     assert probe(target).audio_streams
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    ("bounds", "expected"),
+    [((1280, 720), (64, 48)), ((32, 32), (32, 24))],
+)
+def test_shrink_bounds_do_not_enlarge_video(
+    shortcut_media: tuple[str, Path, Path, Path],
+    tmp_path: Path,
+    bounds: tuple[int, int],
+    expected: tuple[int, int],
+) -> None:
+    ffmpeg, source, _, _ = shortcut_media
+    target = tmp_path / "small.mp4"
+    shortcuts.shrink_video(
+        source,
+        target,
+        codec="h264",
+        max_width=bounds[0],
+        max_height=bounds[1],
+        fps=None,
+    ).run(ffmpeg=ffmpeg, timeout=10)
+
+    info = probe(target)
+    video = info.video_streams[0]
+    assert (video.width, video.height) == expected
+    assert info.audio_streams
 
 
 @pytest.mark.integration
