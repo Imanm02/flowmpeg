@@ -167,9 +167,13 @@ Paths can also be `pathlib.Path` objects.
 ```python
 from flowmpeg import media
 
-plan = media("interview.mp4").scale(width=1280).output(
-    "small.mp4",
-    preset="web",
+plan = (
+    media("interview.mp4")
+    .scale(width=1280)
+    .output(
+        "small.mp4",
+        preset="web",
+    )
 )
 
 plan.validate()
@@ -210,11 +214,7 @@ at zero and its expected duration is 60 seconds.
 ```python
 from flowmpeg import media
 
-plan = (
-    media("interview.mp4")
-    .trim(start=30, end=90)
-    .output("clip.mp4", preset="web")
-)
+plan = media("interview.mp4").trim(start=30, end=90).output("clip.mp4", preset="web")
 
 print(plan.command())
 plan.run(expected_duration=60)

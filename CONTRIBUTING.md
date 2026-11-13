@@ -26,6 +26,10 @@ python -m pytest
 python -m pip wheel . --no-deps --wheel-dir dist
 ```
 
+Markdown examples keep their copyable one-line calls. Ruff checks Python
+files; documentation tests parse the Markdown code blocks and build their
+plans separately.
+
 Tests that start FFmpeg use the `integration` marker:
 
 ```console
