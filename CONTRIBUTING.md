@@ -15,6 +15,10 @@ python -m pip install -e ".[dev]"
 FFmpeg and FFprobe are needed for integration tests. Unit tests for graphs,
 compilation, and parsing run without either binary.
 
+CI installs the versions in `uv.lock`. With uv installed, use
+`uv sync --locked --extra dev --python python` to use the Python already on
+`PATH`, then prefix the check commands below with `uv run --frozen`.
+
 ## Run the checks
 
 ```console

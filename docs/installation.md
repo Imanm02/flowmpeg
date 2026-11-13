@@ -269,7 +269,37 @@ ff.transcode("input.mov", "output.mp4").run(
 )
 ```
 
-## Understand setup statuses
+## Recover a blocked Windows launcher
+
+If Windows reports an Application Control error for `flowmpeg.exe`, test the
+module entry point through the Python installation that owns the package:
+
+```console
+python -m flowmpeg --version
+python -m flowmpeg ui
+python -m flowmpeg shrink input.mov -o small.mp4
+```
+
+Both entry points run the same interface. A normal package reinstall can
+repair a stale launcher:
+
+```console
+python -m pip install --force-reinstall --no-deps "https://github.com/Imanm02/flowmpeg/releases/download/v0.2.0a1/flowmpeg-0.2.0a1-py3-none-any.whl"
+```
+
+If the pip-generated launcher remains blocked and uv is already installed,
+try its installer with the same Python interpreter:
+
+```console
+uv pip install --python python --reinstall --no-deps "https://github.com/Imanm02/flowmpeg/releases/download/v0.2.0a1/flowmpeg-0.2.0a1-py3-none-any.whl"
+```
+
+If a device policy still blocks the launcher or Python itself, ask the device
+administrator to approve the installation. Reinstalling does not change that
+policy. The module form also works when the Scripts directory is missing from
+`PATH`.
+
+## Understand executable statuses
 
 | Status | Meaning | First check |
 | --- | --- | --- |

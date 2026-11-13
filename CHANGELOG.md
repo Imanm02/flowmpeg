@@ -1,8 +1,14 @@
 # Changelog
 
-## Unreleased
+## 0.2.0a1 (2026-11-13)
+
+First tagged alpha snapshot. Public APIs may change before a stable release.
 
 ### Added
+
+- HEVC and H.264 size reduction with folder batches and a ready-command guide
+- Validated saved JSON batches with relative paths and execution controls
+- Named HLS and DASH renditions with size caps and target video bitrates
 
 - Immutable media graph with typed audio, video, and subtitle streams
 - Pure FFmpeg argv and `filter_complex` compilation
@@ -42,3 +48,15 @@
 - Browser-local favorites, named presets, and theme choices
 - Loopback-only serving with per-launch request tokens
 - Packaged UI assets checked in source tests and built wheels
+
+### Fixed
+
+- Shrink size caps no longer enlarge smaller inputs
+- Batch shrink honors keep-size for both width and height limits
+- The size guide compares quality only for matching dimensions and timing
+- HLS rejects subsecond segment targets and incomplete adaptive master playlists
+
+### Maintenance
+
+- Updated build, lint, type-checker, and CI setup dependencies
+- Pull requests run one CI matrix instead of duplicate push and PR matrices

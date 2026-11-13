@@ -33,7 +33,7 @@ jobs:
           --cov=flowmpeg --cov-report=term-missing --cov-fail-under=75
       - run: uv build --wheel --out-dir dist
       - run: python -m venv wheel-test
-      - run: wheel-test/bin/python -m pip install --no-index --find-links dist flowmpeg
+      - run: wheel-test/bin/python -m pip install --pre --no-index --find-links dist flowmpeg
       - run: wheel-test/bin/flowmpeg --version
       - run: wheel-test/bin/python -m flowmpeg --version
       - run: wheel-test/bin/flowmpeg ui --help

@@ -114,7 +114,7 @@ from flowmpeg.workflows import (
     normalize_loudness_two_pass,
 )
 
-__version__ = "0.1.0"
+__version__ = "0.2.0a1"
 
 __all__ = [
     "AudioStream",

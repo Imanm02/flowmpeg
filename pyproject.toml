@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "flowmpeg"
-version = "0.1.0"
+version = "0.2.0a1"
 description = "Readable media job plans for FFmpeg"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -14,7 +14,7 @@ authors = [
 ]
 keywords = ["audio", "ffmpeg", "media", "video"]
 classifiers = [
-    "Development Status :: 2 - Pre-Alpha",
+    "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
@@ -57,6 +57,7 @@ include = [
     "/CONTRIBUTING.md",
     "/LICENSE",
     "/README.md",
+    "/ROADMAP.md",
     "/SECURITY.md",
     "/docs",
     "/examples",
@@ -64,6 +65,7 @@ include = [
     "/scripts",
     "/src",
     "/tests",
+    "/uv.lock",
 ]
 
 [tool.mypy]

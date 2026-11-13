@@ -4,7 +4,7 @@ from flowmpeg.ui.assets import load_asset
 
 
 def test_version_is_public() -> None:
-    assert __version__ == "0.1.0"
+    assert __version__ == "0.2.0a1"
 
 
 def test_specific_errors_share_base_class() -> None:

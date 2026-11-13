@@ -1790,7 +1790,7 @@ def test_doctor_json_reports_ready(
     report = json.loads(capsys.readouterr().out)
     assert report["schema_version"] == 1
     assert report["ok"] is True
-    assert report["flowmpeg_version"] == "0.1.0"
+    assert report["flowmpeg_version"] == "0.2.0a1"
     assert report["python_version"]
     assert report["capabilities"]["filter:overlay"] is True
 
@@ -2928,7 +2928,7 @@ def test_module_entry_point_runs() -> None:
         check=False,
     )
     assert completed.returncode == 0
-    assert completed.stdout == "flowmpeg 0.1.0\n"
+    assert completed.stdout == "flowmpeg 0.2.0a1\n"
 
 
 def test_console_program_runs() -> None:
@@ -2941,7 +2941,7 @@ def test_console_program_runs() -> None:
         check=False,
     )
     assert completed.returncode == 0
-    assert completed.stdout == "flowmpeg 0.1.0\n"
+    assert completed.stdout == "flowmpeg 0.2.0a1\n"
 
 
 def _media_info() -> MediaInfo:

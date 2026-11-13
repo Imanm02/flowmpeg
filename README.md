@@ -22,10 +22,14 @@ Flowmpeg needs Python 3.10 or newer. FFmpeg and FFprobe can be found through
 commands.
 
 ```console
-python -m pip install "git+https://github.com/Imanm02/flowmpeg.git"
+python -m pip install "https://github.com/Imanm02/flowmpeg/releases/download/v0.2.0a1/flowmpeg-0.2.0a1-py3-none-any.whl"
 flowmpeg --version
 flowmpeg setup
 ```
+
+This installs the [0.2.0a1 alpha snapshot](https://github.com/Imanm02/flowmpeg/releases/tag/v0.2.0a1)
+without requiring Git. For the current development checkout, use
+`python -m pip install "git+https://github.com/Imanm02/flowmpeg.git"`.
 
 `flowmpeg setup` checks the tools without changing the machine. If either tool
 is missing, it prints an exact package manager command when a supported manager
@@ -54,6 +58,7 @@ flowmpeg batch "recordings/*.mov" -o converted
 flowmpeg frames input.mp4 --interval 5 -o review-frames
 flowmpeg hls input.mp4 -o delivery-hls
 flowmpeg dash input.mp4 -o delivery-dash
+flowmpeg manifest jobs.json --dry-run
 ```
 
 The second check accepts the `cut` shortcut and verifies the default encoders,
@@ -230,6 +235,8 @@ outputs for common jobs:
 
 The [streaming package guide](docs/streaming.md) explains manifests, segment
 files, staged replacement, and the marker that protects unrelated directories.
+It also covers HLS and DASH ladders with several named quality levels. Saved
+JSON batch files are described in the [batch guide](docs/batch-jobs.md#save-a-repeatable-batch).
 The [frame extraction guide](docs/frame-extraction.md) covers sampling math,
 image formats, bounded sections, and the same directory safety contract.
 The [visual quality guide](docs/quality.md) explains PSNR, SSIM, time windows,
@@ -327,7 +334,7 @@ fanout before starting FFmpeg.
 
 ## Project status
 
-Flowmpeg is pre-alpha. The graph, compiler, and runner contracts are tested,
+Flowmpeg is alpha. The graph, compiler, and runner contracts are tested,
 but the public API may change before the first stable release. Open work and
 verified limits are tracked in [ROADMAP.md](ROADMAP.md). Shipped changes are
 recorded in [CHANGELOG.md](CHANGELOG.md).
