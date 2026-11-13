@@ -39,6 +39,10 @@ python -m pytest -m "not integration"
 
 ## Keep changes focused
 
+CI checks pushes to `main` and pull requests. A dependency pull request runs
+one CI matrix instead of separate push and pull-request matrices. The jobs
+use standard GitHub-hosted runners in this public repository.
+
 - Add exact argv assertions for compiler behavior.
 - Generate short media fixtures with `lavfi` when possible.
 - Keep new public objects immutable unless process state requires mutation.
