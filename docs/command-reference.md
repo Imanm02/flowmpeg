@@ -31,8 +31,8 @@ Exact needs are checked by `flowmpeg doctor --command NAME`.
 | `transcode-webm` | `webm`, `vp9` | media | media | `creator`, `delivery`, `silent-input` | `webm-video` | `encoder:libopus`, `encoder:libvpx-vp9`, `muxer:webm` |
 | `transcode-hevc` | `hevc`, `h265` | media | media | `creator`, `archive`, `delivery`, `silent-input` | `hevc-video` | `encoder:aac`, `encoder:libx265`, `muxer:mp4` |
 | `transcode-av1` | `av1`, `svt-av1` | media | media | `creator`, `archive`, `delivery`, `silent-input` | `av1-video` | `encoder:libopus`, `encoder:libsvtav1`, `muxer:webm` |
-| `package-hls` | `hls`, `hls-vod` | media | artifact directory | `creator`, `delivery`, `silent-input` | `segmented-video` | `encoder:aac`, `encoder:libx264`, `muxer:hls` |
-| `package-dash` | `dash`, `mpeg-dash` | media | artifact directory | `creator`, `delivery`, `silent-input` | `segmented-video` | `encoder:aac`, `encoder:libx264`, `muxer:dash` |
+| `package-hls` | `hls`, `hls-vod` | media | artifact directory | `creator`, `delivery`, `silent-input` | `segmented-video` | `encoder:aac`, `encoder:libx264`, `filter:scale`, `filter:split`, `muxer:hls` |
+| `package-dash` | `dash`, `mpeg-dash` | media | artifact directory | `creator`, `delivery`, `silent-input` | `segmented-video` | `encoder:aac`, `encoder:libx264`, `filter:scale`, `filter:split`, `muxer:dash` |
 | `trim` | `cut` | media | media | `creator`, `delivery`, `silent-input` | `web-video` | `encoder:aac`, `encoder:libx264`, `filter:asetpts`, `filter:atrim`, `filter:setpts`, `filter:trim`, `muxer:mp4` |
 | `loop-video` | `loop`, `repeat-video` | media | media | `creator`, `silent-input` | `web-video` | `encoder:aac`, `encoder:libx264`, `filter:asetpts`, `filter:atrim`, `filter:setpts`, `filter:trim`, `muxer:mp4` |
 | `resize` | `scale` | media | media | `creator`, `delivery`, `silent-input` | `web-video` | `encoder:aac`, `encoder:libx264`, `filter:scale`, `muxer:mp4` |

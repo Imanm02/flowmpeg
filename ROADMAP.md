@@ -204,7 +204,7 @@ only a discussion or test placeholder.
 - [x] Add saved batch manifests with schema validation.
 - [x] Measure reference quality with PSNR and SSIM.
 - [x] Add optional VMAF measurement when the filter is available.
-- [ ] Model adaptive streaming ladders with several renditions.
+- [x] Model adaptive streaming ladders with several renditions.
 
 ## Release gates
 

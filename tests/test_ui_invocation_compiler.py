@@ -167,6 +167,23 @@ def test_ui_compiler_uses_clear_flags_for_explicit_nulls() -> None:
     ) == ("make-gif", "--full")
 
 
+def test_ui_compiler_builds_ladder_arguments() -> None:
+    from flowmpeg.cli import build_parser
+
+    invocation = UiInvocation(
+        "package-hls",
+        (
+            UiValue("source", "input.mp4"),
+            UiValue("output", "hls"),
+            UiValue("renditions", ("hd:1280:720:2500", "sd:640:360:800")),
+        ),
+    )
+    arguments = compile_invocation(build_ui_schema(), invocation)
+    parsed = build_parser().parse_args(arguments)
+    assert [item.name for item in parsed.renditions] == ["hd", "sd"]
+    assert parsed.output == "hls"
+
+
 def test_ui_compiler_builds_shrink_video_arguments() -> None:
     schema = build_ui_schema()
     invocation = UiInvocation(

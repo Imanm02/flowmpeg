@@ -15,8 +15,10 @@ from pathlib import Path
 from typing import Literal, cast
 
 from flowmpeg.errors import GraphError, OutputExistsError
+from flowmpeg.model import expr
 from flowmpeg.pathing import same_destination
 from flowmpeg.plan import Plan, output
+from flowmpeg.probe import probe
 from flowmpeg.progress import Progress
 from flowmpeg.recipes.video import scale
 from flowmpeg.runner import RunResult
@@ -50,6 +52,37 @@ class FrameSet:
 
 
 @dataclass(frozen=True, slots=True)
+class VideoRendition:
+    """One named video representation with size caps and a target bitrate."""
+
+    name: str
+    width: int
+    height: int
+    bitrate_kbps: int
+
+    def __post_init__(self) -> None:
+        if (
+            not isinstance(self.name, str)
+            or re.fullmatch(r"[A-Za-z0-9_-]{1,32}", self.name) is None
+        ):
+            raise GraphError(
+                "Rendition names need 1 to 32 letters, digits, underscores, or hyphens"
+            )
+        for name, value in (("width", self.width), ("height", self.height)):
+            if type(value) is not int or not 2 <= value <= 8192 or value % 2:
+                raise GraphError(
+                    f"Rendition {name} must be an even integer from 2 to 8192"
+                )
+        if (
+            type(self.bitrate_kbps) is not int
+            or not 1 <= self.bitrate_kbps <= 1_000_000
+        ):
+            raise GraphError(
+                "Rendition bitrate must be an integer from 1 to 1000000 kbps"
+            )
+
+
+@dataclass(frozen=True, slots=True)
 class SegmentWorkflow:
     """One staged HLS or DASH package with explicit directory ownership."""
 
@@ -61,6 +94,7 @@ class SegmentWorkflow:
     audio_bitrate: str = "128k"
     include_audio: bool = True
     overwrite: bool = False
+    renditions: tuple[VideoRendition, ...] = ()
 
     def __post_init__(self) -> None:
         _validate_workflow(self)
@@ -75,6 +109,8 @@ class SegmentWorkflow:
         """Build the encoding plan without creating the artifact directory."""
 
         root = Path(self.destination if destination is None else destination).resolve()
+        if self.renditions:
+            return self._ladder_plan(root)
         manifest = root / self.manifest_name
         media = input(_plan_source(self.source))
         streams: list[Stream] = [media.video()]
@@ -82,6 +118,59 @@ class SegmentWorkflow:
             streams.append(media.audio(optional=True))
         args = self._output_args()
         return output(*streams, to=manifest, args=args).overwrite(False)
+
+    def _ladder_plan(self, root: Path) -> Plan:
+        media = input(_plan_source(self.source))
+        video = media.video()
+        videos = (
+            video.split(len(self.renditions)) if len(self.renditions) > 1 else (video,)
+        )
+        streams: list[Stream] = []
+        args = self._output_args()
+        variants: list[str] = []
+        for index, (branch, rendition) in enumerate(
+            zip(videos, self.renditions, strict=True)
+        ):
+            streams.append(
+                branch.filter(
+                    "scale",
+                    w=expr(f"trunc(min(iw,{rendition.width})/2)*2"),
+                    h=expr(f"trunc(min(ih,{rendition.height})/2)*2"),
+                    force_original_aspect_ratio="decrease",
+                    force_divisible_by=2,
+                )
+            )
+            rate = rendition.bitrate_kbps
+            args += (
+                f"-b:v:{index}",
+                f"{rate}k",
+                f"-maxrate:v:{index}",
+                f"{rate}k",
+                f"-bufsize:v:{index}",
+                f"{rate * 2}k",
+            )
+            variant = f"v:{index}"
+            if self.kind == "hls" and self.include_audio:
+                streams.append(media.audio())
+                variant += f",a:{index}"
+            variants.append(f"{variant},name:{rendition.name}")
+        if self.kind == "hls":
+            args += (
+                "-var_stream_map",
+                " ".join(variants),
+                "-master_pl_name",
+                self.manifest_name,
+                "-hls_flags",
+                "independent_segments",
+            )
+            manifest = root / "variant-%v.m3u8"
+        else:
+            if self.include_audio:
+                streams.append(media.audio())
+            sets = "id=0,streams=v" + (" id=1,streams=a" if self.include_audio else "")
+            args += ("-adaptation_sets", sets)
+            manifest = root / self.manifest_name
+        return output(*streams, to=manifest, args=args)
 
     def explain(self, ffmpeg: str = "ffmpeg") -> str:
         """Describe ownership and the encoding plan without creating files."""
@@ -92,6 +181,7 @@ class SegmentWorkflow:
                 f"Owned directory: {self.destination}",
                 f"Manifest: {self.manifest_name}",
                 f"Segment duration: {self.segment_duration:g}s",
+                f"Video renditions: {len(self.renditions) or 1}",
                 f"Overwrite owned set: {'yes' if self.overwrite else 'no'}",
                 f"Command: {self.plan().command(ffmpeg)}",
             )
@@ -101,6 +191,8 @@ class SegmentWorkflow:
         self,
         *,
         ffmpeg: str = "ffmpeg",
+        ffprobe: str = "ffprobe",
+        probe_timeout: float | None = 10.0,
         cancelled: Callable[[], bool] | None = None,
         on_progress: Callable[[Progress], None] | None = None,
         expected_duration: float | None = None,
@@ -108,6 +200,13 @@ class SegmentWorkflow:
     ) -> ArtifactSet:
         """Encode into a staged owned directory and publish it on success."""
 
+        workflow = self
+        if self.renditions and self.include_audio:
+            info = probe(
+                _plan_source(self.source), ffprobe=ffprobe, timeout=probe_timeout
+            )
+            if not info.audio_streams:
+                workflow = replace(self, include_audio=False)
         target = Path(self.destination).resolve()
         target.parent.mkdir(parents=True, exist_ok=True)
         existing_owned = _existing_owned_kind(target)
@@ -129,7 +228,7 @@ class SegmentWorkflow:
         work_root.mkdir()
         published = False
         try:
-            encoding = self.plan(work_root).run(
+            encoding = workflow.plan(work_root).run(
                 ffmpeg=ffmpeg,
                 cwd=work_root,
                 cancelled=cancelled,
@@ -141,6 +240,15 @@ class SegmentWorkflow:
             manifest = work_root / self.manifest_name
             if not manifest.is_file():
                 raise GraphError(f"FFmpeg did not create {self.manifest_name}")
+            if self.kind == "hls" and self.renditions:
+                master = manifest.read_text(encoding="utf-8")
+                if master.count("#EXT-X-STREAM-INF:") != len(self.renditions):
+                    raise GraphError(
+                        "HLS master did not list every rendition; use a longer clip or segment duration"
+                    )
+                for rendition in self.renditions:
+                    if not (work_root / f"variant-{rendition.name}.m3u8").is_file():
+                        raise GraphError("FFmpeg did not create every HLS variant")
             _write_marker(
                 work_root,
                 self.kind,
@@ -171,15 +279,17 @@ class SegmentWorkflow:
         base: tuple[str, ...] = (
             "-c:v",
             "libx264",
-            "-crf",
-            str(self.crf),
             "-preset",
             "medium",
             "-pix_fmt",
             "yuv420p",
             "-force_key_frames",
             f"expr:gte(t,n_forced*{self.segment_duration:g})",
+            "-sc_threshold",
+            "0",
         )
+        if not self.renditions:
+            base += ("-crf", str(self.crf))
         if self.include_audio:
             base += ("-c:a", "aac", "-b:a", self.audio_bitrate)
         if self.kind == "hls":
@@ -192,7 +302,7 @@ class SegmentWorkflow:
                 "-hls_playlist_type",
                 "vod",
                 "-hls_segment_filename",
-                "segment-%05d.ts",
+                "segment-%v-%05d.ts" if self.renditions else "segment-%05d.ts",
             )
         return (
             *base,
@@ -356,6 +466,7 @@ def hls_package(
     audio_bitrate: str = "128k",
     include_audio: bool = True,
     overwrite: bool = False,
+    renditions: tuple[VideoRendition, ...] = (),
 ) -> SegmentWorkflow:
     """Build an owned HLS video-on-demand workflow."""
 
@@ -368,6 +479,7 @@ def hls_package(
         audio_bitrate,
         include_audio,
         overwrite,
+        renditions,
     )
 
 
@@ -380,6 +492,7 @@ def dash_package(
     audio_bitrate: str = "128k",
     include_audio: bool = True,
     overwrite: bool = False,
+    renditions: tuple[VideoRendition, ...] = (),
 ) -> SegmentWorkflow:
     """Build an owned MPEG-DASH workflow."""
 
@@ -392,6 +505,7 @@ def dash_package(
         audio_bitrate,
         include_audio,
         overwrite,
+        renditions,
     )
 
 
@@ -427,6 +541,14 @@ def frame_sequence(
 
 
 def _validate_workflow(workflow: SegmentWorkflow) -> None:
+    if not isinstance(workflow.renditions, tuple) or len(workflow.renditions) > 8:
+        raise GraphError(
+            "Renditions must be an immutable tuple with at most eight entries"
+        )
+    if not all(isinstance(item, VideoRendition) for item in workflow.renditions):
+        raise GraphError("Renditions require VideoRendition values")
+    if len({item.name for item in workflow.renditions}) != len(workflow.renditions):
+        raise GraphError("Rendition names must be unique")
     if workflow.kind not in {"hls", "dash"}:
         raise GraphError(f"Unknown artifact kind: {workflow.kind}")
     if not workflow.source or workflow.source.startswith("-"):
@@ -445,6 +567,8 @@ def _validate_workflow(workflow: SegmentWorkflow) -> None:
         or workflow.segment_duration > 3_600
     ):
         raise GraphError("Segment duration must be above zero and at most 3600")
+    if workflow.kind == "hls" and workflow.segment_duration < 1:
+        raise GraphError("HLS segment duration must be at least 1 second")
     if isinstance(workflow.crf, bool) or not isinstance(workflow.crf, int):
         raise GraphError("CRF must be an integer from 0 through 51")
     if workflow.crf < 0 or workflow.crf > 51:
@@ -617,6 +741,7 @@ __all__ = [
     "FrameWorkflow",
     "ImageFormat",
     "SegmentWorkflow",
+    "VideoRendition",
     "dash_package",
     "frame_sequence",
     "hls_package",

@@ -886,8 +886,20 @@ _COMMAND_REQUIREMENTS = {
         "encoder:libsvtav1",
         "muxer:webm",
     ),
-    "package-hls": ("encoder:aac", "encoder:libx264", "muxer:hls"),
-    "package-dash": ("encoder:aac", "encoder:libx264", "muxer:dash"),
+    "package-hls": (
+        "encoder:aac",
+        "encoder:libx264",
+        "filter:scale",
+        "filter:split",
+        "muxer:hls",
+    ),
+    "package-dash": (
+        "encoder:aac",
+        "encoder:libx264",
+        "filter:scale",
+        "filter:split",
+        "muxer:dash",
+    ),
     "trim": _requirements(
         *_MP4,
         "filter:asetpts",

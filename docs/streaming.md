@@ -71,9 +71,64 @@ flowmpeg dash animation.mp4 --no-audio --crf 18 -o animation-dash
 | Audio | Optional AAC | Optional AAC |
 | Flowmpeg ownership marker | Yes | Yes |
 
-These first package workflows create one video representation and one optional
-audio representation. An adaptive bitrate ladder needs a representation model
-before it can claim to describe several renditions correctly.
+Without rendition settings, the package has one video representation and one
+optional audio representation. A ladder creates several video representations
+for a player to switch between as available bandwidth changes.
+
+## Package several quality levels
+
+```console
+flowmpeg hls lesson.mp4 --rendition hd:1280:720:2500 sd:640:360:800 -o lesson-adaptive
+flowmpeg dash lesson.mp4 --rendition hd:1280:720:2500 sd:640:360:800 -o lesson-dash-adaptive
+```
+
+Each entry is `NAME:WIDTH:HEIGHT:KBPS`. Names identify the HLS variant files.
+Dimensions are upper bounds, preserve aspect ratio, and never enlarge a small
+source. The last value is the video target bitrate in kilobits per second.
+Rate control uses that target, the same maximum rate, and a two-second buffer.
+`--crf` applies only when no renditions are provided.
+
+| Entry | Maximum frame | Video target | Typical use |
+|---|---|---|---|
+| `hd:1280:720:2500` | 1280 by 720 | 2500 kbps | Main playback |
+| `sd:640:360:800` | 640 by 360 | 800 kbps | Slower connection |
+
+HLS creates `index.m3u8`, `variant-hd.m3u8`, `variant-sd.m3u8`, and separately
+named segment files. DASH creates an MPD with one video adaptation set holding
+both representations and an optional audio adaptation set. HLS muxes a copy
+of the selected audio into each variant; DASH shares one audio representation.
+
+The encoder forces segment-boundary keyframes and disables scene-cut
+keyframes. HLS segment targets must be at least one second. An HLS master
+missing a requested variant is rejected before the artifact set is published.
+FFprobe detects silent sources during execution and removes audio mappings
+from the entire ladder. Dry runs do not probe and display the requested audio
+policy; use `--no-audio` for an exact video-only preview.
+
+```python
+from flowmpeg import VideoRendition, hls_package
+
+workflow = hls_package(
+    "lesson.mp4",
+    "lesson-adaptive",
+    renditions=(
+        VideoRendition("hd", 1280, 720, 2500),
+        VideoRendition("sd", 640, 360, 800),
+    ),
+)
+print(workflow.explain())
+result = workflow.run(timeout=600)
+```
+
+In the local UI, choose Package HLS or Package DASH and enter one rendition
+per line in the Renditions field. Input paths, overwrite confirmation, command
+previews, and cancellation work through the same local job controls.
+
+The model accepts up to eight uniquely named renditions. Width and height must
+be even integers from 2 through 8192. Bitrates must be positive integers. This
+is a VOD ladder; it does not add a live server, DRM, or alternate-language
+audio groups. The [FFmpeg muxer reference](https://ffmpeg.org/ffmpeg-formats.html)
+documents the HLS variant and DASH adaptation-set options used here.
 
 ## Inspect without writing
 

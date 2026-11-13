@@ -3,11 +3,13 @@ from __future__ import annotations
 import json
 import shutil
 import subprocess
+import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import Any, cast
 
 import pytest
 
+from flowmpeg import VideoRendition, probe
 from flowmpeg.artifacts import dash_package, frame_sequence, hls_package
 from flowmpeg.errors import ExecutionError, GraphError, OutputExistsError
 from flowmpeg.plan import Plan
@@ -38,6 +40,146 @@ def test_dash_plan_uses_template_names(tmp_path: Path) -> None:
         argv[argv.index("-media_seg_name") + 1]
         == "chunk-$RepresentationID$-$Number%05d$.m4s"
     )
+
+
+@pytest.mark.parametrize("factory", [hls_package, dash_package])
+def test_ladder_plan_maps_each_representation(factory: Any) -> None:
+    workflow = factory(
+        "input.mp4",
+        "delivery",
+        renditions=(
+            VideoRendition("hd", 1280, 720, 2500),
+            VideoRendition("sd", 640, 360, 800),
+        ),
+    )
+    plan = workflow.plan()
+    argv = plan.raw_argv()
+    assert "-b:v:0" in argv and "-b:v:1" in argv
+    assert "-crf" not in argv
+    assert "split=outputs=2" in (plan.filter_graph() or "")
+    if workflow.kind == "hls":
+        assert (
+            argv[argv.index("-var_stream_map") + 1] == "v:0,a:0,name:hd v:1,a:1,name:sd"
+        )
+        assert argv[-1].endswith("variant-%v.m3u8")
+    else:
+        assert (
+            argv[argv.index("-adaptation_sets") + 1] == "id=0,streams=v id=1,streams=a"
+        )
+
+
+@pytest.mark.parametrize(
+    "values",
+    [
+        ("../hd", 1280, 720, 2500),
+        ("hd", True, 720, 2500),
+        ("hd", 1279, 720, 2500),
+        ("hd", 1280, 0, 2500),
+        ("hd", 1280, 720, 0),
+        ("hd", 1280, 720, True),
+    ],
+)
+def test_rendition_rejects_invalid_values(values: tuple[Any, ...]) -> None:
+    with pytest.raises(GraphError):
+        VideoRendition(*values)
+
+
+def test_ladder_rejects_duplicate_names() -> None:
+    rendition = VideoRendition("hd", 1280, 720, 2500)
+    with pytest.raises(GraphError, match="unique"):
+        hls_package("input.mp4", "delivery", renditions=(rendition, rendition))
+
+
+def test_incomplete_ladder_is_not_published(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    target = tmp_path / "hls"
+    workflow = hls_package(
+        "input.mp4",
+        target,
+        include_audio=False,
+        renditions=(VideoRendition("hd", 1280, 720, 2500),),
+    )
+
+    def run(plan: Plan, **kwargs: object) -> RunResult:
+        del kwargs
+        root = Path(plan.outputs[0].destination).parent
+        (root / "index.m3u8").write_text("#EXTM3U\n", encoding="utf-8")
+        return RunResult(0, 0.1, "", None, ())
+
+    monkeypatch.setattr(Plan, "run", run)
+    with pytest.raises(GraphError, match="every rendition"):
+        workflow.run()
+    assert not target.exists()
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize("kind", ["hls", "dash"])
+@pytest.mark.parametrize("silent", [True, False])
+def test_ladder_runs_with_and_without_audio(
+    tmp_path: Path, kind: str, silent: bool
+) -> None:
+    ffmpeg = shutil.which("ffmpeg")
+    if ffmpeg is None:
+        pytest.skip("FFmpeg is required")
+    source = tmp_path / "input.mp4"
+    command = [
+        ffmpeg,
+        "-hide_banner",
+        "-loglevel",
+        "error",
+        "-f",
+        "lavfi",
+        "-i",
+        "testsrc2=size=64x48:rate=10:duration=0.6",
+    ]
+    if not silent:
+        command += [
+            "-f",
+            "lavfi",
+            "-i",
+            "sine=duration=0.6",
+            "-c:a",
+            "aac",
+            "-shortest",
+        ]
+    subprocess.run([*command, "-c:v", "libx264", str(source)], check=True, timeout=10)
+    factory = hls_package if kind == "hls" else dash_package
+    workflow = factory(
+        source,
+        tmp_path / kind,
+        segment_duration=1,
+        renditions=(
+            VideoRendition("large", 1280, 720, 128),
+            VideoRendition("small", 32, 24, 64),
+        ),
+    )
+    result = workflow.run(ffmpeg=ffmpeg, timeout=20)
+    manifest = Path(result.manifest)
+    if kind == "hls":
+        master = manifest.read_text(encoding="utf-8")
+        assert master.count("#EXT-X-STREAM-INF") == 2
+        for name, dimensions in (("large", (64, 48)), ("small", (32, 24))):
+            playlist = manifest.parent / f"variant-{name}.m3u8"
+            assert playlist.name in master
+            info = probe(playlist)
+            assert (
+                info.video_streams[0].width,
+                info.video_streams[0].height,
+            ) == dimensions
+            assert bool(info.audio_streams) is not silent
+    else:
+        root = ET.parse(manifest).getroot()
+        sets = root.findall(".//{*}AdaptationSet")
+        video_set = next(item for item in sets if item.get("contentType") == "video")
+        reps = video_set.findall("{*}Representation")
+        assert {(item.get("width"), item.get("height")) for item in reps} == {
+            ("64", "48"),
+            ("32", "24"),
+        }
+        assert any(item.get("contentType") == "audio" for item in sets) is not silent
+    assert (manifest.parent / ".flowmpeg-artifacts.json").is_file()
 
 
 def test_frame_plan_names_images_and_sampling(tmp_path: Path) -> None:
@@ -82,6 +224,7 @@ def test_frame_plan_accepts_rate_and_png(tmp_path: Path) -> None:
     "kwargs",
     [
         {"segment_duration": 0},
+        {"segment_duration": 0.2},
         {"segment_duration": 3_601},
         {"crf": True},
         {"crf": 52},
@@ -376,7 +519,7 @@ def test_segment_workflow_runs_on_generated_video(
     )
     target = tmp_path / kind
     workflow = (
-        hls_package(source, target, segment_duration=0.5)
+        hls_package(source, target, segment_duration=1)
         if kind == "hls"
         else dash_package(source, target, segment_duration=0.5)
     )

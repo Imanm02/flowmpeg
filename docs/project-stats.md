@@ -17,13 +17,13 @@ source change.
 | Stable error identifiers | 16 | CLI error guide |
 | Stable audit findings | 20 | Media audit |
 | Doctor feature groups | 19 | Doctor requirements |
-| Test function definitions | 635 | `tests/test_*.py` |
-| UI test function definitions | 151 | `tests/test_ui_*.py` |
-| FFmpeg integration tests | 44 | Pytest markers |
+| Test function definitions | 641 | `tests/test_*.py` |
+| UI test function definitions | 152 | `tests/test_ui_*.py` |
+| FFmpeg integration tests | 45 | Pytest markers |
 | Documentation pages | 22 | `docs/*.md` |
-| Documented command lines | 610 | Markdown code lines |
-| Completed roadmap items | 137 | `ROADMAP.md` |
-| Open roadmap items | 1 | `ROADMAP.md` |
+| Documented command lines | 612 | Markdown code lines |
+| Completed roadmap items | 138 | `ROADMAP.md` |
+| Open roadmap items | 0 | `ROADMAP.md` |
 
 ## Category matrix
 

@@ -22,6 +22,7 @@ from flowmpeg import __version__, shortcuts
 from flowmpeg.artifacts import (
     FrameWorkflow,
     SegmentWorkflow,
+    VideoRendition,
     dash_package,
     frame_sequence,
     hls_package,
@@ -314,6 +315,8 @@ _FEATURE_REQUIREMENTS = {
     "segmented-video": (
         "encoder:aac",
         "encoder:libx264",
+        "filter:scale",
+        "filter:split",
         "muxer:dash",
         "muxer:hls",
     ),
@@ -1095,6 +1098,16 @@ def _add_dash(commands: argparse._SubParsersAction[argparse.ArgumentParser]) -> 
     )
 
 
+def _video_rendition(value: str) -> VideoRendition:
+    try:
+        name, width, height, bitrate = value.split(":")
+        return VideoRendition(name, int(width), int(height), int(bitrate))
+    except (ValueError, GraphError) as error:
+        raise argparse.ArgumentTypeError(
+            "Use NAME:WIDTH:HEIGHT:KBPS with even dimensions and a positive bitrate"
+        ) from error
+
+
 def _add_artifact_command(
     commands: argparse._SubParsersAction[argparse.ArgumentParser],
     name: str,
@@ -1123,7 +1136,19 @@ def _add_artifact_command(
         type=_positive_float,
         default=segment_duration,
     )
-    parser.add_argument("--crf", type=_nonnegative_int, default=23)
+    parser.add_argument(
+        "--crf",
+        type=_nonnegative_int,
+        default=23,
+        help="Single-representation quality; renditions use bitrates",
+    )
+    parser.add_argument(
+        "--rendition",
+        dest="renditions",
+        type=_video_rendition,
+        nargs="+",
+        help="Variants as NAME:WIDTH:HEIGHT:KBPS, separated by spaces",
+    )
     parser.add_argument("--audio-bitrate", default="128k")
     _audio_toggle(parser)
     parser.add_argument(
@@ -1142,6 +1167,10 @@ def _add_artifact_command(
     )
     parser.add_argument("--explain", action="store_true")
     parser.set_defaults(handler=_run_artifact_workflow, artifact_factory=factory)
+    parser.add_argument(
+        "--ffprobe", default="ffprobe", help="FFprobe for audio detection"
+    )
+    parser.add_argument("--probe-timeout", type=_positive_float, default=10.0)
 
 
 def _add_frame_sequence(
@@ -3503,6 +3532,7 @@ def _run_artifact_workflow(args: argparse.Namespace) -> int:
         audio_bitrate=cast(str, args.audio_bitrate),
         include_audio=cast(bool, args.include_audio),
         overwrite=cast(bool, args.overwrite),
+        renditions=tuple(cast(list[VideoRendition] | None, args.renditions) or ()),
     )
     ffmpeg = cast(str, args.ffmpeg)
     if cast(bool, args.explain) or cast(bool, args.dry_run):
@@ -3516,6 +3546,8 @@ def _run_artifact_workflow(args: argparse.Namespace) -> int:
     try:
         result = workflow.run(
             ffmpeg=ffmpeg,
+            ffprobe=cast(str, args.ffprobe),
+            probe_timeout=cast(float, args.probe_timeout),
             on_progress=progress_printer,
             expected_duration=cast(float | None, args.expected_duration),
             timeout=cast(float | None, args.timeout),
